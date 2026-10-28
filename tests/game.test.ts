@@ -176,8 +176,9 @@ test('backups restore sound and effects preferences and accept old copies withou
 });
 
 test('every rarity can drop gear, a phrase or a companion with stable atlas sprite IDs', () => {
-  assert.equal(GEAR.length, 20);
-  assert.deepEqual(GEAR.filter(gear => !gear.atlas || gear.atlas === 'core').map(gear => gear.sprite).sort((left, right) => left - right), Array.from({ length: 12 }, (_, index) => index));
+  assert.equal(GEAR.filter(gear => gear.artwork !== 'forge').length, 20);
+  assert.equal(GEAR.filter(gear => gear.artwork === 'forge').length, 15);
+  assert.deepEqual(GEAR.filter(gear => gear.artwork !== 'forge' && (!gear.atlas || gear.atlas === 'core')).map(gear => gear.sprite).sort((left, right) => left - right), Array.from({ length: 12 }, (_, index) => index));
   assert.deepEqual(GEAR.filter(gear => gear.atlas === 'mythic').map(gear => gear.sprite).sort((left, right) => left - right), Array.from({ length: 8 }, (_, index) => index));
   for (const rarity of Object.keys(RARITIES) as (keyof typeof RARITIES)[]) {
     assert.equal(rewardForRoll(rarity, 0, 0).kind, 'gear');

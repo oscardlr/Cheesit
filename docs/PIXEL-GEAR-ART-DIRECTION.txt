@@ -1,0 +1,17 @@
+GRIND — Cosmetic expansion art direction
+Generator: built-in ImageGen, transparent-background mode.
+Style references: public/assets/grind-gear.png and public/assets/grind-gear-mythic.png.
+Integrated asset: public/assets/grind-gear-pixel-expansion.png (1619 x 971 RGBA).
+
+Generation prompt (condensed):
+Create one transparent equipment sprite atlas for the existing GRIND fitness RPG. Match the two original atlas references closely in pixel rendering, detail density, material texture, bevels, highlights, volume and palette. Dense, detailed SNES/32-bit fantasy arcade pixel art with small visible pixel steps, near-black purple outlines, multilevel purple shading, electric lime energy, gold beveled trim and charcoal cloth. Preserve sculpted muscular chest armor, fabric folds and bright gems. Avoid the rejected flat geometric vector treatment, pastel panels, cyan, red, salmon and broad ivory or gray-white surfaces.
+
+Layout: five columns by three rows, one isolated complete item in each cell, transparent gaps, no text or labels. Columns are head, torso, legs, hand, back. Front-facing inventory art; sleeveless torso garments, connected paired shorts, upright sword and axe with handles below, wrist-above-fingers gauntlet.
+
+Row 1 — Ronin: purple kabuto with gold horns and lime diamond; layered purple samurai cuirass with gold rivets and lime stitching; charcoal/violet hakama training shorts with gold jewel belt; upright curved lime katana with violet channel and gold guard; violet battle standard with gold crossbar and lime diamond crest.
+
+Row 2 — Aurora guardian: violet/lime crystal crown with gold headband; faceted violet chest plate with a large lime gem and gold bevels; charcoal/violet armored shorts with connected gem knee plates; violet double-headed battle axe edged in lime, gold center and violet handle; violet cape with lime lining and gold feather collar.
+
+Row 3 — Cosmic explorer: violet visor with lime lens and gold framing; violet powered torso with ribbed black abdomen, gold trim and lime reactor; charcoal/violet cargo training shorts with lime circuits and gold buckle; clenched violet gauntlet with gold knuckles and lime jewel; violet twin-thruster jetpack with gold rims and lime flame jets.
+
+The generated PNG is integrated unchanged. Source rectangles and silhouette clips isolate individual items; anatomical targets fit them to the existing character rig. Existing item IDs, abilities and ownership remain compatible.

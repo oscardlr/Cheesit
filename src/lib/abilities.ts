@@ -16,13 +16,16 @@ const targets: Record<string, Ability['target']> = {
   'violet-cape': 'pull', 'neon-wings': 'all', 'golden-armor': 'push', 'training-tank': 'all',
   'phoenix-crown': 'all', 'celestial-armor': 'push', 'storm-tank': 'push', 'void-greaves': 'legs',
   'mecha-shorts': 'legs', 'thunder-hammer': 'arms', 'starlight-gauntlet': 'arms', 'solar-cape': 'credits',
+  'ronin-head': 'all', 'ronin-top': 'push', 'ronin-bottom': 'legs', 'ronin-hand': 'arms', 'ronin-back': 'pull',
+  'glacier-head': 'all', 'glacier-top': 'push', 'glacier-bottom': 'legs', 'glacier-hand': 'pull', 'glacier-back': 'credits',
+  'cosmic-head': 'all', 'cosmic-top': 'push', 'cosmic-bottom': 'legs', 'cosmic-hand': 'arms', 'cosmic-back': 'credits',
 };
 const targetLabels = { all: 'tus series', legs: 'pierna y glúteo', arms: 'bíceps y tríceps', push: 'pecho, hombro y tríceps', pull: 'espalda y bíceps', credits: 'créditos por sesión' };
 export const ABILITIES: Ability[] = GEAR.map(gear => {
   const target = targets[gear.id] ?? 'all';
   const values = balance[gear.rarity];
   const percent = target === 'all' ? values.percent / 2 : values.percent;
-  return { id: gear.id, name: gear.name, rarity: gear.rarity, target, ...values, percent,
+  return { id: gear.id, name: gear.abilityName ?? gear.name, rarity: gear.rarity, target, ...values, percent,
     description: target === 'credits' ? `+${values.credits} créditos al terminar un entrenamiento válido.`
       : `+${new Intl.NumberFormat('es-ES').format(percent)} % XP en ${targetLabels[target]}, máximo ${values.maxXp} XP por entreno.` };
 });

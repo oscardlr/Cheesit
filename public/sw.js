@@ -1,5 +1,5 @@
 // Cache only the generic application shell and immutable local resources; never cache API responses.
-const CACHE = 'entrenos-shell-v20';
+const CACHE = 'entrenos-shell-v21-pixel-gear';
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);
@@ -8,7 +8,7 @@ self.addEventListener('install', (event) => {
     const html = await response.clone().text();
     const assets = [...html.matchAll(/(?:src|href)="(\/_next\/static\/[^"?]+)(?:\?[^\"]*)?"/g)].map((match) => match[1]);
     await cache.put('/', response);
-    await cache.addAll([...new Set(['/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/assets/grind-dumbbell.webp', '/assets/grind-athlete.png', '/assets/grind-bench-frames.png', '/assets/grind-avatar-base.png', '/assets/grind-gear.png', '/assets/grind-gear-mythic.png', '/assets/grind-companions.png', '/assets/grind-chest-iron.png', '/assets/grind-chest-energy.png', '/assets/grind-chest-legend.png', ...assets])]);
+    await cache.addAll([...new Set(['/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/assets/grind-dumbbell.webp', '/assets/grind-athlete.png', '/assets/grind-bench-frames.png', '/assets/grind-avatar-base.png', '/assets/grind-gear.png', '/assets/grind-gear-pixel-expansion.png', '/assets/grind-gear-mythic.png', '/assets/grind-companions.png', '/assets/grind-chest-iron.png', '/assets/grind-chest-energy.png', '/assets/grind-chest-legend.png', ...assets])]);
   })());
 });
 self.addEventListener('activate', (event) => {
