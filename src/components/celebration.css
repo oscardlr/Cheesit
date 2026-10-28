@@ -1,0 +1,94 @@
+.celebration-stage{position:fixed;inset:0;z-index:90;pointer-events:none;isolation:isolate;--reward-lime:#d7ff5f;--reward-purple:#a985ff}
+.celebration-backdrop{position:absolute;inset:0;background:rgba(12,9,20,.76);backdrop-filter:blur(12px);pointer-events:auto;animation:reward-backdrop-in .3s ease both}
+.celebration-card{position:absolute;background:#231d31;color:#fff;border:1px solid rgba(215,255,95,.35);box-shadow:0 24px 100px #0008,0 0 65px #b382ff16;overflow:hidden;font-family:inherit}
+.celebration-card:before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at 15% 0%,#8857e238,transparent 65%)}
+.celebration-set{bottom:calc(100px + env(safe-area-inset-bottom));left:50%;width:min(450px,calc(100% - 32px));padding:21px 46px 20px 20px;border-radius:20px;display:grid;grid-template-columns:48px 1fr;gap:13px;transform:translateX(-50%);animation:reward-toast-in .45s cubic-bezier(.2,.9,.2,1.2) both}
+.celebration-close{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.06);color:#b6acc8;border:1px solid rgba(255,255,255,.08);width:32px;height:32px;min-height:32px!important;border-radius:50%;display:grid;place-items:center;cursor:pointer;pointer-events:auto;padding:0}
+.celebration-close:hover{color:#fff;background:#ffffff14}
+.celebration-emblem{position:relative;display:grid;place-items:center;width:48px;height:48px;background:var(--reward-lime);color:#1d1924;border-radius:14px;transform:rotate(-8deg);box-shadow:0 0 36px #d7ff5f20}
+.celebration-emblem>svg{width:27px;height:27px;transform:rotate(8deg)}
+.celebration-emblem>span{position:absolute;inset:-6px;border:1px solid #d7ff5f36;border-radius:18px;animation:reward-emblem-pulse 1s ease-out both}
+.celebration-content{min-width:0}
+.celebration-kicker{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:800;letter-spacing:.15em;color:var(--reward-lime);line-height:1.3;margin:0 0 6px}
+.celebration-card h2{margin:0;font-size:20px;line-height:1.05;letter-spacing:-.055em;font-weight:950;font-style:italic;color:#fff}
+.celebration-detail{font-size:11px;line-height:1.55;color:#bab0ca;margin:8px 0 0!important}
+.celebration-set .celebration-reward{grid-column:2;display:flex;align-items:baseline;gap:8px;margin-top:-4px}
+.celebration-reward>span{color:var(--reward-lime);font-size:30px;font-weight:900;letter-spacing:-.07em;font-variant-numeric:tabular-nums;animation:reward-number-in .55s .12s cubic-bezier(.2,.8,.2,1.2) both}
+.celebration-reward>small{font-size:9px;letter-spacing:.12em;font-weight:800;color:#b8afc6}
+.celebration-combo{display:flex;align-items:center;gap:6px;color:#ffb877;font-size:11px;font-weight:700}
+.celebration-set .celebration-combo{grid-column:2;margin-top:-6px}
+.celebration-combo>strong{font-size:15px}
+.celebration-combo>span{font-size:8px;letter-spacing:.12em}
+.celebration-victory{display:grid;place-items:center}
+.celebration-workout{position:relative;width:min(440px,calc(100% - 32px));max-height:calc(100dvh - 40px);overflow-y:auto;border-radius:28px;padding:38px 30px 25px;text-align:center;pointer-events:auto;animation:reward-victory-in .55s cubic-bezier(.18,.85,.26,1.1) both}
+.celebration-workout:after{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,#a985ff,#d7ff5f,#a985ff)}
+.celebration-workout .celebration-emblem{width:82px;height:82px;margin:6px auto 29px;border-radius:24px;box-shadow:0 0 65px #d7ff5f20;animation:reward-trophy-in .7s .1s cubic-bezier(.2,.8,.2,1.2) both}
+.celebration-workout .celebration-emblem>svg{width:42px;height:42px}
+.celebration-workout .celebration-emblem>span{inset:-10px;border-radius:30px}
+.celebration-workout .celebration-kicker{justify-content:center;font-size:9px;margin-bottom:12px}
+.celebration-workout h2{font-size:46px;line-height:1;letter-spacing:-.065em}
+.celebration-workout .celebration-detail{font-size:13px;max-width:290px;margin:12px auto 0!important}
+.celebration-workout .celebration-reward{display:flex;flex-direction:column;align-items:center;gap:4px;margin:23px 0 17px}
+.celebration-workout .celebration-reward>span{font-size:76px;line-height:1;letter-spacing:-.075em;text-shadow:0 0 30px #d7ff5f15}
+.celebration-workout .celebration-combo{justify-content:center;margin:-5px 0 20px}
+.celebration-workout-stats{border-top:1px solid #ffffff12;display:flex;flex-direction:column;gap:12px;padding:20px 0;color:#b9afc9}
+.celebration-workout-stats>span{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px}
+.celebration-workout-stats>span>svg{color:var(--reward-lime)}
+.celebration-workout-stats>strong{font-size:16px;color:#fff;font-variant-numeric:tabular-nums}
+.celebration-workout-stats>strong>small{font-size:11px;color:#a69cb6;font-weight:400}
+.celebration-continue{width:100%;min-height:52px;border:0;display:flex;align-items:center;justify-content:center;gap:12px;background:var(--reward-lime);color:#231d31;font-size:13px;font-weight:850;border-radius:13px;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.celebration-continue:hover{transform:translateY(-2px);box-shadow:0 8px 24px #d7ff5f20}
+.celebration-footer{color:#82778f;font-size:8px;letter-spacing:.11em;margin:18px 0 0!important;line-height:1.5}
+.celebration-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.celebration-particles>i{position:absolute;left:50%;top:50%;width:var(--particle-width);height:12px;background:var(--particle-color);border-radius:1px;opacity:0;animation:reward-confetti 1.6s var(--particle-delay) cubic-bezier(.1,.6,.5,1) both}
+.celebration-hit .celebration-particles>i{top:75%;height:8px}
+.celebration-record .celebration-emblem{background:#ffe38c}
+.celebration-record .celebration-kicker{color:#ffe38c}
+.celebration-quiet *{animation:none!important;transition:none!important}
+.celebration-close:focus-visible,.celebration-continue:focus-visible{outline:3px solid var(--reward-purple);outline-offset:4px}
+@keyframes reward-toast-in{from{opacity:0;transform:translate(-50%,28px) scale(.94)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+@keyframes reward-victory-in{from{opacity:0;transform:translateY(28px) scale(.88)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes reward-backdrop-in{from{opacity:0}to{opacity:1}}
+@keyframes reward-number-in{from{opacity:0;transform:translateY(10px) scale(.8)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes reward-trophy-in{from{opacity:0;transform:rotate(-24deg) scale(.4)}to{opacity:1;transform:rotate(-8deg) scale(1)}}
+@keyframes reward-emblem-pulse{from{opacity:0;transform:scale(.8)}50%{opacity:1}to{opacity:1;transform:scale(1)}}
+@keyframes reward-confetti{0%{opacity:0;transform:translate(0,0) rotate(0)}8%{opacity:1}75%{opacity:.8}100%{opacity:0;transform:translate(var(--particle-x),var(--particle-y)) rotate(var(--particle-rotate))}}
+@media(min-width:1100px){.celebration-set{left:calc(50% + 104px)}}
+@media(max-width:420px){.celebration-set{padding:18px 36px 18px 16px;grid-template-columns:40px 1fr;gap:10px}.celebration-set .celebration-emblem{width:40px;height:40px;border-radius:12px}.celebration-set h2{font-size:18px}.celebration-detail{font-size:10px}.celebration-workout{padding:30px 22px 22px}.celebration-workout h2{font-size:42px}.celebration-workout .celebration-reward>span{font-size:66px}}
+@media(prefers-reduced-motion:reduce){.celebration-stage *{animation:none!important;transition:none!important}.celebration-particles{display:none}.celebration-backdrop{backdrop-filter:none}}
+
+/* The jackpot uses one short camera move, followed by a stable reward screen. */
+.celebration-workout{width:min(480px,calc(100% - 28px));padding-top:23px;animation:reward-jackpot-in .75s cubic-bezier(.2,.8,.2,1) both}
+.celebration-rays{position:absolute;left:50%;top:50%;width:120vmax;height:120vmax;border-radius:50%;transform:translate(-50%,-50%);opacity:.18;background:repeating-conic-gradient(from 0deg,#d8ff3e1c 0deg 8deg,transparent 8deg 20deg);mask-image:radial-gradient(circle,#000 0%,transparent 62%);animation:reward-rays 18s linear infinite;pointer-events:none}
+.celebration-athlete-stage{position:relative;width:176px;height:150px;margin:0 auto 16px;display:grid;place-items:center}
+.celebration-athlete-stage>.pixel-athlete{width:155px;z-index:1;filter:drop-shadow(0 8px 12px #0006)}
+.celebration-orbit{position:absolute;inset:13px 22px 0;border:1px solid #d8ff3e35;border-radius:50%;box-shadow:0 0 60px #d8ff3e17,inset 0 0 30px #a985ff0f;animation:reward-orbit 1.2s ease-out both}
+.celebration-orbit:before,.celebration-orbit:after{content:"✦";position:absolute;color:#d8ff3e;font-size:22px;top:7px;left:-7px}.celebration-orbit:after{font-size:15px;top:auto;left:auto;right:-4px;bottom:14px;color:#b8a0ff}
+.celebration-player-label{position:absolute;bottom:-3px;left:50%;transform:translateX(-50%) rotate(-4deg);z-index:2;white-space:nowrap;background:#d8ff3e;color:#1d1926;padding:5px 10px;border-radius:3px;font:800 8px monospace;letter-spacing:.13em;box-shadow:0 4px 10px #0003}
+.celebration-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.celebration-history-note{font-size:10px;line-height:1.6;color:#c9b3e2;background:#a985ff12;padding:10px;border-radius:8px}
+.celebration-set-breakdown{grid-column:1/-1;display:flex;justify-content:center;flex-wrap:wrap;gap:5px 12px;font-size:9px;color:#bba9d0}.celebration-set-breakdown strong{color:#d7ff5f}
+.celebration-milestones{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;margin:14px 0}.celebration-milestones>span{width:100%;font-size:7px;color:#bba4d1;letter-spacing:1.5px}.celebration-milestones>strong{display:flex;align-items:center;gap:5px;font-size:9px;color:#ffdb79;padding:7px 10px;border:1px solid #ffdb7930;border-radius:20px;background:#ffdb7908}
+.celebration-workout .celebration-reward{margin:18px 0 9px}.celebration-workout .celebration-reward>span{font-size:86px;text-shadow:0 0 45px #d8ff3e25;animation:reward-number-land 1.35s ease both}
+.celebration-workout .celebration-reward>small{font-size:8px}
+.celebration-coins{display:flex;gap:6px;align-items:center;color:#ffd569;font-variant-numeric:tabular-nums}.celebration-coins>strong{font-size:17px}.celebration-coins>span{font-size:8px;font-weight:700;letter-spacing:.08em}.celebration-set .celebration-coins{grid-column:2;margin-top:-6px}.celebration-workout .celebration-coins{justify-content:center;margin-bottom:17px}
+.celebration-level-scene{position:relative;overflow:hidden;padding:15px 14px 11px;border:1px solid #b8a0ff5a;border-radius:13px;background:linear-gradient(120deg,#a985ff13,#d8ff3e08);margin:14px 0;text-align:left}
+.celebration-level-copy{display:flex;align-items:center;gap:7px;color:#d2bdff}.celebration-level-copy>span{font-size:8px;font-weight:800;letter-spacing:.06em;flex:1}.celebration-level-copy>strong{font-size:29px;color:#d8ff3e;line-height:1;font-variant-numeric:tabular-nums}
+.celebration-stairs{position:relative;height:102px;margin:0 15px 5px;display:flex;align-items:flex-end;justify-content:center;gap:3px}
+.celebration-stairs>i{width:21%;height:20px;background:linear-gradient(180deg,#b8a0ff44,#b8a0ff08);border-top:2px solid #b8a0ff95;border-left:1px solid #b8a0ff35;border-radius:3px 3px 0 0}.celebration-stairs>i:nth-child(2){height:36px}.celebration-stairs>i:nth-child(3){height:53px}.celebration-stairs>i:nth-child(4){height:70px}
+.celebration-stairs>.pixel-athlete{position:absolute;width:95px;left:10%;bottom:6px;animation:reward-stair-climb 2.2s .3s steps(4,end) both}
+.celebration-chest{position:absolute;right:6%;bottom:71px;color:#ffd569;filter:drop-shadow(0 0 12px #ffd56988);animation:reward-chest-glow 1.6s ease-in-out infinite}
+.celebration-level-scene>p{display:flex;align-items:center;justify-content:center;gap:5px;color:#bca9cd;font-size:9px;margin:6px 0 0!important}
+.celebration-set .celebration-level-scene{grid-column:1/-1;margin:2px 0 0}.celebration-set .celebration-stairs{height:72px;margin:3px 12px}.celebration-set .celebration-stairs>.pixel-athlete{width:76px}.celebration-set .celebration-stairs>i{height:12px}.celebration-set .celebration-stairs>i:nth-child(2){height:24px}.celebration-set .celebration-stairs>i:nth-child(3){height:36px}.celebration-set .celebration-stairs>i:nth-child(4){height:48px}.celebration-set .celebration-chest{bottom:49px;width:23px;height:23px}.celebration-set .celebration-level-copy>strong{font-size:24px}
+.celebration-breakdown{margin:15px 0 0;padding:12px 14px;border:1px solid #ffffff0c;border-radius:10px;background:#00000012}.celebration-breakdown>div{display:flex;justify-content:space-between;gap:15px;padding:4px 0;font-size:10px;color:#b9acc9}.celebration-breakdown strong{color:#d8ff3e;font-variant-numeric:tabular-nums;font-size:10px;white-space:nowrap}
+.celebration-session-total{margin:12px 0 0;display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px;text-align:left;padding:12px 14px;background:#a985ff0c;border-radius:10px}.celebration-session-total>span{font:700 8px monospace;letter-spacing:.05em;color:#baa6d1}.celebration-session-total>strong{font-size:19px;color:#d8ff3e;letter-spacing:-.04em}.celebration-session-total>small{grid-column:1/-1;font-size:9px;color:#9d8caf}
+.celebration-workout-stats{padding:16px 0;gap:9px}.celebration-workout h2{font-size:48px}.celebration-workout .celebration-detail{font-size:12px}.celebration-workout .celebration-kicker{font-size:8px}
+.celebration-quiet .celebration-stairs>.pixel-athlete{left:50%;bottom:35px}.celebration-quiet .celebration-rays{display:none}
+@keyframes reward-jackpot-in{0%{opacity:0;transform:scale(.72) translateY(22px)}45%{opacity:1;transform:scale(1.035) translateY(-5px)}70%{transform:scale(.99) translateY(2px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes reward-rays{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes reward-orbit{from{transform:scale(.25);opacity:0}60%{opacity:1}to{transform:scale(1);opacity:1}}
+@keyframes reward-number-land{0%{transform:scale(.7);opacity:0}20%{transform:scale(1);opacity:1}85%{transform:scale(1)}93%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes reward-stair-climb{0%{left:5%;bottom:0}25%{left:21%;bottom:16px}50%{left:39%;bottom:32px}75%,100%{left:57%;bottom:48px}}
+@keyframes reward-chest-glow{0%,100%{filter:drop-shadow(0 0 8px #ffd56955);transform:translateY(0)}50%{filter:drop-shadow(0 0 18px #ffd56999);transform:translateY(-3px)}}
+@media(max-width:420px){.celebration-workout{padding:22px 20px 20px;max-height:calc(100dvh - 24px);border-radius:22px}.celebration-workout h2{font-size:43px}.celebration-workout .celebration-reward>span{font-size:74px}.celebration-athlete-stage{height:125px;width:150px;margin-bottom:15px}.celebration-athlete-stage>.pixel-athlete{width:135px}.celebration-workout .celebration-detail{font-size:11px}.celebration-workout .celebration-kicker{font-size:7px}.celebration-level-scene{padding:12px 11px 9px}.celebration-stairs{height:88px}.celebration-workout .celebration-reward{margin:15px 0 8px}}
+@media(prefers-reduced-motion:reduce){.celebration-rays{display:none}.celebration-stairs>.pixel-athlete{left:50%;bottom:35px}.celebration-workout{animation:none!important}}

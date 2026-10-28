@@ -1,0 +1,20 @@
+.credit-pill{display:flex;align-items:center;gap:6px;border:1px solid #b8ff5a35;background:#d7ff5f0d;border-radius:8px;padding:8px 10px;color:#d7ff5f;font-size:11px;font-weight:800;white-space:nowrap}
+.credit-pill small{font-size:8px;letter-spacing:1px;color:#a49ab4}
+.level-pill{cursor:pointer}
+.app-content{animation:grind-screen-in .32s ease-out both}
+button{position:relative;transition:transform .16s ease,background-color .18s ease,border-color .18s ease,box-shadow .18s ease}
+button:active:not(:disabled){transform:scale(.96)}
+button:focus-visible,[role=button]:focus-visible{outline:2px solid #d7ff5f;outline-offset:4px}
+.set-row{transition:background-color .3s ease,box-shadow .3s ease}
+.set-row.set-confirmed{animation:grind-set-confirmed .5s ease both}
+.progress-track>span,.level-ring{transition:width .8s cubic-bezier(.16,1,.3,1),stroke-dasharray .8s ease}
+.error[role=alert]{animation:grind-error .3s ease both}
+@keyframes grind-screen-in{from{opacity:.3;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@keyframes grind-set-confirmed{0%{box-shadow:0 0 0 0 #d7ff5f55}60%{box-shadow:0 0 0 7px #d7ff5f00}100%{box-shadow:none}}
+@keyframes grind-error{0%,100%{transform:translateX(0)}30%{transform:translateX(-4px)}70%{transform:translateX(4px)}}
+.effects-disabled .app-content,.effects-disabled .set-row,.effects-disabled .error{animation:none}
+.effects-disabled button,.effects-disabled .progress-track>span,.effects-disabled .level-ring{transition:none}
+@media(min-width:761px){.bottom-nav{gap:7px}.bottom-nav button{min-height:43px}.bottom-nav .nav-add{margin-top:8px;margin-bottom:8px}}
+@media(max-width:760px){.bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr));gap:3px}.bottom-nav button{font-size:8px}.credit-pill{font-size:10px;padding:7px 8px;gap:4px}.credit-pill>svg{width:11px}.credit-pill small{display:none}.topbar-actions{gap:5px}.level-pill{font-size:6.5px!important;padding:8px!important}.topbar{padding-right:13px}.brand{font-size:22px}.brand-symbol{width:21px}.screen-game .app-content{padding-top:24px}}
+@media(max-width:360px){.brand{font-size:19px}.brand-symbol{width:18px}.topbar-actions{gap:3px}.credit-pill{padding:6px;font-size:9px}.topbar .settings-button{width:26px;height:26px}.sound-toggle{width:26px;height:26px}.level-pill>svg{display:none}}
+@media(prefers-reduced-motion:reduce){.app-content,.set-row.set-confirmed,.error[role=alert]{animation:none}button,.progress-track>span,.level-ring{transition:none}button:active:not(:disabled){transform:none}}

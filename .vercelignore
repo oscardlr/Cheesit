@@ -1,0 +1,15 @@
+# Only application source and public assets belong in the deployment.
+.git/
+.next/
+.vercel/
+node_modules/
+.env
+.env.*
+artifacts/
+test-results*/
+playwright-report/
+coverage/
+tests/
+docs/
+supabase/
+*.tsbuildinfo

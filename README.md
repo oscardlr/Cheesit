@@ -1,0 +1,80 @@
+# Entrenos
+
+Aplicación web móvil para registrar entrenamientos de fuerza, instalable como PWA. Esta implementación guarda los datos en el navegador; la cuenta y la sincronización remota siguen pendientes. La especificación completa está en [ESPECIFICACION-ENTRENOS.md](ESPECIFICACION-ENTRENOS.md).
+
+## Ejecutar
+
+Con Node.js 20.9 o posterior:
+
+```sh
+npm ci
+npm run dev
+```
+
+Abrir [http://localhost:3000](http://localhost:3000). Para probar el service worker y la carga sin conexión se necesita una compilación de producción:
+
+```sh
+npm run build
+npm start
+```
+
+## Experiencia de entrenamiento
+
+La interfaz usa una identidad oscura con violeta y lima, una ilustración 3D propia, navegación adaptable a móvil y escritorio y animaciones que respetan el movimiento reducido del dispositivo. Las rutinas sugeridas se pueden personalizar antes de guardarlas.
+
+Cada serie válida y confirmada suma XP según repeticiones, carga relativa y mejora personal, hasta 130 XP; terminar una sesión añade 200 XP, con bonus de 75 XP por serie de récord comparable y 100 XP por trabajar tres grupos musculares. El primer nivel requiere 1.000 XP y cada siguiente exige 250 XP más. El progreso se calcula desde los registros guardados: editar o volver a confirmar una serie no duplica puntos. El perfil inicial es hombre, 20 años, 70 kg y 180 cm; registra el peso de una mancuerna y el peso total en barra. Las referencias son orientativas del juego, sin percentiles demográficos inventados. Fórmulas y fuentes: [docs/PROGRESION-V2.md](docs/PROGRESION-V2.md).
+
+Las series muestran contadores ascendentes sin bloquear la siguiente entrada; finalizar abre un jackpot con confeti, desglose y objetivos conquistados. Las subidas de nivel muestran al atleta pixelado ascendiendo escaleras. Al entrar, una animación de cuatro fotogramas reproduce un press de banca. Todos los botones tienen respuesta sonora; sonido y efectos tienen controles persistentes y respetan el movimiento reducido.
+
+En **Universo RPG** encontrarás 52 objetivos con recompensas de XP automáticas: 17 semanales y 35 de trayectoria. Cada recompensa se concede una sola vez; «A tu ritmo» permite elegir los días de entrenamiento por semana. También hay logros, mapa muscular anterior y posterior, cofres, armario y camino de niveles. El mapa colorea diez zonas según series directas y secundarias de los últimos 7, 14 o 30 días. Cada músculo tiene además su propio nivel y XP con el historial completo. Cada día cambia la motivación, y puedes destacar una carta como lema.
+
+Cada 5 XP generan un crédito virtual y empiezas con 100 de bienvenida. Los cofres comprados mezclan tipos de recompensa con rarezas y probabilidades visibles. Cada nivel desde el 2 desbloquea un cofre gratuito único que garantiza equipo. La ruleta dura cinco segundos, muestra solo rarezas y abre el contenido automáticamente después. Recargar recupera la apertura sin repetir el sorteo ni enseñar el premio en la colección. Puedes equipar y quitar piezas en cinco ranuras y una compañera, y ver tu personaje en Resumen. Los objetos obtenidos no se pueden vender. El inventario agrupa las copias del mismo equipo o compañera y muestra su cantidad sobre la tarjeta, por ejemplo `3x`. Cada frase solo puede tocar una vez y no muestra contador.
+
+El armario incluye **20 piezas**, cuatro compañeras adultas y animaciones de reposo, auras y brillos. Aspectos reúne equipo y compañeras con filtros por ranura y muestra los diseños pendientes en gris, con la etiqueta «Sin desbloquear». La apariencia desbloqueada es permanente, incluso al agotar su habilidad. Cada copia de equipo aporta una carga, sea cual sea su rareza. Las habilidades se seleccionan por separado: una activa para la próxima sesión y una carga al terminar si aporta un bonus. Los bonus se guardan con la sesión, sin aplicarse retroactivamente al cambiar de objeto. Los entrenamientos nuevos usan automáticamente el verde de la interfaz. Reglas y equilibrio: [docs/EQUIPO-V3.md](docs/EQUIPO-V3.md); arte y prompts: [docs/RECURSOS-ARCADE-V3.md](docs/RECURSOS-ARCADE-V3.md).
+
+Los cofres comprados mezclan 55 % equipo, 25 % frases y 20 % compañeras. Cuando ya tienes todas las frases de una rareza, su probabilidad pasa a equipo de esa misma rareza. Los cofres de nivel garantizan equipo. Las copias incluyen colección, movimientos, consumos de habilidades, aspectos, compañera, recompensas de objetivos, perfil, apertura pendiente y preferencias. Las versiones anteriores están documentadas en [docs/EVOLUCION-ARCADE-V2.md](docs/EVOLUCION-ARCADE-V2.md), [docs/LOOT-V2.md](docs/LOOT-V2.md) y [docs/GAMIFICACION.md](docs/GAMIFICACION.md).
+
+Los ejercicios del catálogo con mancuernas muestran su convención junto a los campos: el peso se introduce por mancuerna y la XP utiliza la carga de las dos en movimientos bilaterales, o la individual en movimientos alternos o con una sola mancuerna. Los perfiles antiguos que registraban la pareja conservan su aviso y sus datos.
+
+El navegador debe abrir la aplicación con conexión al menos una vez. El almacenamiento de Safari y el de una PWA instalada pueden ser independientes. Los datos de esta versión se guardan en IndexedDB de este navegador; no existe una copia remota. Exporta una copia JSON y guárdala en un lugar privado. No utilices varias pestañas para editar simultáneamente: esta versión todavía no coordina las escrituras entre ellas.
+
+## Verificación
+
+### Publicación en Vercel y uso móvil
+
+URL pública: [https://cheesit-entrenos.vercel.app](https://cheesit-entrenos.vercel.app). Proyecto `cheesit-entrenos` en el espacio `financial-ai`, publicado el 28 de octubre de 2026. La vinculación local queda en `.vercel/project.json`, excluida de Git. El despliegue inicial procede de los archivos de este directorio; todavía no hay un repositorio remoto conectado para publicar cambios automáticamente.
+
+La aplicación se puede alojar en Vercel como proyecto Next.js con `npm ci` y `npm run build`, usando Node.js 24. La publicación no necesita variables de Supabase mientras siga utilizándose el almacenamiento local. En producción, dejar `NEXT_PUBLIC_TEST_CREDITS` sin definir o establecerlo a `0`.
+
+`.vercelignore` excluye entornos locales, dependencias, compilaciones previas, pruebas y artefactos del envío. Las credenciales y la vinculación local de Vercel también están excluidas de Git. Publicar no requiere subir los entrenamientos: los datos permanecen en el navegador.
+
+Desde la URL pública HTTPS, en iPhone abrir Safari y elegir **Compartir → Añadir a pantalla de inicio**. En Android abrir Chrome y elegir **Instalar aplicación** o **Añadir a pantalla de inicio**. Abrirla con conexión y esperar a que termine de cargar antes de probarla sin red.
+
+El dominio publicado tiene un almacenamiento distinto de `localhost`; para llevar el historial al móvil, exportar una copia JSON desde la instalación anterior e importarla desde la nueva. No hay sincronización automática entre dispositivos. Conservar la copia en un lugar privado y comprobar la importación antes de borrar el original.
+
+Para publicar cambios desde este directorio ya vinculado, comprobar primero el destino con `npx vercel@65.4.0 project inspect --scope financial-ai --non-interactive` y después ejecutar `npx vercel@65.4.0 deploy --prod --scope financial-ai --build-env NEXT_PUBLIC_TEST_CREDITS=0 --yes --non-interactive`.
+
+### Créditos temporales de prueba
+
+Esta instalación local tiene `NEXT_PUBLIC_TEST_CREDITS=1000000` en `.env.local` (excluido de Git). Añade un millón de créditos de prueba y muestra un aviso en Cofres. No cambia XP, entrenamientos ni niveles.
+
+**Antes de preparar la versión final:** eliminar esa variable o ponerla a `0`, recompilar y reiniciar. Las compras financiadas en pruebas y las ventas guardadas de versiones anteriores quedan marcadas con `testFunded`; no generan deuda ni saldo real al retirar la ayuda. Los objetos y aspectos obtenidos se conservan. Las pruebas normales de navegador esperan el modo de créditos temporales desactivado; recompilar con la variable a `0` antes de ejecutar esa batería.
+
+```sh
+npm test
+npm run typecheck
+npm run build
+npm run test:e2e
+```
+
+La prueba de navegador utiliza Chrome instalado y un servidor de producción en `localhost:3000`. Las pruebas unitarias no requieren servidor.
+
+Para comprobar otra instancia local, configura `PLAYWRIGHT_BASE_URL` con su URL. Las pruebas de navegador cubren registro y recuperación de sesiones, celebraciones, XP, niveles, preferencias, descarte de cambios históricos, objetivos, mapa corporal, apertura de cofres e inventario agrupado sin ventas. Comprueban 24 combinaciones de pantalla y anchura (320, 390, 768 y 1440 px) y generan capturas en `test-results/`. Reinicia el servidor de producción después de recompilar para que sirva los recursos de la versión nueva.
+
+## Estado y límites
+
+Están implementados el registro local de rutinas y sesiones, la confirmación explícita de series, calendario, estadísticas, comparaciones y exportación/importación del formato local. Se incluye la instalación PWA y una caché del shell; la carga sin red se ha comprobado en Chromium, no en un iPhone físico.
+
+No están terminados la cuenta ni la sincronización entre dispositivos. Hay una migración SQL y un cliente remoto preparados, pero no conectados ni validados contra un servicio real. Tampoco se ha probado el aislamiento de usuarios, la recuperación, la restauración de copias ni la operación en producción. Consulta [docs/SERVIDOR.md](docs/SERVIDOR.md) antes de usar esa infraestructura.
+
+Faltan las ilustraciones del catálogo con procedencia y derechos acreditados, la importación de respaldos históricos, gráficos completos, pruebas reales de iPhone y el resto de criterios de lanzamiento de la especificación. El catálogo recoge los 34 nombres enumerados en la tabla: el documento los cuenta como 33 por error. Una entrada incompleta o inválida en edición puede perder su texto parcial al recargar; el dato válido guardado permanece.

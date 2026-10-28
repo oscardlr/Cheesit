@@ -1,0 +1,25 @@
+{
+  "mode": "built-in image_gen",
+  "reference": "public/assets/grind-gear-mythic.png",
+  "transparent_background": true,
+  "images": [
+    {
+      "id": "iron",
+      "name": "Cofre de hierro",
+      "prompt": "Use case: stylized-concept. Asset type: single chest illustration for GRIND fitness RPG app. Reference image is a STYLE REFERENCE ONLY: match its richly shaded retro pixel-art fantasy RPG equipment aesthetic, deep violet, near black, electric lime palette, stepped pixel edges, bright polished highlights and detailed game sprite rendering. Create ONE complete treasure chest at three-quarter front view, centered, fills 85% of square canvas, lid closed, sturdy wide chest. Actual transparent background, clean cutout and transparent padding. No words, letters, logos, watermark, text, frame, UI, ground or other objects. Strong readable silhouette at small card size. Keep illustration cohesive with violet/lime equipment reference. Subject: IRON CHEST, heavy forged dark gunmetal steel panels, silver iron reinforced corners and chunky rivets, violet inset bevels, centered lime green angular latch clasp, understated cool highlights. Practical rugged gym iron aesthetic. Rectangular metal lid slightly arched. Common tier: restrained and industrial, less ornate.",
+      "path": "public/assets/grind-chest-iron.png"
+    },
+    {
+      "id": "energy",
+      "name": "Cofre de energía",
+      "prompt": "Use case: stylized-concept. Asset type: single chest illustration for GRIND fitness RPG app. Reference image is a STYLE REFERENCE ONLY: match its richly shaded retro pixel-art fantasy RPG equipment aesthetic, deep violet, near black, electric lime palette, stepped pixel edges, bright polished highlights and detailed game sprite rendering. Create ONE complete treasure chest at three-quarter front view, centered, fills 85% of square canvas, lid closed, sturdy wide chest. Actual transparent background, clean cutout and transparent padding. No words, letters, logos, watermark, text, frame, UI, ground or other objects. Strong readable silhouette at small card size. Keep illustration cohesive with violet/lime equipment reference. Subject: ENERGY CHEST, advanced fantasy deep purple and black metal chest with luminous electric-lime energy conduits crossing its surfaces, bright green crystalline diamond core latch on front, bolts of violet and lime electricity contained close to edges, reinforced violet corners and emerald seams. Mid tier: powerful and energetic, highly detailed.",
+      "path": "public/assets/grind-chest-energy.png"
+    },
+    {
+      "id": "legend",
+      "name": "Cofre de leyenda",
+      "prompt": "Use case: stylized-concept. Asset type: single chest illustration for GRIND fitness RPG app. Reference image is a STYLE REFERENCE ONLY: match its richly shaded retro pixel-art fantasy RPG equipment aesthetic, deep violet, near black, electric lime palette, stepped pixel edges, bright polished highlights and detailed game sprite rendering. Create ONE complete treasure chest at three-quarter front view, centered, fills 85% of square canvas, lid closed, sturdy wide chest. Actual transparent background, clean cutout and transparent padding. No words, letters, logos, watermark, text, frame, UI, ground or other objects. Strong readable silhouette at small card size. Keep illustration cohesive with violet/lime equipment reference. Subject: LEGENDARY CHEST, magnificent ornate regal purple chest clad in polished gold frame and gold dragon wing motifs, large faceted electric-lime emerald crystal clasp, beautiful angular gilded reinforcement bands and small star-shaped gleams, purple gemstones, regal and rare. Highest tier: luxurious gold, purple, lime, visibly more prestigious than iron and energy tier. Entire chest visible.",
+      "path": "public/assets/grind-chest-legend.png"
+    }
+  ]
+}

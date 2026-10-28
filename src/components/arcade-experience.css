@@ -1,0 +1,23 @@
+.pixel-athlete{display:inline-block;position:relative;width:150px;aspect-ratio:1;flex-shrink:0;overflow:hidden;vertical-align:middle;filter:drop-shadow(0 9px 15px #0005)}
+.pixel-athlete>span{display:block;width:100%;height:100%;background-image:url('/assets/grind-athlete.png');background-size:200% 200%;background-repeat:no-repeat;image-rendering:pixelated;transform-origin:50% 75%}
+.pixel-athlete-bench>span{background-position:0 0;background-size:180% 200%}.pixel-athlete-victory>span{background-position:100% 0}.pixel-athlete-climb>span{background-position:0 100%}.pixel-athlete-idle>span{background-position:100% 100%}
+.pixel-athlete-victory>span{clip-path:inset(0 0 0 14%)}.pixel-athlete-idle>span{clip-path:inset(0 0 0 8%)}
+.pixel-athlete-bench>span{background-image:url('/assets/grind-bench-frames.png');background-size:400% auto;background-position:0% 50%}
+.pixel-athlete-bench.pixel-athlete-animated>span{animation:pixel-bench-frames 1.2s step-end infinite}.pixel-athlete-victory.pixel-athlete-animated>span{animation:pixel-victory 1.2s steps(4,end) infinite}.pixel-athlete-climb.pixel-athlete-animated>span{animation:pixel-climb 1.1s steps(4,end) infinite}.pixel-athlete-idle.pixel-athlete-animated>span{animation:pixel-idle 2s steps(4,end) infinite}
+.arcade-intro{position:fixed;left:calc(50% + 108px);top:calc(95px + var(--safe-area-top,0px));transform:translateX(-50%);z-index:70;display:flex;align-items:center;gap:16px;width:min(470px,calc(100vw - 32px));padding:16px 26px 16px 10px;border:1px solid #d8ff3e4a;border-radius:18px;background:linear-gradient(120deg,#2b223bee,#17131eee);box-shadow:0 20px 70px #0008;backdrop-filter:blur(14px);animation:arcade-intro-in .45s cubic-bezier(.2,.8,.2,1.1) both;pointer-events:none}
+.arcade-intro>.pixel-athlete{width:130px}.arcade-intro>div{flex:1}.arcade-intro>div>span{display:flex;align-items:center;gap:6px;color:#c0a3ef;font:700 8px monospace;letter-spacing:.08em}.arcade-intro strong{display:block;margin:9px 0;font-size:25px;font-weight:950;letter-spacing:-.05em;line-height:.98}.arcade-intro em{color:#d8ff3e;font-style:normal}.arcade-intro small{font-size:9px;color:#b7a9c5}.arcade-intro>button{position:absolute;right:8px;top:8px;display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:#ffffff0b;color:#bfaed0;pointer-events:auto}
+.arcade-tap{position:fixed;z-index:200;pointer-events:none;width:16px;height:16px;margin:-8px 0 0 -8px;border:2px solid #d8ff3eb3;border-radius:50%;animation:arcade-tap-out .45s ease-out both}
+html[data-arcade-effects="true"] button:hover:not(:disabled){transition:transform .18s,background .2s,box-shadow .2s}
+html[data-arcade-effects="true"] .stat-card:hover{transform:translateY(-3px);border-color:#b8a0ff60;transition:transform .25s,border-color .25s}
+html[data-arcade-effects="true"] .set-row:has(.confirm-set:disabled){animation:arcade-confirm .45s ease both}
+html[data-arcade-effects="false"] *,html[data-arcade-effects="false"] *::before,html[data-arcade-effects="false"] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+.arcade-intro-quiet{animation:none;backdrop-filter:none}
+@keyframes pixel-bench-frames{0%{background-position-x:0%}25%{background-position-x:33.333333%}50%{background-position-x:66.666667%}75%,100%{background-position-x:100%}}
+@keyframes pixel-victory{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-6px) rotate(2deg)}}
+@keyframes pixel-climb{0%,100%{transform:translate(-4px,4px) rotate(-3deg)}50%{transform:translate(4px,-5px) rotate(2deg)}}
+@keyframes pixel-idle{0%,100%{transform:scaleY(.98)}50%{transform:scaleY(1.02)}}
+@keyframes arcade-intro-in{from{opacity:0;transform:translate(-50%,-20px) scale(.9)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+@keyframes arcade-tap-out{from{opacity:1;transform:scale(.5)}to{opacity:0;transform:scale(4)}}
+@keyframes arcade-confirm{0%{background:#d8ff3e30;box-shadow:0 0 20px #d8ff3e18}100%{background:transparent;box-shadow:0 0 0 transparent}}
+@media(max-width:760px){.arcade-intro{left:50%;top:calc(85px + var(--safe-area-top,0px));gap:8px;padding:12px 22px 12px 6px}.arcade-intro>.pixel-athlete{width:100px}.arcade-intro strong{font-size:22px}.arcade-intro small{font-size:8px}}
+@media(prefers-reduced-motion:reduce){.pixel-athlete>span,.arcade-intro{animation:none!important}.arcade-tap{display:none}.arcade-intro{backdrop-filter:none}}

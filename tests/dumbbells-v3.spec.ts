@@ -1,0 +1,35 @@
+import { test, expect } from '@playwright/test';
+
+test('dumbbell exercise notes retain the entered per-hand weight and award XP for the correct load', async ({ page }) => {
+  await page.addInitScript(() => sessionStorage.setItem('grind-intro-v1', '1'));
+  await page.goto('/');
+  const navigation = page.getByRole('navigation', { name: 'Navegación principal' });
+  await navigation.getByRole('button', { name: 'Empezar entrenamiento', exact: true }).click();
+  await page.getByRole('main').getByRole('button', { name: /Empezar entrenamiento/ }).click();
+  await page.getByRole('button', { name: '＋ Añadir ejercicio' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /Press inclinado con mancuernas/ }).click();
+  const incline = page.locator('.exercise-card').filter({ has: page.getByText('Press inclinado con mancuernas', { exact: true }) });
+  await expect(incline.getByRole('note')).toContainText('Kg por mancuerna');
+  await expect(incline.getByRole('note')).toContainText('escribe 20 kg');
+  await expect(incline.getByRole('note')).toContainText('40 kg de carga total');
+  await page.getByLabel(/Carga.*serie 1 de Press inclinado con mancuernas/).fill('20');
+  await page.getByLabel('Repeticiones, serie 1 de Press inclinado con mancuernas').fill('8');
+  await incline.getByRole('button', { name: 'Confirmar serie 1', exact: true }).click();
+  await expect(page.locator('.celebration-reward')).toContainText('+57');
+  await page.getByRole('button', { name: 'Cerrar celebración' }).click();
+  await navigation.getByRole('button', { name: 'Resumen', exact: true }).click();
+  await expect(page.locator('.xp-label > strong')).toHaveText(/57 \/ 1\.?000 XP/);
+  await expect(page.getByRole('status')).toContainText('Guardado en este dispositivo');
+  await page.reload();
+  await page.getByRole('button', { name: /Continuar entrenamiento/ }).click();
+  await expect(page.getByLabel(/Carga.*serie 1 de Press inclinado con mancuernas/)).toHaveValue('20');
+  await page.getByRole('button', { name: '＋ Añadir ejercicio' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /Remo con mancuerna/ }).click();
+  const row = page.locator('.exercise-card').filter({ has: page.getByText('Remo con mancuerna', { exact: true }) });
+  await expect(row.getByRole('note')).toContainText('Kg de la mancuerna');
+  await expect(row.getByRole('note')).toContainText('una sola vez');
+  await page.getByLabel(/Carga.*serie 1 de Remo con mancuerna/).fill('20');
+  await page.getByLabel('Repeticiones, serie 1 de Remo con mancuerna').fill('8');
+  await row.getByRole('button', { name: 'Confirmar serie 1', exact: true }).click();
+  await expect(page.locator('.celebration-reward')).toContainText('+52');
+});

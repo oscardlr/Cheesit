@@ -1,0 +1,15 @@
+{
+  "name": "Entrenos",
+  "short_name": "Entrenos",
+  "description": "Cada rep cuenta. Entrena, conquista y sube de nivel.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#110f16",
+  "theme_color": "#110f16",
+  "lang": "es",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
