@@ -48,9 +48,9 @@ export default function ArcadeExperience({ loaded, effectsEnabled, soundEnabled 
     return () => document.removeEventListener('click', handleClick, true);
   }, [effectsEnabled]);
 
-  return intro ? <aside className={`arcade-intro ${effectsEnabled ? '' : 'arcade-intro-quiet'}`} aria-label="Bienvenido a GRIND">
+  return intro ? <aside className={`arcade-intro ${effectsEnabled ? '' : 'arcade-intro-quiet'}`} aria-label="Bienvenido a Cheesit">
     <PixelAthlete pose="bench" animated={effectsEnabled} />
-    <div><span><Dumbbell size={12} /> PLAYER 01 · READY</span><strong>OTRA REPE.<br/><em>OTRO NIVEL.</em></strong><small>Tu próxima versión empieza aquí.</small></div>
+    <div><span><Dumbbell size={12} /> CHEESIT · TU SESIÓN</span><strong>OTRA REPE.<br/><em>OTRO NIVEL.</em></strong><small>Elige rutina, registra y confirma tus series.</small></div>
     <button aria-label="Cerrar bienvenida" onClick={() => setIntro(false)}><X size={15}/></button>
   </aside> : null;
 }

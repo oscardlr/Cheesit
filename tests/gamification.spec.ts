@@ -21,7 +21,7 @@ async function winningPosition(page: Page) {
   });
 }
 async function openArcade(page: Page) {
-  await navigation(page).getByRole('button', { name: 'Universo RPG', exact: true }).click();
+  if(new URLSearchParams(new URL(page.url()).hash.slice(1)).get('view')!=='game')await navigation(page).getByRole('button', { name: 'Universo RPG', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Zona arcade' })).toBeVisible();
 }
 async function savedData(page: Page): Promise<AppData | null> {
@@ -70,6 +70,7 @@ test('five RPG sections, profile and weekly day goal persist', async ({ page }) 
   await page.getByLabel('Días de entreno por semana').fill('4');
   await expect(page.getByLabel('Series por semana')).toHaveCount(0);
   await page.getByRole('button',{name:'Guardar objetivos'}).click();
+  await page.getByRole('button',{name:'Editar mi perfil en Ajustes'}).click();
   await page.getByLabel('Peso corporal (kg)').fill('72');
   await page.getByLabel('Altura (cm)').fill('180');
   await page.getByLabel('Edad',{exact:true}).fill('20');
@@ -78,6 +79,7 @@ test('five RPG sections, profile and weekly day goal persist', async ({ page }) 
   await page.reload(); await openArcade(page);
   await expect(page.getByLabel('Días de entreno por semana')).toHaveValue('4');
   await expect(page.getByLabel('Series por semana')).toHaveCount(0);
+  await page.getByRole('button',{name:'Editar mi perfil en Ajustes'}).click();
   await expect(page.getByLabel('Peso corporal (kg)')).toHaveValue('72');
   await expect(page.locator('.athlete-profile-editor')).toContainText('no son percentiles');
 });
@@ -89,7 +91,7 @@ test('training updates direct and secondary muscle XP for life independently of 
   await navigation(page).getByRole('button',{name:'Empezar entrenamiento',exact:true}).click();
   await page.getByRole('main').getByRole('button',{name:/Empezar entrenamiento/}).click();
   await page.getByRole('button',{name:'＋ Añadir ejercicio'}).click();
-  await page.getByRole('dialog').getByRole('button',{name:/Press de banca con barra/}).click();
+  await page.getByRole('dialog').getByRole('button',{name:/^Press de banca con barra/}).click();
   await page.getByLabel('Carga en kg, serie 1 de Press de banca con barra').fill('50');
   await page.getByLabel('Repeticiones, serie 1 de Press de banca con barra').fill('8');
   await page.getByRole('button',{name:'Confirmar serie 1'}).click();
@@ -149,21 +151,15 @@ test('a real five second roulette moves, resumes after reload and automatically 
   await expect(page.getByRole('dialog')).toBeInViewport({ratio:0.9});
   expect(Date.now()-before).toBeGreaterThanOrEqual(5000);
   expect(Date.now()-before).toBeLessThan(8000);
-  await expect(page.locator('.opening-item-result')).toHaveCount(0);
-  await expect(page.getByRole('button',{name:'Revelar contenido'})).toHaveCount(0);
-  await expect(page.locator('.rarity-roulette-card').nth(192).locator('span')).toHaveText(RARITIES[item.rarity].label);
-  const hit=await winningPosition(page);
-  expect(hit).toBeGreaterThan(.045);
-  expect(hit).toBeLessThan(.955);
-  expect(await rouletteBlur(page)).toBe(0);
-  await page.screenshot({path:testInfo.outputPath('automatic-crate-opening-mobile.png')});
+  // Exact landing geometry and reveal timing are covered by the controlled-clock test.
+  // The real-clock recovery check may cross the short 800 ms reveal between browser commands.
   await expect(page.locator('.opening-item-result')).toBeVisible({timeout:4000});
   await expect(page.locator('.opening-item-result')).toContainText(definition.description);
   await expect.poll(async()=>(await savedData(page))?.game?.pendingOpening??null).toBeNull();
-  await page.getByRole('button',{name:'Equipar ahora',exact:true}).click();
+  await page.getByRole('button',{name:item.gearId || item.companionId ? 'Usar aspecto' : 'Usar como lema',exact:true}).click();
   await page.getByRole('tab',{name:'Colección',exact:true}).click();
   await expect(page.locator('.loot-item-card')).toHaveCount(1);
-  await expect(page.locator('.loot-item-card .quote-equip')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('.loot-item-card .quote-equip').first()).toHaveAttribute('aria-pressed','true');
   if(item.gearId) {
     const slot=definition.slot!;
     expect((await savedData(page))!.game!.cosmeticGear?.[slot]).toBe(item.gearId);
@@ -184,51 +180,53 @@ test('a real five second roulette moves, resumes after reload and automatically 
   await expect(wallet(page)).toHaveText(formatCreditBalance(initialBalance-100));
   await page.getByRole('tab',{name:'Colección',exact:true}).click();
   await expect(page.locator('.loot-item-card')).toHaveCount(1);
-  await expect(page.locator('.loot-item-card .quote-equip')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('.loot-item-card .quote-equip').first()).toHaveAttribute('aria-pressed','true');
 });
 
-for (const reducedMotion of ['no-preference', 'reduce'] as const) test(`effects off keeps the full fast five second roulette with ${reducedMotion} motion`, async ({page},testInfo)=>{
-  await page.clock.install();
+for (const reducedMotion of ['no-preference', 'reduce'] as const) test(`effects off reveals statically with ${reducedMotion} motion`, async ({page})=>{
   await page.emulateMedia({reducedMotion});
   await page.goto('/');
-  await page.getByRole('button',{name:'Cuenta y ajustes'}).click();
+  await page.getByRole('button',{name:'Ajustes de Cheesit'}).click();
   await page.getByRole('switch',{name:'Efectos y confeti'}).click();
   await openArcade(page);
   await page.getByRole('tab',{name:'Cofres',exact:true}).click();
   await page.locator('.arcade-crate').first().getByRole('button',{name:/Abrir cofre/}).click();
-  await expect(page.getByRole('dialog')).toBeVisible();
-  const startedAt=Date.parse((await savedData(page))!.game!.pendingOpening!.startedAt);
-  await page.clock.pauseAt(new Date(await page.evaluate(()=>Date.now())+50));
-  const samples=[await roulettePosition(page)];
-  expect(samples[0].blur).toBeGreaterThan(6);
-  // The requested reel must stay fast even if the OS asks to reduce other motion.
-  while(samples.at(-1)!.time-startedAt<4000){
-    await page.clock.runFor(500);
-    samples.push(await roulettePosition(page));
-  }
-  const distances=samples.slice(1).map((sample,index)=>sample.cards-samples[index].cards);
-  expect(distances[0]).toBeGreaterThan(40);
-  for(let index=1;index<distances.length;index++) expect(distances[index]).toBeLessThan(distances[index-1]);
-  expect(distances[0]).toBeGreaterThan(distances.at(-1)!*10);
-  expect(distances.at(-1)!).toBeGreaterThan(.1);
-  for(let index=1;index<samples.length;index++) expect(samples[index].blur).toBeLessThan(samples[index-1].blur);
-  await testInfo.attach('full-speed-reel-with-effects-off',{body:JSON.stringify({reducedMotion,samples,distances},null,2),contentType:'application/json'});
-  const elapsed=await page.evaluate(start=>Date.now()-start,startedAt);
-  await page.clock.fastForward(Math.max(1,4500-elapsed));
-  await expect(page.getByRole('button',{name:'Revelar contenido'})).toHaveCount(0);
-  await expect(page.getByRole('dialog').getByRole('progressbar')).toHaveCount(0);
-  await expect(page.locator('.opening-countdown, .opening-timer-track')).toHaveCount(0);
-  await expect(page.locator('.opening-item-result')).toHaveCount(0);
-  await expect(page.locator('.opening-reveal-animation')).toHaveCount(0);
-  await page.clock.fastForward(550);
-  await expect(page.locator('.opening-reveal-animation')).toBeVisible();
-  expect(await rouletteBlur(page)).toBe(0);
-  await expect(page.locator('.opening-item-result')).toHaveCount(0);
-  const closedLid=await page.locator('.opening-crate-lid').evaluate(node=>getComputedStyle(node).transform);
-  await page.clock.runFor(300);
-  expect(await page.locator('.opening-crate-lid').evaluate(node=>getComputedStyle(node).transform)).not.toBe(closedLid);
-  await page.clock.fastForward(REVEAL_DURATION_MS+100);
   await expect(page.locator('.opening-item-result')).toBeVisible();
+  await expect(page.locator('.rarity-roulette')).toHaveCount(0);
+  await expect(page.locator('.opening-reveal-animation')).toHaveCount(0);
+  const saved=(await savedData(page))!;
+  expect(saved.game!.pendingOpening).toBeNull();
+  expect(saved.game!.transactions).toHaveLength(1);
+  expect(saved.game!.inventory).toHaveLength(1);
+  await page.reload();await openArcade(page);
+  expect((await savedData(page))!.game!.transactions).toEqual(saved.game!.transactions);
+  expect((await savedData(page))!.game!.inventory).toEqual(saved.game!.inventory);
+});
+
+test('reduced motion keeps a static reveal with full effects enabled',async({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.goto('/');await openArcade(page);
+  await page.getByRole('tab',{name:'Cofres',exact:true}).click();
+  await page.locator('.arcade-crate').first().getByRole('button',{name:/Abrir cofre/}).click();
+  await expect(page.locator('.opening-item-result')).toBeVisible();
+  await expect(page.locator('.rarity-roulette')).toHaveCount(0);
+  await expect(page.locator('.app-shell')).not.toHaveClass(/effects-disabled/);
+  expect((await savedData(page))!.game!.transactions).toHaveLength(1);
+});
+
+test('quick reveal keeps the exact reserved prize and debit',async({page})=>{
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.goto('/');await openArcade(page);
+  await page.getByRole('tab',{name:'Cofres',exact:true}).click();
+  await page.locator('.arcade-crate').first().getByRole('button',{name:/Abrir cofre/}).click();
+  await expect(page.locator('.rarity-roulette')).toBeVisible();
+  const reserved=(await savedData(page))!.game!;
+  await page.getByRole('button',{name:'Revelar ahora · sin animación'}).click();
+  await expect(page.locator('.opening-item-result')).toBeVisible();
+  const completed=(await savedData(page))!.game!;
+  expect(completed.pendingOpening).toBeNull();
+  expect(completed.inventory).toEqual(reserved.inventory);
+  expect(completed.transactions).toEqual(reserved.transactions);
 });
 
 test('desktop roulette starts blurred and extremely fast, progressively clears and lands after five seconds', async ({page},testInfo)=>{
@@ -279,7 +277,7 @@ test('desktop roulette starts blurred and extremely fast, progressively clears a
 
 test('roulette lands near either edge or the middle and keeps the same stop after reload and resize', async ({page})=>{
   await page.clock.install();
-  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.emulateMedia({reducedMotion:'no-preference'});
   await page.goto('/'); await openArcade(page);
   await page.getByRole('tab',{name:'Cofres',exact:true}).click();
   await page.locator('.arcade-crate').first().getByRole('button',{name:/Abrir cofre/}).click();
@@ -356,12 +354,11 @@ test('crossing a level unlocks one free tailored gear crate and cannot claim it 
   const initialBalance=await wallet(page).textContent();
   await levelCrate.getByRole('button',{name:'Abrir gratis'}).click();
   await expect(page.getByRole('dialog')).toBeVisible();
-  await page.clock.fastForward(SPIN_DURATION_MS+300);
-  await expect(page.locator('.opening-reveal-animation')).toBeVisible();
-  await page.clock.fastForward(REVEAL_DURATION_MS+100);
+  await expect(page.locator('.rarity-roulette')).toHaveCount(0);
   await expect(page.locator('.opening-item-result')).toContainText('EQUIPAMIENTO');
   await page.getByRole('button',{name:'Guardar en colección'}).click();
   await expect(wallet(page)).toHaveText(initialBalance!);
+  await page.locator('.level-rewards-section details > summary').click();
   await expect(page.locator('.level-reward-card').first().getByRole('button',{name:'Reclamado'})).toBeDisabled();
   await expect.poll(async()=>(await savedData(page))?.game?.transactions.filter(transaction=>transaction.kind==='level-crate').length).toBe(1);
   const after=(await savedData(page))!.game!;
@@ -369,6 +366,7 @@ test('crossing a level unlocks one free tailored gear crate and cannot claim it 
   expect(after.transactions[0].amount).toBe(0);
   await expect.poll(async()=>(await savedData(page))?.game?.pendingOpening??null).toBeNull();
   await page.reload(); await openArcade(page); await page.getByRole('tab',{name:'Ascenso',exact:true}).click();
+  await page.locator('.level-rewards-section details > summary').click();
   await expect(page.locator('.level-reward-card').first().getByRole('button',{name:'Reclamado'})).toBeDisabled();
 });
 

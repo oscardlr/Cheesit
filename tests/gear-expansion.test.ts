@@ -17,8 +17,8 @@ import type { AppData, Workout } from '../src/lib/model';
 const expansion = GEAR.filter(gear => gear.artwork === 'forge');
 const originalIds = ['purple-tank', 'lime-shorts', 'crimson-shorts', 'dragon-head', 'champion-crown', 'headphones', 'titan-sword', 'plasma-blaster', 'violet-cape', 'neon-wings', 'golden-armor', 'training-tank', 'phoenix-crown', 'celestial-armor', 'storm-tank', 'void-greaves', 'mecha-shorts', 'thunder-hammer', 'starlight-gauntlet', 'solar-cape'];
 const groups: [string, string, MuscleId][] = [
-  ['Pecho', 'press-banca-barra', 'chest'], ['Espalda', 'jalon-pecho', 'back'], ['Hombro', 'press-militar', 'shoulders'],
-  ['Bíceps', 'curl-barra', 'biceps'], ['Tríceps', 'extension-triceps-polea', 'triceps'], ['Pierna y glúteo', 'extension-cuadriceps', 'quads'], ['Abdominales', 'crunch-abdominal', 'abs'],
+  ['Pecho', 'press-banca-barra', 'chest'], ['Espalda', 'remo-barra', 'back'], ['Hombro', 'press-militar', 'shoulders'],
+  ['Bíceps', 'curl-barra', 'biceps'], ['Tríceps', 'extension-triceps-polea', 'triceps'], ['Pierna y glúteo', 'sentadilla-barra', 'quads'], ['Abdominales', 'crunch-abdominal', 'abs'],
 ];
 
 function owned(gearId: string, copies = 1): GameState {
@@ -30,7 +30,7 @@ function owned(gearId: string, copies = 1): GameState {
 
 function workout(abilityId: string): Workout {
   return { id: crypto.randomUUID(), name: 'Entrenamiento de colección', color: '#0057C2', date: '2026-10-28', status: 'finished', createdAt: '2026-10-28T08:00:00Z', updatedAt: '2026-10-28T09:00:00Z', abilityId,
-    exercises: groups.map(([group, exerciseId, muscle]) => ({ id: crypto.randomUUID(), exerciseId, name: group, group, mode: 'external_load_reps', sets: Array.from({ length: 3 }, () => ({ id: crypto.randomUUID(), weight: 50, reps: 10, confirmed: true })) })) };
+    exercises: groups.map(([group, exerciseId, muscle]) => ({ id: crypto.randomUUID(), exerciseId, name: group, group, mode: 'external_load_reps', loadConvention: 'total', primaryMuscles: [muscle], secondaryMuscles: [], sets: Array.from({ length: 3 }, () => ({ id: crypto.randomUUID(), weight: 50, reps: 10, confirmed: true })) })) };
 }
 
 test('three complete native collections extend the original 20 stable gear definitions', () => {

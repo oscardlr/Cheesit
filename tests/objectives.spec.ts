@@ -21,7 +21,7 @@ async function stored(page:Page):Promise<AppData>{
 async function freshAccount(page:Page){
   await page.goto('/');
   await expect(page.getByRole('heading',{name:'Resumen'})).toBeVisible();
-  await expect.poll(async()=>Boolean((await stored(page))?.preferences)).toBe(true);
+  await expect(page.locator('.dashboard-footer .storage-status')).toContainText('Guardado en este dispositivo');
   const data:AppData={routines:[],workouts:[],customExercises:[],game:normalizeGame(),profile:DEFAULT_PROFILE,preferences:{effects:false,sound:false}};
   await page.evaluate(value=>new Promise<void>((resolve,reject)=>{
     const request=indexedDB.open('entrenos-local',1);request.onerror=()=>reject(request.error);
@@ -74,7 +74,7 @@ test('52 objectives show their XP and automatically award one completed workout 
   await nav(page).getByRole('button',{name:'Empezar entrenamiento',exact:true}).click();
   await page.getByRole('main').getByRole('button',{name:/Empezar entrenamiento/}).click();
   await page.getByRole('button',{name:'＋ Añadir ejercicio',exact:true}).click();
-  await page.getByRole('dialog').getByRole('button',{name:/Press de banca con barra/}).click();
+  await page.getByRole('dialog').getByRole('button',{name:/^Press de banca con barra/}).click();
   await page.getByLabel('Carga en kg, serie 1 de Press de banca con barra').fill('50');
   await page.getByLabel('Repeticiones, serie 1 de Press de banca con barra').fill('8');
   await page.getByRole('button',{name:'Confirmar serie 1',exact:true}).click();
@@ -82,7 +82,7 @@ test('52 objectives show their XP and automatically award one completed workout 
   await page.getByRole('button',{name:'Cerrar celebración',exact:true}).click();
   expect((await stored(page)).game?.missionRewards??[]).toEqual([]);
   await page.getByRole('button',{name:'Finalizar entrenamiento',exact:true}).click();
-  await expect(page.getByRole('dialog',{name:'OTRO NIVEL.',exact:true})).toBeVisible();
+  await expect(page.getByRole('dialog',{name:'SESIÓN COMPLETADA.',exact:true})).toBeVisible();
   await expect.poll(async()=>(await stored(page)).game?.missionRewards?.length??0).toBe(2);
   await page.getByRole('button',{name:'A por el siguiente nivel',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Resumen'})).toBeVisible();
@@ -113,6 +113,7 @@ test('52 objectives show their XP and automatically award one completed workout 
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
   }
 
+  await nav(page).getByRole('button',{name:'Resumen',exact:true}).click();
   await page.reload();
   await expect(page.getByRole('heading',{name:'Resumen'})).toBeVisible();
   await expect(page.locator('.xp-label > strong')).toHaveText(/410\s*\/\s*1\.?000 XP/);

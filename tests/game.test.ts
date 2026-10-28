@@ -167,7 +167,7 @@ test('backups restore sound and effects preferences and accept old copies withou
   assert.deepEqual(restored.merged.preferences, { effects: false, sound: true });
   assert.notStrictEqual(restored.merged.preferences, incoming.preferences);
   const current: AppData = { ...data(), preferences: { effects: true, sound: false } };
-  assert.deepEqual(previewBackup(createBackup(incoming), current).merged.preferences, incoming.preferences);
+  assert.deepEqual(previewBackup(createBackup(incoming), current).merged.preferences, current.preferences);
   assert.deepEqual(previewBackup(createBackup(data()), current).merged.preferences, current.preferences);
   assert.equal(previewBackup(createBackup(data()), data()).merged.preferences, undefined);
   const invalid = createBackup(data());
@@ -324,7 +324,7 @@ test('every reached level has a tailored free gear crate and can be claimed only
   assert.deepEqual(restored.merged.game, reloaded);
 });
 
-test('merging a newer ledger cannot equip the hidden duplicate of a sold last quote', () => {
+test('merging preserves a permanently obtained sold motto without exposing its hidden duplicate', () => {
   const now = new Date().toISOString();
   const oldItem = { id: crypto.randomUUID(), quoteId: 'show-up', rarity: 'common' as const, acquiredAt: now, crateId: 'starter', sold: false };
   const current: GameState = { ...normalizeGame(), inventory: [oldItem], equippedQuoteId: oldItem.quoteId,
@@ -338,9 +338,14 @@ test('merging a newer ledger cannot equip the hidden duplicate of a sold last qu
   assert.ok(isGameState(incoming));
   const merged = previewBackup(createBackup(data(incoming)), data(current));
   assert.equal(merged.conflicts.length, 0);
-  assert.equal(merged.merged.game!.equippedQuoteId, null);
+  assert.equal(merged.merged.game!.equippedQuoteId, oldItem.quoteId);
   assert.equal(merged.merged.game!.pendingOpening?.itemId, hiddenDuplicate.id);
   assert.strictEqual(equipItem(merged.merged.game!, hiddenDuplicate.id), merged.merged.game);
+  const hiddenOnly:GameState={...normalizeGame(),inventory:[hiddenDuplicate],transactions:[incoming.transactions.at(-1)!],pendingOpening:incoming.pendingOpening};
+  assert.ok(isGameState(hiddenOnly));
+  assert.strictEqual(equipItem(hiddenOnly,hiddenDuplicate.id),hiddenOnly);
+  assert.equal(hiddenOnly.equippedQuoteId,null);
+  assert.equal(isGameState({...hiddenOnly,equippedQuoteId:oldItem.quoteId}),false);
 });
 
 test('backup merges retain valid equipped instances and do not resurrect sold gear or reset pending prizes', () => {

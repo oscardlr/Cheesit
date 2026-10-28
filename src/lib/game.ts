@@ -47,6 +47,7 @@ export const REVEAL_DURATION_MS = 800;
 export const GEAR_DROP_CHANCE = .55;
 export const QUOTE_DROP_CHANCE = .25;
 export const COMPANION_DROP_CHANCE = .2;
+export type RewardChoice = { avoidCompanionDuplicates?: boolean; gearSlot?: GearSlot };
 export type PendingOpening = { itemId: string; startedAt: string; stage: 'spinning' | 'rarity' | 'revealing'; revealStartedAt?: string };
 export type GameState = {
   transactions: GameTransaction[];
@@ -154,7 +155,7 @@ export function isGameState(value: unknown): value is GameState {
     } else return false;
   }
   if (![...items.values()].every(item => purchased.has(item.id) && sold.has(item.id) === item.sold) ||
-    (value.equippedQuoteId !== null && ![...items.values()].some(item => !item.sold && item.quoteId === value.equippedQuoteId))) return false;
+    (value.equippedQuoteId !== null && ![...items.values()].some(item => item.quoteId === value.equippedQuoteId))) return false;
   if (value.equippedGear !== undefined) {
     if (!record(value.equippedGear)) return false;
     for (const [slot, itemId] of Object.entries(value.equippedGear)) {
@@ -173,7 +174,7 @@ export function isGameState(value: unknown): value is GameState {
     if (record(value.equippedGear) && Object.values(value.equippedGear).includes(item.id)) return false;
     if (item.quoteId && value.equippedQuoteId === item.quoteId) {
       // A duplicate quote may already be equipped through an earlier owned card.
-      if (![...items.values()].some(candidate => candidate.id !== item.id && !candidate.sold && candidate.quoteId === item.quoteId)) return false;
+      if (![...items.values()].some(candidate => candidate.id !== item.id && candidate.quoteId === item.quoteId)) return false;
     }
   }
   const revealedGear = new Set([...items.values()].filter(item => item.id !== (record(value.pendingOpening) ? value.pendingOpening.itemId : null) && item.gearId).map(item => item.gearId));
@@ -220,7 +221,7 @@ export function awardMissionRewards(game: GameState, history: Workout[], day: st
 }
 
 /** Deleted sessions can remove unspent earning power, never make the displayed balance negative. */
-export function gameBalance(game: GameState, history: Workout[], profile?: AthleteProfile, testAllowance=TEST_CREDITS): number {
+export function gameCreditStatus(game: GameState, history: Workout[], profile?: AthleteProfile, testAllowance=TEST_CREDITS) {
   const unique = new Set<string>();
   const abilityCredits = history.reduce((sum, workout) => {
     if (workout.status !== 'finished' || unique.has(workout.id) || !isAbilityUse(workout.abilityReward) || workout.abilityReward.workoutId !== workout.id || workout.abilityReward.abilityId !== workout.abilityId ||
@@ -228,9 +229,21 @@ export function gameBalance(game: GameState, history: Workout[], profile?: Athle
       !(game.abilityUses ?? []).some(use => use.workoutId === workout.id && use.abilityId === workout.abilityReward!.abilityId && use.bonusCredits === workout.abilityReward!.bonusCredits)) return sum;
     unique.add(workout.id); return sum + workout.abilityReward.bonusCredits;
   }, 0);
-  const earned=Math.max(0,100+Math.floor(gameProgress(game,history,profile).xp/5)+abilityCredits+game.transactions.filter(transaction=>!transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0));
+  const rawEarned=100+Math.floor(gameProgress(game,history,profile).xp/5)+abilityCredits+game.transactions.filter(transaction=>!transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0);
+  const earned=Math.max(0,rawEarned);
   const testing=testAllowance>0?testAllowance+game.transactions.filter(transaction=>transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0):0;
-  return Math.max(0,earned+testing);
+  return { balance: Math.max(0,earned+testing), earnedBalance: earned, deficit: Math.max(0,-rawEarned), testingBalance: testing };
+}
+
+export function gameBalance(game: GameState, history: Workout[], profile?: AthleteProfile, testAllowance=TEST_CREDITS): number {
+  return gameCreditStatus(game, history, profile, testAllowance).balance;
+}
+
+/** Preview the existing recalculation policy before deleting activity; never rewrites the ledger. */
+export function activityEconomyAdjustment(game: GameState, before: Workout[], after: Workout[], profile?: AthleteProfile) {
+  const previous = gameCreditStatus(game, before, profile), next = gameCreditStatus(game, after, profile);
+  return { xpDelta: gameProgress(game, after, profile).xp - gameProgress(game, before, profile).xp,
+    balanceDelta: next.balance - previous.balance, deficitBefore: previous.deficit, deficitAfter: next.deficit };
 }
 
 function randomUnit(): number {
@@ -249,8 +262,12 @@ export function rarityForRoll(crate: Pick<Crate, 'odds'>, roll: number): Rarity 
 }
 
 /** Quotes never repeat; a completed quote rarity converts its 25% share to gear. */
-export function rewardForRoll(rarity: Rarity, kindRoll: number, itemRoll: number, forceGear = false, inventory: readonly InventoryItem[] = []): ItemDefinition {
-  const gearPool = () => GEAR.filter(candidate => candidate.rarity === rarity).map(candidate => ({ ...candidate, kind: 'gear' as const }));
+export function rewardForRoll(rarity: Rarity, kindRoll: number, itemRoll: number, forceGear = false, inventory: readonly InventoryItem[] = [], choice: RewardChoice = {}): ItemDefinition {
+  const gearPool = () => {
+    const sameRarity = GEAR.filter(candidate => candidate.rarity === rarity);
+    const chosenSlot = forceGear && choice.gearSlot ? sameRarity.filter(candidate => candidate.slot === choice.gearSlot) : [];
+    return (chosenSlot.length ? chosenSlot : sameRarity).map(candidate => ({ ...candidate, kind: 'gear' as const }));
+  };
   let pool: ItemDefinition[];
   if (forceGear || kindRoll < GEAR_DROP_CHANCE) {
     pool = gearPool();
@@ -263,12 +280,16 @@ export function rewardForRoll(rarity: Rarity, kindRoll: number, itemRoll: number
     if (!pool.length) pool = gearPool();
   } else {
     pool = COMPANIONS.filter(candidate => candidate.rarity === rarity).map(candidate => ({ ...candidate, kind: 'companion' as const }));
+    if (choice.avoidCompanionDuplicates) {
+      const fresh = pool.filter(candidate => !inventory.some(item => item.companionId === candidate.id));
+      pool = fresh.length ? fresh : gearPool();
+    }
   }
   return pool[Math.min(pool.length - 1, Math.max(0, Math.floor(itemRoll * pool.length)))];
 }
 
-function openReward(game: GameState, crateId: string, rarity: Rarity, transaction: { kind: 'crate'; amount: number } | { kind: 'level-crate'; amount: 0; sourceLevel: number }) {
-  const definition = rewardForRoll(rarity, randomUnit(), randomUnit(), transaction.kind === 'level-crate', game.inventory);
+function openReward(game: GameState, crateId: string, rarity: Rarity, transaction: { kind: 'crate'; amount: number } | { kind: 'level-crate'; amount: 0; sourceLevel: number }, choice: RewardChoice = {}) {
+  const definition = rewardForRoll(rarity, randomUnit(), randomUnit(), transaction.kind === 'level-crate', game.inventory, choice);
   const now = new Date(Date.now()).toISOString();
   const item: InventoryItem = { id: crypto.randomUUID(), kind: definition.kind,
     ...(definition.kind === 'gear' ? { gearId: definition.id } : definition.kind === 'companion' ? { companionId: definition.id } : { quoteId: definition.id }),
@@ -279,18 +300,18 @@ function openReward(game: GameState, crateId: string, rarity: Rarity, transactio
 }
 
 /** Cost, hidden prize and recovery state commit together, before the roulette starts. */
-export function openCrate(game: GameState, history: Workout[], crateId: string, profile?: AthleteProfile): { game: GameState; item: InventoryItem } | null {
+export function openCrate(game: GameState, history: Workout[], crateId: string, profile?: AthleteProfile, choice: RewardChoice = {}): { game: GameState; item: InventoryItem } | null {
   const crate = CRATES.find(candidate => candidate.id === crateId);
   if (!crate || !isGameState(game) || game.pendingOpening || gameBalance(game, history, profile) < crate.cost) return null;
   const rarity = rarityForRoll(crate, randomUnit());
-  return openReward(game, crate.id, rarity, { kind: 'crate', amount: -crate.cost });
+  return openReward(game, crate.id, rarity, { kind: 'crate', amount: -crate.cost }, choice);
 }
 
-export function openLevelCrate(game: GameState, history: Workout[], level: number, profile?: AthleteProfile): { game: GameState; item: InventoryItem } | null {
+export function openLevelCrate(game: GameState, history: Workout[], level: number, profile?: AthleteProfile, choice: RewardChoice = {}): { game: GameState; item: InventoryItem } | null {
   if (!isGameState(game) || game.pendingOpening || !Number.isInteger(level) || level < 2 || level > 9999 || level > gameProgress(game, history, profile).level ||
     game.transactions.some(transaction => transaction.kind === 'level-crate' && transaction.sourceLevel === level)) return null;
   const crate = levelCrate(level);
-  return openReward(game, crate.id, rarityForRoll(crate, randomUnit()), { kind: 'level-crate', amount: 0, sourceLevel: level });
+  return openReward(game, crate.id, rarityForRoll(crate, randomUnit()), { kind: 'level-crate', amount: 0, sourceLevel: level }, choice);
 }
 
 /** The prize stays hidden until both stages have finished, including after a reload. */
@@ -308,6 +329,11 @@ export function completeOpening(game: GameState): GameState {
   return { ...game, pendingOpening: null };
 }
 
+/** A static/quick reveal changes presentation only: the original debit and prize stay intact. */
+export function revealReservedOpening(game: GameState): GameState {
+  return game.pendingOpening && isGameState(game) ? { ...game, pendingOpening: null } : game;
+}
+
 /** Items cannot be sold. Keep the old entry point harmless for existing callers. */
 export function sellItem(game: GameState, _itemId: string): GameState {
   return game;
@@ -315,7 +341,8 @@ export function sellItem(game: GameState, _itemId: string): GameState {
 
 export function equipItem(game: GameState, itemId: string | null): GameState {
   if (itemId === null) return { ...game, equippedQuoteId: null };
-  const item = game.inventory.find(candidate => candidate.id === itemId && !candidate.sold);
+  // Old sales remain in the ledger; obtaining a quote permanently unlocks its motto.
+  const item = game.inventory.find(candidate => candidate.id === itemId);
   return item?.quoteId && game.pendingOpening?.itemId !== item.id ? { ...game, equippedQuoteId: item.quoteId } : game;
 }
 
@@ -345,6 +372,10 @@ export function unlockedGear(game: GameState) {
 export function unlockedCompanions(game: GameState): Companion[] {
   const unlocked = new Set(game.inventory.filter(item => item.id !== game.pendingOpening?.itemId && item.companionId).map(item => item.companionId));
   return COMPANIONS.filter(companion => unlocked.has(companion.id));
+}
+export function unlockedQuotes(game: GameState): Quote[] {
+  const obtained = new Set(game.inventory.filter(item => item.id !== game.pendingOpening?.itemId).map(item => item.quoteId));
+  return QUOTES.filter(quote => obtained.has(quote.id));
 }
 export function equipCosmetic(game: GameState, gearId: string | null, slot?: GearSlot): GameState {
   if (!isGameState(game)) return game;

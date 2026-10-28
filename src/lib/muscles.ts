@@ -92,7 +92,7 @@ export function muscleActivity(history: Workout[], today: string, days: number, 
   for (const workout of history) {
     if (workout.status === 'deleted' || workout.date > today) continue;
     for (const exercise of workout.exercises) {
-      const known = mapping[exercise.exerciseId];
+      const known = exercise.primaryMuscles ? { primary: exercise.primaryMuscles, secondary: exercise.secondaryMuscles ?? [] } : mapping[exercise.exerciseId];
       const targets: Involvement = known ?? { primary: groupFallback[exercise.group] ?? [], secondary: [] };
       const sets = exercise.sets.filter(set => {
         if (!set.confirmed || !validSet(set, exercise.mode) || visited.has(set.id)) return false;
@@ -101,7 +101,8 @@ export function muscleActivity(history: Workout[], today: string, days: number, 
       if (!sets.length) continue;
       for (const primary of [true, false]) {
         for (const target of primary ? targets.primary : targets.secondary) {
-          const muscle = byId.get(target)!;
+          const muscle = byId.get(target);
+          if (!muscle) continue;
           const factor = primary ? 1 : 0.5;
           muscle.lifetimeSets += sets.length * factor;
           muscle.xp += sets.reduce((sum, set) => sum + (earned.get(set.id)?.xp ?? 0) * factor, 0);

@@ -12,7 +12,7 @@ import { appearanceGear, CharacterParty, CompanionSprite, GearSprite, SLOT_LABEL
 import './wardrobe-v3.css';
 import './wardrobe-motion.css';
 
-type Props={game:GameState;level:number;effectsEnabled:boolean;soundEnabled:boolean;onChange:(transform:(current:GameState)=>GameState)=>void;onNotice:(message:string)=>void;onOpenCrates:()=>void;onResumeOpening:()=>void};
+type Props={game:GameState;level:number;effectsEnabled:boolean;soundEnabled:boolean;onChange:(transform:(current:GameState)=>GameState)=>Promise<void>;onNotice:(message:string)=>void;onOpenCrates:()=>void;onResumeOpening:()=>void};
 type Panel='inventory'|'looks'|'abilities';
 type LookSlot=GearSlot|'companion';
 type Look={kind:'gear';slot:GearSlot;definition:Gear}|{kind:'companion';slot:'companion';definition:Companion};
@@ -28,6 +28,8 @@ const gearCollections=Array.from(new Set(GEAR.flatMap(gear=>gear.collection?[gea
 
 export default function WardrobeV3({game,level,effectsEnabled,soundEnabled,onChange,onNotice,onOpenCrates,onResumeOpening}:Props){
   const [panel,setPanel]=useState<Panel>('inventory');
+  const saveLock=useRef(false);
+  const [saving,setSaving]=useState(false);
   const [filter,setFilter]=useState<Rarity|'all'>('all');
   const [kind,setKind]=useState<'all'|'gear'|'quote'|'companion'>('all');
   const [lookFilter,setLookFilter]=useState<LookSlot|'all'>('all');
@@ -48,7 +50,7 @@ export default function WardrobeV3({game,level,effectsEnabled,soundEnabled,onCha
     looksRef.current?.focus({preventScroll:true});
     looksRef.current?.scrollIntoView({block:'start',behavior:'instant'});
   },[lookFocusRequest]);
-  const inventory=game.inventory.filter(item=>!item.sold&&item.id!==game.pendingOpening?.itemId);
+  const inventory=game.inventory.filter(item=>(!item.sold||Boolean(item.quoteId))&&item.id!==game.pendingOpening?.itemId);
   const stacks=new Map<string,{item:InventoryItem;definition:ItemDefinition;quantity:number}>();
   for(const item of inventory){
     const definition=getItemDefinition(item);if(!definition)continue;
@@ -58,8 +60,8 @@ export default function WardrobeV3({game,level,effectsEnabled,soundEnabled,onCha
   }
   const filtered=Array.from(stacks.values()).filter(({item,definition})=>(filter==='all'||item.rarity===filter)&&(kind==='all'||definition.kind===kind)).sort((a,b)=>rarestFirst(a.item,b.item)||inventoryKindOrder[a.definition.kind]-inventoryKindOrder[b.definition.kind]);
   const active=getAbilityDefinition(game.activeAbilityId);
-  const change=(transform:(current:GameState)=>GameState,message:string,sound='confirm')=>{onChange(transform);onNotice(message);if(soundEnabled)playSound(sound)};
-  return <div className={`wardrobe-v3 ${effectsEnabled?'':'is-quiet'}`}>
+  const change=async(transform:(current:GameState)=>GameState,message:string,sound='confirm')=>{if(saveLock.current)return;saveLock.current=true;setSaving(true);try{await onChange(transform);onNotice(message);if(soundEnabled)playSound(sound)}catch{onNotice('No se ha confirmado el guardado. Reintenta desde el aviso de la app.');if(soundEnabled)playSound('error')}finally{saveLock.current=false;setSaving(false)}};
+  return <div className={`wardrobe-v3 ${effectsEnabled?'':'is-quiet'}`} aria-busy={saving}>
     <div className="wardrobe-stage"><div className="wardrobe-character-preview"><CharacterParty game={game} level={level} motion={motion} animated={effectsEnabled&&!motionPaused}/><div className="character-motion-controls"><div className="character-motion-heading"><span><i/> DALE VIDA</span><button type="button" disabled={!effectsEnabled} aria-label={motionPaused?'Reanudar animación':'Pausar animación'} aria-pressed={motionPaused} onClick={()=>setMotionPaused(value=>!value)}>{motionPaused?<Play size={13}/>:<Pause size={13}/>}</button></div><nav aria-label="Animaciones del personaje">{CHARACTER_MOTIONS.map(item=><button type="button" key={item.id} aria-pressed={motion===item.id} onClick={()=>setMotion(item.id)}>{item.label}</button>)}</nav><p>{!effectsEnabled?'Activa los efectos de la app para ver sus movimientos.':motionPaused?'Animación en pausa.':CHARACTER_MOTIONS.find(item=>item.id===motion)?.description}</p><small className="character-reduced-motion-note">Movimiento reducido activado en tu dispositivo.</small></div></div><div className="wardrobe-slots">{(Object.keys(SLOT_LABELS) as (keyof typeof SLOT_LABELS)[]).map(slot=>{
       const current=equipped.find(item=>item.slot===slot)?.definition;
       return <div className="wardrobe-slot" data-slot={slot} key={slot}><button className="wardrobe-slot-shortcut" aria-label={`Ver aspectos de ${SLOT_LABELS[slot]}`} onClick={()=>openLooks(slot)}>{current?<GearSprite gearId={current.id}/>:<Shirt size={27}/>}<span className="wardrobe-slot-copy"><small>{SLOT_LABELS[slot]}</small><strong>{current?.name??(slot==='top'?'Tirantes básicos':slot==='bottom'?'Bóxer inicial':'Sin equipar')}</strong></span><ArrowRight size={13}/></button>{current&&<button className="wardrobe-slot-remove" aria-label={`Quitar equipo de ${SLOT_LABELS[slot]}`} onClick={()=>change(value=>equipCosmetic(value,null,slot),'Aspecto guardado. Sigue desbloqueado para siempre.')}>Quitar pieza</button>}</div>;
@@ -67,7 +69,7 @@ export default function WardrobeV3({game,level,effectsEnabled,soundEnabled,onCha
       <button className="wardrobe-slot-shortcut" aria-label="Ver aspectos de Compañera" onClick={()=>openLooks('companion')}>{companion?<CompanionSprite companionId={companion.id} animated={effectsEnabled}/>:<Heart size={27}/>}<span className="wardrobe-slot-copy"><small>Compañera</small><strong>{companion?.name??'Sin equipar'}</strong></span><ArrowRight size={13}/></button>
       {companion&&<button className="wardrobe-slot-remove" aria-label="Quitar compañera del armario" onClick={()=>change(value=>equipCompanion(value,null),'Compañera guardada. Sigue disponible en tu inventario.')}>Quitar compañera</button>}
     </div></div></div>
-    <div className="wardrobe-permanence"><Star size={18}/><p><strong>Tu colección se queda contigo.</strong> Los objetos no se pueden vender. Cada frase se consigue una sola vez. El equipo y las compañeras repetidas muestran su cantidad; el equipo suma cargas de habilidad. Agotarlas conserva el aspecto.</p></div>
+    <div className="wardrobe-permanence"><Star size={18}/><p><strong>Tu colección se queda contigo.</strong> Los objetos no se pueden vender. Las frases obtenidas, también las vendidas en versiones antiguas, quedan disponibles como lema permanente. El equipo y las compañeras repetidas muestran su cantidad; el equipo suma cargas de habilidad. Agotarlas conserva el aspecto.</p></div>
     <nav className="collection-subtabs" aria-label="Organizar colección">{panels.map(({id,label,Icon})=><button key={id} aria-pressed={panel===id} onClick={()=>{setPanel(id);setFilter('all')}}><Icon size={15}/>{label}</button>)}</nav>
     {panel==='inventory'&&<>
       <div className="collection-counts"><span>{inventory.length} copias disponibles</span><span>{available.length+companions.length} aspectos desbloqueados</span><span>{companions.length} compañeras</span></div>
@@ -81,6 +83,7 @@ export default function WardrobeV3({game,level,effectsEnabled,soundEnabled,onCha
           <div className="quote-card-top"><span><i/>{RARITIES[item.rarity].label}</span>{selected?<span><Check size={12}/> EQUIPADO</span>:<Sparkles size={18}/>}</div>
           {item.gearId?<><div className="gear-card-preview"><GearSprite gearId={item.gearId}/></div><span className="gear-slot-tag">{definition.slot?SLOT_LABELS[definition.slot]:'EQUIPO'}</span><h3 className="gear-item-name">{definition.name}</h3><p className="gear-item-description">{definition.description}</p>{ability&&<><GearAbility gearId={item.gearId}/><p className="ability-drop-note">+{chargeLabel(ability.chargesPerDrop)} por copia revelada.</p></>}</>:item.companionId?<><div className="inventory-companion-art"><CompanionSprite companionId={item.companionId} animated={effectsEnabled}/></div><h3 className="gear-item-name">{definition.name}</h3><p className="gear-item-description">{definition.description}</p></>:<blockquote>“{definition.description}”</blockquote>}
           <small>CONSEGUIDO EL {new Intl.DateTimeFormat('es-ES',{day:'numeric',month:'short',timeZone:'Europe/Madrid'}).format(new Date(item.acquiredAt))}</small>
+          {item.sold&&item.quoteId&&<p className="legacy-quote-note">Frase recuperada de una venta antigua. Se conservan la venta y sus créditos.</p>}
           <div className="quote-card-actions"><button className="quote-equip" aria-pressed={selected} onClick={()=>{
             if(item.gearId)change(value=>equipCosmetic(value,selected?null:item.gearId!,definition.slot),selected?'Pieza guardada en tus aspectos.':'Aspecto equipado. Sus cargas se activan en Habilidades.');
             else if(item.companionId)change(value=>equipCompanion(value,selected?null:item.companionId!),'Compañera actualizada. La verás junto a tu personaje.');

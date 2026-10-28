@@ -10,6 +10,7 @@ coverage/
 *.tsbuildinfo
 test-results/
 playwright-report/
+public/offline-manifest.json
 test-results-gamification/
 artifacts/arcade-visual/
 artifacts/iphone-fix/

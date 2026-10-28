@@ -27,7 +27,7 @@ test('routine, confirmed series, recovery and calendar persist locally', async (
   await expect(page.getByRole('status')).toContainText('Guardado en este dispositivo');
 
   await page.reload();
-  await page.getByRole('button', { name: /Continuar entrenamiento/ }).click();
+  await expect(page.getByRole('heading', { name: 'Entrenamiento', exact: true })).toBeVisible();
   await expect(page.getByLabel('Carga en kg, serie 1 de Press de banca con barra')).toHaveValue('50');
   await expect(page.getByLabel('Repeticiones, serie 1 de Press de banca con barra')).toHaveValue('8');
   await expect(page.getByRole('button', { name: 'Realizada 1' })).toBeVisible();
@@ -36,7 +36,7 @@ test('routine, confirmed series, recovery and calendar persist locally', async (
     await dialog.accept();
   });
   await page.getByRole('button', { name: 'Finalizar entrenamiento' }).click();
-  await expect(page.getByRole('dialog', { name: 'OTRO NIVEL.' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'SESIÓN COMPLETADA.' })).toBeVisible();
   await page.getByRole('button', { name: 'A por el siguiente nivel' }).click();
   await expect(page.getByRole('heading', { name: 'Resumen' })).toBeVisible();
   await expect(page.getByRole('status')).toContainText('Guardado en este dispositivo');

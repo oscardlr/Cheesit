@@ -100,7 +100,7 @@ export default function Celebration({ event, onDismiss, effectsEnabled, soundEna
   if (!event) return null;
   const isWorkout = event.kind === 'workout';
   const isRecord = Boolean(event.record);
-  const title = isWorkout ? 'OTRO NIVEL.' : isRecord ? 'NUEVO RÉCORD.' : 'SERIE CONQUISTADA.';
+  const title = isWorkout ? (levelUp ? 'OTRO NIVEL.' : 'SESIÓN COMPLETADA.') : isRecord ? 'NUEVO RÉCORD.' : 'SERIE CONQUISTADA.';
   const Icon = isWorkout || isRecord ? Trophy : Zap;
 
   return (

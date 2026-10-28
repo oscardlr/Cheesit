@@ -29,8 +29,9 @@ function owned(inventory:InventoryItem[]):GameState{
 
 async function seed(page:Page,game:GameState){
   expect(isGameState(game)).toBe(true);
+  if(game.pendingOpening)await page.emulateMedia({reducedMotion:'no-preference'});
   await page.goto('/');await expect(page.getByRole('heading',{name:'Resumen'})).toBeVisible();
-  await expect.poll(async()=>Boolean((await stored(page))?.preferences)).toBe(true);
+  await expect(page.locator('.dashboard-footer .storage-status')).toContainText('Guardado en este dispositivo');
   await page.evaluate(data=>new Promise<void>((resolve,reject)=>{
     const request=indexedDB.open('entrenos-local',1);request.onerror=()=>reject(request.error);
     request.onsuccess=()=>{
@@ -38,11 +39,13 @@ async function seed(page:Page,game:GameState){
       tx.objectStore('state').put(data,'local');
       tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>reject(tx.error);
     };
-  }),{routines:[],workouts:[],customExercises:[],game,profile:DEFAULT_PROFILE,preferences:{effects:false,sound:false}});
+  }),{routines:[],workouts:[],customExercises:[],game,profile:DEFAULT_PROFILE,preferences:{effects:Boolean(game.pendingOpening),sound:false}});
   await page.reload();await expect(page.getByRole('heading',{name:'Resumen'})).toBeVisible();
 }
 
 async function collection(page:Page){
+  if(new URLSearchParams(new URL(page.url()).hash.slice(1)).get('view')==='game'){await expect(page.getByRole('tab',{name:'Colección',exact:true})).toHaveAttribute('aria-selected','true');return}
+  await page.getByRole('navigation',{name:'Navegación principal'}).getByRole('button',{name:'Resumen',exact:true}).click();
   await page.getByRole('button',{name:'Personalizar personaje'}).click();
   await expect(page.getByRole('tab',{name:'Colección',exact:true})).toHaveAttribute('aria-selected','true');
 }
@@ -91,7 +94,7 @@ test('inventory groups legacy quote duplicates without counters and keeps equipm
   await expect(page.locator('.quote-collection .loot-item-card')).toHaveCount(1);
   await companion.getByRole('button',{name:'Equipar compañera',exact:true}).click();
   await page.locator('.collection-type-filters').getByRole('button',{name:'Todo',exact:true}).click();
-  await gear.getByRole('button',{name:'Equipar pieza',exact:true}).click();
+  await gear.getByRole('button',{name:'Usar aspecto',exact:true}).click();
   await expect.poll(async()=>(await stored(page)).game?.cosmeticGear?.bottom).toBe('lime-shorts');
   const saved=(await stored(page)).game!;
   expect(saved.inventory).toEqual(initial.inventory);expect(saved.transactions).toEqual(initial.transactions);
@@ -103,7 +106,7 @@ test('inventory groups legacy quote duplicates without counters and keeps equipm
   await expect(quote).toHaveCount(1);await expect(quote.locator('.inventory-quantity')).toHaveCount(0);
   await expect(page.locator('.loot-item-card[data-item-kind="quote"] .inventory-quantity')).toHaveCount(0);
   await expect(companion.locator('.inventory-quantity')).toHaveText('2x');
-  await expect(gear.getByRole('button',{name:'Quitar pieza',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(gear.getByRole('button',{name:'Quitar aspecto',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(quote.getByRole('button',{name:'Quitar lema',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(companion.getByRole('button',{name:'Quitar compañera',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(page.getByRole('button',{name:/Vender/})).toHaveCount(0);
@@ -191,6 +194,7 @@ test('companions equip from inventory and the sixth wardrobe slot and persist wi
   await expect(card(page,'companion','dragon-queen').getByRole('button',{name:'Quitar compañera',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(card(page,'companion','athlete').getByRole('button',{name:'Equipar compañera',exact:true})).toHaveAttribute('aria-pressed','false');
   await expect.poll(async()=>(await stored(page)).game?.equippedCompanionId).toBe('dragon-queen');
+  await page.getByRole('navigation',{name:'Navegación principal'}).getByRole('button',{name:'Resumen',exact:true}).click();
   await page.reload();
   await expect(page.locator('.character-summary-card .character-party .companion-sprite')).toHaveAttribute('data-companion-id','dragon-queen');
   await collection(page);
@@ -241,7 +245,7 @@ test('all six wardrobe shortcuts open their aspect filter by keyboard when empty
     await expect(looks).toBeFocused();
     const first=page.locator('.cosmetic-card').first();
     await first.getByRole('button',{name:slot==='companion'?'Equipar compañera':'Usar aspecto',exact:true}).click();
-    await expect(first.locator('.wardrobe-action')).toHaveAttribute('aria-pressed','true');
+    await expect(first.getByRole('button',{name:slot==='companion'?'Quitar compañera':'Quitar aspecto',exact:true})).toHaveAttribute('aria-pressed','true');
     await expect(stageSlot.getByRole('button',{name:/^Quitar /})).toHaveCount(1);
   }
   await expect.poll(async()=>Object.keys((await stored(page)).game?.cosmeticGear??{}).length).toBe(5);
@@ -252,7 +256,7 @@ test('all six wardrobe shortcuts open their aspect filter by keyboard when empty
     await page.locator(`.wardrobe-slot[data-slot="${slot}"]`).getByRole('button',{name:`Ver aspectos de ${shortcut}`,exact:true}).click();
     await filteredTo(slot,filter);
     await expect(looks).toBeFocused();
-    await expect(page.locator('.cosmetic-card .wardrobe-action[aria-pressed="true"]')).toHaveCount(1);
+    await expect(page.locator('.cosmetic-card').getByRole('button',{name:slot==='companion'?'Quitar compañera':'Quitar aspecto',exact:true})).toHaveCount(1);
   }
 
   // The same categories also work directly, and Todos restores the complete
@@ -381,9 +385,18 @@ test('locked aspects show grayscale gear and companion artwork without equip act
   await expect(locked.locator('[data-gear-id="purple-tank"],[data-companion-id="athlete"]')).toHaveCount(0);
   const artwork=cards.locator('.cosmetic-locked-art>[role="img"]');
   await expect(artwork).toHaveCount(expected);
-  for(const style of await artwork.evaluateAll(elements=>elements.map(element=>({filter:getComputedStyle(element).filter,background:getComputedStyle(element).backgroundImage})))){
-    expect(style.filter).toContain('grayscale(1)');
-    expect(style.background).toMatch(/grind-(gear|companions)/);
+  const images=await artwork.evaluateAll(elements=>Promise.all(elements.map(async element=>{
+    const style=getComputedStyle(element);
+    const source=style.backgroundImage==='none'?element.querySelector('image')?.getAttribute('href'):style.backgroundImage.match(/url\(["']?([^"')]+)["']?\)/)?.[1];
+    const image=new Image();
+    if(source)image.src=source;
+    try{if(source)await image.decode()}catch{/* A missing or corrupt atlas is asserted below. */}
+    return {filter:style.filter,source,loaded:image.complete&&image.naturalWidth>0};
+  })));
+  for(const image of images){
+    expect(image.filter).toContain('grayscale(1)');
+    expect(image.source).toMatch(/grind-(gear|companions)/);
+    expect(image.loaded,`Locked artwork must load: ${image.source}`).toBe(true);
   }
   const ranks=await cards.evaluateAll(elements=>elements.map(element=>({common:0,rare:1,epic:2,legendary:3}[element.getAttribute('data-rarity') as 'common'|'rare'|'epic'|'legendary'])));
   expect(ranks).toEqual([...ranks].sort((left,right)=>right-left));

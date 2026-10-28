@@ -37,6 +37,43 @@ const entries: [string, string, string, ExerciseMode?][] = [
   ['elevacion-piernas', 'Elevación de piernas', 'Abdominales', 'bodyweight_reps'],
   ['crunch-polea', 'Crunch en polea', 'Abdominales'],
 ];
-export const CATALOG: Exercise[] = entries.map(([id, name, group, mode]) => ({ id, name, group, mode: mode ?? 'external_load_reps' }));
+/** Original Cheesit descriptions, CC BY 4.0; no copied photos, diagrams or third-party text. */
+const guides: Record<string, [string, string, string]> = {
+  'press-banca-barra': ['Empuje horizontal con barra y apoyo en banco.', 'Mantén los pies apoyados y baja la barra de forma controlada antes de volver a empujar.', 'Banco, barra y discos'],
+  'press-inclinado-mancuernas': ['Empuje con dos mancuernas en un banco inclinado.', 'Apoya la espalda, controla el descenso y registra el peso de cada mancuerna según la convención indicada.', 'Banco inclinable y dos mancuernas'],
+  'aperturas-mancuernas': ['Apertura de brazos tumbado en banco.', 'Mantén una flexión cómoda de codos y abre sin forzar el recorrido del hombro.', 'Banco y dos mancuernas'],
+  'aperturas-polea': ['Aproximación de los brazos con resistencia de poleas.', 'Conserva una posición estable y junta las manos con un recorrido controlado.', 'Dos poleas con asas'],
+  flexiones: ['Empuje del cuerpo con las manos apoyadas.', 'Mantén el tronco alineado y adapta el apoyo o la inclinación para controlar cada repetición.', 'Suelo o apoyo estable'],
+  'jalon-pecho': ['Tracción vertical de una barra de polea hacia el torso.', 'Mantén el torso estable y lleva los codos hacia abajo sin balancearte.', 'Polea alta y barra'],
+  'remo-barra': ['Tracción de barra con el tronco inclinado.', 'Estabiliza la posición del tronco y acerca la barra sin impulsarte con la cadera.', 'Barra y discos'],
+  'remo-polea-baja': ['Tracción horizontal desde una polea baja.', 'Tira llevando los codos atrás y vuelve de forma controlada, sin balancear el torso.', 'Polea baja y agarre'],
+  'remo-mancuerna': ['Remo con una mancuerna, un lado cada vez.', 'Usa un apoyo estable y acerca la mancuerna al torso sin girarlo. Las reps cuentan el lado registrado.', 'Mancuerna y apoyo estable'],
+  dominadas: ['Tracción del cuerpo suspendido de una barra.', 'Evita el balanceo y elige un recorrido que puedas controlar al subir y bajar.', 'Barra de dominadas'],
+  'sentadilla-barra': ['Flexión y extensión de piernas con barra.', 'Mantén el apoyo estable y baja hasta un recorrido que puedas controlar antes de levantarte.', 'Rack, barra y discos'],
+  'prensa-piernas': ['Empuje de una plataforma desde una posición sentada.', 'Ajusta el asiento, conserva la espalda apoyada y controla el regreso de la plataforma.', 'Máquina de prensa'],
+  'peso-muerto-convencional': ['Elevación de una barra desde el suelo con piernas y cadera.', 'Acerca la barra al cuerpo y mantén una posición de tronco estable durante el movimiento.', 'Barra y discos'],
+  'peso-muerto-rumano': ['Bisagra de cadera con barra y rodillas ligeramente flexionadas.', 'Lleva la cadera hacia atrás y mantén la carga cerca del cuerpo con un descenso controlado.', 'Barra y discos'],
+  'hip-thrust': ['Extensión de cadera con la espalda alta apoyada.', 'Mantén los pies estables y termina extendiendo la cadera sin exagerar el arco lumbar.', 'Banco estable y carga externa'],
+  'extension-cuadriceps': ['Extensión de rodillas en una máquina sentada.', 'Ajusta el eje y los apoyos de la máquina y mueve la carga sin impulso.', 'Máquina de extensión de piernas'],
+  'curl-femoral': ['Flexión de rodillas contra la resistencia de una máquina.', 'Ajusta los apoyos y conserva la posición del tronco mientras flexionas y vuelves.', 'Máquina de curl femoral'],
+  'elevacion-gemelos': ['Elevación de talones contra una resistencia.', 'Sube y baja los talones con control y usa un apoyo estable para el equilibrio.', 'Máquina, carga y apoyo estable'],
+  'zancadas-mancuernas': ['Paso y flexión de piernas con dos mancuernas.', 'Mantén el equilibrio y un paso que permita controlar el descenso. Registra las reps realizadas.', 'Dos mancuernas y espacio libre'],
+  'press-militar': ['Empuje vertical con una barra.', 'Mantén una base estable y eleva la barra sin impulsarte con las piernas.', 'Barra y discos'],
+  'press-hombros-mancuernas': ['Empuje vertical con dos mancuernas.', 'Conserva el tronco estable y coordina el descenso y empuje de ambas mancuernas.', 'Dos mancuernas y banco opcional'],
+  'elevaciones-laterales': ['Elevación de los brazos hacia los lados.', 'Usa una flexión cómoda de codos y evita balancearte para mover la carga.', 'Dos mancuernas'],
+  'elevaciones-frontales': ['Elevación de los brazos hacia delante.', 'Controla el recorrido y evita impulsar las mancuernas con el tronco.', 'Dos mancuernas'],
+  'pajaros-mancuernas': ['Apertura de brazos con el tronco inclinado.', 'Estabiliza el tronco y separa los brazos sin convertir el movimiento en un remo.', 'Dos mancuernas y apoyo opcional'],
+  'curl-barra': ['Flexión de codos con una barra.', 'Mantén los codos cerca del torso y baja la barra con control, sin balanceo.', 'Barra recta o Z y discos'],
+  'curl-alterno-mancuernas': ['Flexión de codos alternando los brazos.', 'Registra el total de movimientos alternos; la carga corresponde a una mancuerna.', 'Dos mancuernas'],
+  'curl-martillo': ['Flexión de codos con agarre neutro y dos mancuernas.', 'Mantén las palmas orientadas entre sí y evita balancear el tronco.', 'Dos mancuernas'],
+  'curl-polea': ['Flexión de codos contra una polea.', 'Conserva el torso estable y controla tanto la subida como el retorno.', 'Polea baja y agarre'],
+  'extension-triceps-polea': ['Extensión de codos desde una polea alta.', 'Mantén los brazos cerca del torso y extiende los codos sin mover los hombros en exceso.', 'Polea alta y agarre'],
+  'extension-cabeza-mancuerna': ['Extensión de codos con una mancuerna sobre la cabeza.', 'Sujeta una única mancuerna y controla el recorrido. Registra su peso una sola vez.', 'Una mancuerna'],
+  'press-frances': ['Flexión y extensión de codos tumbado con barra.', 'Mantén una posición cómoda de brazos y baja la carga con control.', 'Banco y barra Z o recta'],
+  'crunch-abdominal': ['Flexión corta del tronco tumbado.', 'Acerca el tórax a la pelvis de forma controlada sin tirar del cuello.', 'Suelo o colchoneta'],
+  'elevacion-piernas': ['Elevación de piernas con control del tronco.', 'Adapta el recorrido o flexiona las rodillas para mantener el movimiento controlado.', 'Suelo, banco o soporte'],
+  'crunch-polea': ['Flexión del tronco contra una polea alta.', 'Acerca el tórax a la pelvis manteniendo las manos como apoyo de la carga.', 'Polea alta y cuerda'],
+};
+export const CATALOG: Exercise[] = entries.map(([id, name, group, mode]) => ({ id, name, group, mode: mode ?? 'external_load_reps', description: guides[id]?.[0], technique: guides[id]?.[1], equipment: guides[id]?.[2] }));
 export const GROUPS = [...new Set(CATALOG.map((exercise) => exercise.group))];
 export function normalizeSearch(value: string): string { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, ' '); }

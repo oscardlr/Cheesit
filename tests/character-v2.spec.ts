@@ -5,10 +5,7 @@ import { DEFAULT_PROFILE } from '../src/lib/strength';
 import type { AppData } from '../src/lib/model';
 
 async function putFixture(page:Page,data:AppData){
-  await expect.poll(()=>page.evaluate(()=>new Promise<boolean>(resolve=>{
-    const request=indexedDB.open('entrenos-local',1);
-    request.onsuccess=()=>{const db=request.result;const tx=db.transaction('state','readonly');const get=tx.objectStore('state').get('local');get.onsuccess=()=>resolve(Boolean(get.result?.preferences));tx.oncomplete=()=>db.close()};
-  }))).toBe(true);
+  await expect(page.locator('.dashboard-footer .storage-status')).toContainText('Guardado en este dispositivo');
   await page.evaluate(value=>new Promise<void>((resolve,reject)=>{
     const request=indexedDB.open('entrenos-local',1);request.onerror=()=>reject(request.error);
     request.onsuccess=()=>{const db=request.result;const tx=db.transaction('state','readwrite');tx.objectStore('state').put(value,'local');tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>reject(tx.error)};
@@ -63,6 +60,7 @@ test('five gear layers render and unequipping preserves inventory through reload
   await expect(page.locator('.quote-collection .loot-item-card')).toHaveCount(5);
   await expect(page.locator('.wardrobe-stage .character-slot-hand')).toHaveCount(1);
   await expect(page.locator('.wardrobe-stage .character-equipped')).toHaveCount(4);
+  await page.getByRole('navigation',{name:'Navegación principal'}).getByRole('button',{name:'Resumen',exact:true}).click();
   await page.reload();
   await page.getByRole('button',{name:'Personalizar personaje'}).click();
   await expect(page.locator('.wardrobe-stage .character-equipped')).toHaveCount(4);

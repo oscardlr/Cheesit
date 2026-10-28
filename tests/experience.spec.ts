@@ -41,7 +41,7 @@ test('series celebrate once and XP survives edits, completion and reload', async
 
   await page.getByRole('button', { name: /Continuar entrenamiento/ }).click();
   await page.getByRole('button', { name: 'Finalizar entrenamiento' }).click();
-  const victory = page.getByRole('dialog', { name: 'OTRO NIVEL.' });
+  const victory = page.getByRole('dialog', { name: 'SESIÓN COMPLETADA.' });
   await expect(victory).toBeVisible();
   await expect(victory.locator('.celebration-reward')).toContainText('+350');
   await page.screenshot({ path: testInfo.outputPath('workout-victory.png'), animations: 'disabled' });
@@ -57,7 +57,7 @@ test('series celebrate once and XP survives edits, completion and reload', async
 
 test('experience preferences persist and quiet mode still confirms a series', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Cuenta y ajustes' }).click();
+  await page.getByRole('button', { name: 'Ajustes de Cheesit' }).click();
   const effects = page.getByRole('switch', { name: 'Efectos y confeti' });
   const sound = page.getByRole('switch', { name: 'Sonido de victoria' });
   await expect(effects).toBeChecked();
@@ -65,7 +65,7 @@ test('experience preferences persist and quiet mode still confirms a series', as
   await effects.click();
   await sound.click();
   await page.reload();
-  await page.getByRole('button', { name: 'Cuenta y ajustes' }).click();
+  await expect(page.getByRole('heading', { name: 'Ajustes', exact: true })).toBeVisible();
   await expect(effects).not.toBeChecked();
   await expect(sound).not.toBeChecked();
 
@@ -89,11 +89,10 @@ test('discarding historical edits through new session preserves the original wor
   await page.locator('.list-card .list-row').click();
   await page.getByRole('button', { name: 'Editar entrenamiento', exact: true }).click();
   await page.getByLabel('Carga en kg, serie 1 de Press de banca con barra').fill('90');
-  page.once('dialog', async dialog => {
-    expect(dialog.message()).toContain('Descartar los cambios');
-    await dialog.accept();
-  });
   await page.getByRole('navigation').getByRole('button', { name: 'Empezar entrenamiento', exact: true }).click();
+  const unsaved = page.getByRole('dialog', { name: 'Cambios pendientes' });
+  await expect(unsaved).toBeVisible();
+  await unsaved.getByRole('button', { name: 'Descartar cambios' }).click();
   await expect(page.getByRole('heading', { name: 'Empezar entrenamiento', exact: true })).toBeVisible();
   await page.getByRole('navigation').getByRole('button', { name: 'Calendario', exact: true }).click();
   await page.locator('.list-card .list-row').click();

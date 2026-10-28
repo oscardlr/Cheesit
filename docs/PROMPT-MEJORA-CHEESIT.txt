@@ -1,0 +1,40 @@
+Actúa como responsable de producto, UX y desarrollo de Cheesit, una PWA de registro de fuerza con gamificación RPG. Mejora la app existente a partir de la revisión /Users/oscardlr/Desktop/Cheesit/docs/REVIEW-APP-2026-10-28.md. Primero lee el informe, AGENTS.md y las guías relevantes de la versión instalada de Next en node_modules/next/dist/docs/. Revalida cada hallazgo antes de cambiarlo: las líneas y el código pueden haber evolucionado.
+
+Objetivo: hacer que registrar una sesión sea rápido, entender el progreso sea sencillo y conservar el historial sea fiable. Mantén la identidad oscura, violeta y lima y el carácter RPG. Conserva las preferencias del usuario. Trabaja por fases con cambios verificables; evita una reescritura general.
+
+FASE 1. Fiabilidad y errores.
+- Garantiza que toda copia generada por la app se restaura en una instalación vacía. Distingue valores temporales de borradores y series confirmadas. No elimines datos válidos para hacer pasar el importador.
+- Valida series previstas como enteros entre 1 y 20 antes de guardar.
+- Evita sobrescrituras entre pestañas mediante revisiones y coordinación, o impide claramente una segunda instancia de edición.
+- Haz accesibles todos los borradores por identificador y fecha, o limita coherentemente a uno.
+- Define y unifica volumen y convención de carga en bilateral, alterno, unilateral y datos antiguos. Conserva los pesos introducidos; no dupliques retrospectivamente registros de pareja.
+- Agrupa bloques del mismo ejercicio por entrenamiento antes de comparar sesiones. Corrige copiar filas inexistentes y protege cambios de rutinas al navegar.
+- Usa días distintos en todas las metas semanales; considera múltiples sesiones importadas y cambios de meta ya recompensada.
+- Comunica éxito solo tras el commit, muestra errores recuperables y permite reintentar/exportar. Revisa segundo plano, cierre y recuperación.
+- Respeta movimiento reducido con revelado estático; conserva premio reservado, débito único e idempotencia. Mantén el giro rápido actual de cinco segundos para quien elija animación completa: es una preferencia previa que no debe eliminarse globalmente.
+- Versiona y verifica la caché offline; muestra preparación, fallo y actualización sin perder borradores.
+- Revisa también nombres duplicados largos y conflictos de importación con versiones distintas; ofrece resolución comprensible.
+
+FASE 2. Registro y UX.
+- Añade descanso configurable y duración de sesión, valores previos reutilizables sin autoconfirmación, copiar todas las series y crear las filas faltantes.
+- Amplía rutinas con reps/rangos, carga objetivo, descanso y notas; añade RPE/RIR opcional, sustitución y reordenación durante sesión, repetir sesión y guardar como rutina.
+- Permite varias sesiones al día conservando el cálculo semanal por días.
+- Compacta el encabezado de entrenamiento y prioriza sesión activa, siguiente rutina y últimas marcas en el Resumen habitual.
+- Muestra pocos objetivos relevantes y deja el resto filtrable/plegable. Mueve el perfil a un lugar fácil de encontrar.
+- Unifica Cheesit/Entrenos/GRIND, corrige textos y plurales, elimina microtexto ilegible y comprueba navegación, foco, zoom y uso táctil.
+- Mejora los ejercicios propios: edición/archivo, modalidad, convención de carga y músculos principales/secundarios. Añade fichas y recursos del catálogo con derechos claros.
+
+FASE 3. Progreso y juego.
+- Añade gráficos de carga/reps/volumen y 1RM estimado solo donde sea válido, buscador global de progreso y acceso desde la sesión.
+- Revisa recompensas repetidas del mismo récord y cambios retroactivos de XP/créditos al actualizar el perfil. Propón migraciones explícitas y compatibles antes de cambiar la economía guardada.
+- Explica ajustes por borrar actividad. Recupera frases legacy obtenidas sin reescribir el ledger.
+- Ofrece dos acciones claras por objeto: usar aspecto y preparar habilidad. Explica carga, beneficio y consumo.
+- Mejora el valor de duplicados de compañeras y las recompensas elegibles; ofrece apertura rápida como elección sin sustituir la animación completa preferida. Adapta los retos al plan personal y distingue actividad registrada de condición física.
+
+SINCRONIZACIÓN.
+La cuenta y sync preparadas no están conectadas ni validadas en vivo. Mantén el modo local. Si entra en el alcance de esta implementación, conecta y prueba el flujo completo con aislamiento de usuarios, revisiones, cola offline, idempotencia, cierre/cambio de cuenta, conflictos y recuperación. No presentes el código existente como servicio operativo. No publiques ni actives servicios externos sin la autorización correspondiente.
+
+VERIFICACIÓN.
+Reproduce primero cada fallo importante y añade pruebas de regresión útiles. Comprueba round-trip de respaldo, borradores inválidos/incompletos, decimales, pestañas concurrentes, cambios de fecha, mancuernas, bloques duplicados, metas y aperturas recuperadas. Ejecuta typecheck, build, tests de dominio y navegador; estabiliza los tests dependientes de animaciones sin ocultar errores reales. Prueba 320/390/768/1440 px, teclado, zoom, movimiento reducido, arranque offline y actualización con sesión pendiente. Separa pruebas de escritorio de lo que requiera iPhone/Android físicos.
+
+Al terminar cada fase, entrega qué cambió, qué evidencia demuestra que funciona, qué falta y cualquier decisión que necesite criterio de producto. Prioriza fiabilidad y comodidad antes de añadir más contenido RPG. No incorpores nutrición completa, feed social ni entrenador de IA en estas fases.

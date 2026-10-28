@@ -1,4 +1,4 @@
-import { validSet, type WorkoutExercise, type WorkoutSet } from './model';
+import { CATALOG_LOAD_CONVENTIONS, resolvedLoadConvention, validSet, type WorkoutExercise, type WorkoutSet } from './model';
 
 export type AthleteProfile = {
   weightKg: number;
@@ -35,21 +35,6 @@ const GAME_REFERENCES: Record<string, { ratio: number; name: string }> = {
   'press-militar': { ratio: 0.6, name: 'Press militar: 0,6 × tu peso' },
   'remo-barra': { ratio: 0.8, name: 'Remo: 0,8 × tu peso' },
 };
-type DumbbellExecution = 'pair' | 'alternating' | 'single';
-/** Stable catalogue IDs only: a custom exercise's name cannot silently change its load. */
-const DUMBBELL_EXERCISES: Record<string, DumbbellExecution> = {
-  'press-inclinado-mancuernas': 'pair',
-  'aperturas-mancuernas': 'pair',
-  'zancadas-mancuernas': 'pair',
-  'press-hombros-mancuernas': 'pair',
-  'elevaciones-laterales': 'pair',
-  'elevaciones-frontales': 'pair',
-  'pajaros-mancuernas': 'pair',
-  'curl-martillo': 'pair',
-  'curl-alterno-mancuernas': 'alternating',
-  'remo-mancuerna': 'single',
-  'extension-cabeza-mancuerna': 'single',
-};
 const ESTIMATED_MAX_EXERCISES = new Set(['press-banca-barra', 'sentadilla-barra', 'peso-muerto-convencional']);
 
 export type ExerciseLoadConvention = {
@@ -61,21 +46,22 @@ export type ExerciseLoadConvention = {
 };
 
 /** The editor and XP use this same declaration instead of separate exercise lists. */
-export function exerciseLoadConvention(exercise: Pick<WorkoutExercise, 'exerciseId' | 'mode'>, profile?: AthleteProfile): ExerciseLoadConvention {
+export function exerciseLoadConvention(exercise: Pick<WorkoutExercise, 'exerciseId' | 'mode' | 'loadConvention'>, profile?: AthleteProfile): ExerciseLoadConvention {
   if (exercise.mode === 'bodyweight_reps') return { isDumbbell: false, heading: 'Peso corporal', hint: 'La carga externa es cero; la XP usa tus repeticiones y tu progreso.', inputSuffix: 'kg', effectiveMultiplier: 0 };
-  const execution = Object.hasOwn(DUMBBELL_EXERCISES, exercise.exerciseId) ? DUMBBELL_EXERCISES[exercise.exerciseId] : undefined;
-  if (!execution) return { isDumbbell: false, heading: 'Carga registrada', hint: 'Introduce la carga indicada para este ejercicio.', inputSuffix: 'kg', effectiveMultiplier: 1 };
-  if (execution === 'pair' && normalizeProfile(profile).dumbbellLoad === 'pair') {
+  const execution = Object.hasOwn(CATALOG_LOAD_CONVENTIONS, exercise.exerciseId) ? CATALOG_LOAD_CONVENTIONS[exercise.exerciseId] : undefined;
+  const convention = resolvedLoadConvention(exercise, profile);
+  if (convention === 'total' && !execution) return { isDumbbell: false, heading: 'Carga total registrada', hint: 'Introduce la carga externa total. El volumen suma esa carga × repeticiones.', inputSuffix: 'kg', effectiveMultiplier: 1 };
+  if (convention === 'total') {
     return { isDumbbell: true, heading: 'Suma de las dos mancuernas · perfil antiguo', inputSuffix: 'kg en total', effectiveMultiplier: 1,
-      hint: 'Tu perfil conserva el registro por pareja: si cada mancuerna pesa 20 kg, anota 40 kg. La XP utiliza ese total una sola vez.' };
+      hint: 'Este registro conserva la carga total: si cada mancuerna pesa 20 kg, anota 40 kg. La XP y el volumen utilizan ese total una sola vez.' };
   }
-  if (execution === 'pair') {
+  if (convention === 'per_unit_bilateral') {
     return { isDumbbell: true, heading: 'Kg por mancuerna', inputSuffix: 'kg por mancuerna', effectiveMultiplier: 2,
-      hint: 'Anota el peso de una sola mancuerna. Si llevas 20 kg en cada brazo, escribe 20 kg. La XP tiene en cuenta las dos mancuernas: 40 kg de carga total.' };
+      hint: 'Anota el peso de una sola mancuerna. Si llevas 20 kg en cada brazo, escribe 20 kg. La XP y el volumen tienen en cuenta las dos mancuernas: 40 kg de carga total.' };
   }
-  if (execution === 'alternating') {
+  if (convention === 'per_unit_alternating') {
     return { isDumbbell: true, heading: 'Kg por mancuerna', inputSuffix: 'kg por mancuerna', effectiveMultiplier: 1,
-      hint: 'Anota el peso de una sola mancuerna. Si usas 20 kg en cada brazo, escribe 20 kg; al trabajar de forma alterna, la XP considera la carga de cada brazo sin sumarla dos veces.' };
+      hint: 'Anota el peso de una sola mancuerna y el total de repeticiones alternas. Si usas 20 kg en cada brazo, escribe 20 kg; la XP y el volumen consideran la carga de cada movimiento sin sumarla dos veces.' };
   }
   return { isDumbbell: true, heading: 'Kg de la mancuerna', inputSuffix: 'kg por mancuerna', effectiveMultiplier: 1,
     hint: exercise.exerciseId === 'extension-cabeza-mancuerna'
@@ -83,18 +69,18 @@ export function exerciseLoadConvention(exercise: Pick<WorkoutExercise, 'exercise
       : 'Anota el peso de la mancuerna que levanta cada brazo. Si usas una de 20 kg, escribe 20 kg. La XP cuenta esa carga una sola vez.' };
 }
 
-export function effectiveLoad(exercise: Pick<WorkoutExercise, 'exerciseId' | 'mode'>, weight: number, profile?: AthleteProfile): number {
+export function effectiveLoad(exercise: Pick<WorkoutExercise, 'exerciseId' | 'mode' | 'loadConvention'>, weight: number, profile?: AthleteProfile): number {
   const multiplier = exerciseLoadConvention(exercise, profile).effectiveMultiplier;
   return multiplier === 0 ? 0 : weight * multiplier;
 }
 
 /** Informational Brzycki estimate. No extrapolation beyond ten reps, no machine/custom equivalence. */
-export function estimatedOneRepMax(exercise: Pick<WorkoutExercise, 'exerciseId' | 'mode'>, set: WorkoutSet): number | null {
+export function estimatedOneRepMax(exercise: Pick<WorkoutExercise, 'exerciseId' | 'mode' | 'loadConvention'>, set: WorkoutSet): number | null {
   if (exercise.mode !== 'external_load_reps' || !ESTIMATED_MAX_EXERCISES.has(exercise.exerciseId) || !validSet(set, exercise.mode) || set.weight! <= 0 || set.reps! > 10) return null;
   return Math.round(set.weight! * 36 / (37 - set.reps!) * 10) / 10;
 }
 
-export function strengthReference(exercise: Pick<WorkoutExercise, 'exerciseId' | 'mode'>, set: WorkoutSet, profile?: AthleteProfile) {
+export function strengthReference(exercise: Pick<WorkoutExercise, 'exerciseId' | 'mode' | 'loadConvention'>, set: WorkoutSet, profile?: AthleteProfile) {
   const current = normalizeProfile(profile);
   const target = GAME_REFERENCES[exercise.exerciseId];
   const effectiveWeightKg = effectiveLoad(exercise, set.weight ?? 0, current);

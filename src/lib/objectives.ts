@@ -2,7 +2,7 @@ import { addDays, isCivilDate, todayMadrid, weekStart } from './dates';
 import { validSet, type Workout } from './model';
 
 export type MissionReward = { id: string; xp: number; target: number; awardedAt: string };
-export type Mission = { id: string; title: string; description: string; current: number; target: number; complete: boolean; unit: string; xp: number; scope: 'weekly' | 'career'; rewarded: boolean };
+export type Mission = { id: string; title: string; description: string; current: number; target: number; complete: boolean; unit: string; xp: number; scope: 'weekly' | 'career'; rewarded: boolean; rewardNote?: string };
 type MissionState = { weeklyWorkoutGoal: number; missionRewards?: MissionReward[] };
 type Stats = { days: number; sessions: number; sets: number; reps: number; exercises: number; groups: number; byGroup: Map<string, number> };
 type Metric = Exclude<keyof Stats, 'byGroup'> | `group:${string}`;
@@ -61,7 +61,10 @@ export function getObjectiveMissions(history: Workout[], day: string, game: Miss
     const reward = earned.get(id), target = reward?.target ?? (definition.personal ? game.weeklyWorkoutGoal : definition.target);
     const source = definition.scope === 'weekly' ? thisWeek : lifetime;
     const current = definition.metric.startsWith('group:') ? source.byGroup.get(definition.metric.slice(6)) ?? 0 : source[definition.metric as Exclude<keyof Stats, 'byGroup'>];
-    return { id, title: definition.title, description: definition.description, current: reward ? Math.max(target, current) : current, target, unit: definition.unit, xp: definition.xp, scope: definition.scope, complete: Boolean(reward) || current >= target, rewarded: Boolean(reward) };
+    const rewardNote = reward && definition.personal && target !== game.weeklyWorkoutGoal
+      ? `Recompensa obtenida con ${target} ${target === 1 ? 'día' : 'días'}. Tu meta actual es ${game.weeklyWorkoutGoal}; se usará para la recompensa de la próxima semana. Esta semana no se cobra otra vez.`
+      : reward ? 'Recompensa conservada aunque edites o borres actividad. El contador refleja el historial actual.' : undefined;
+    return { id, title: definition.title, description: definition.description, current, target, unit: definition.unit, xp: definition.xp, scope: definition.scope, complete: Boolean(reward) || current >= target, rewarded: Boolean(reward), ...(rewardNote ? { rewardNote } : {}) };
   });
 }
 

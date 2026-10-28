@@ -145,7 +145,7 @@ test('reduced motion and the saved effects preference stop articulated animation
   await expect.poll(() => runningAnimations(avatar(page))).toBe(0);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await expect.poll(() => runningAnimations(avatar(page))).toBeGreaterThan(2);
-  await page.getByRole('button', { name: /Cuenta y ajustes|Ajustes de Cheesit/ }).click();
+  await page.getByRole('button', { name: 'Ajustes de Cheesit', exact: true }).click();
   await page.getByRole('switch', { name: 'Efectos y confeti', exact: true }).click();
   await expect.poll(async () => (await stored(page)).preferences?.effects).toBe(false);
   await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Resumen', exact: true }).click();

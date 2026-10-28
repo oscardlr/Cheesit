@@ -21,6 +21,7 @@ test('dumbbell exercise notes retain the entered per-hand weight and award XP fo
   await expect(page.locator('.xp-label > strong')).toHaveText(/57 \/ 1\.?000 XP/);
   await expect(page.getByRole('status')).toContainText('Guardado en este dispositivo');
   await page.reload();
+  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
   await page.getByRole('button', { name: /Continuar entrenamiento/ }).click();
   await expect(page.getByLabel(/Carga.*serie 1 de Press inclinado con mancuernas/)).toHaveValue('20');
   await page.getByRole('button', { name: '＋ Añadir ejercicio' }).click();

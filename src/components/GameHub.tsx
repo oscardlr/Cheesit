@@ -1,24 +1,24 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type Dispatch, type SetStateAction } from 'react';
-import { ArrowRight, Award, Box, Check, ChevronRight, Coins, Crown, Dumbbell, Flame, Footprints, Gift, Heart, LockKeyhole, PackageOpen, Quote as QuoteIcon, Shirt, Sparkles, Star, Target, Trophy, TrendingUp, Zap } from 'lucide-react';
+import { ArrowRight, Award, Box, Check, ChevronRight, Coins, Crown, Dumbbell, Footprints, Gift, Heart, LockKeyhole, PackageOpen, Quote as QuoteIcon, Shirt, Sparkles, Target, Trophy, TrendingUp, Zap } from 'lucide-react';
 import type { AppData } from '@/lib/model';
-import { CRATES, QUOTES, RARITIES, awardMissionRewards, gameProgress, equipItem, equipGearItem, unequipGear, equipCosmetic, equipCompanion, gameBalance, getAchievements, getDailyQuote, getItemDefinition, getLevelCrates, getMissions, normalizeGame, openCrate, openLevelCrate, type GameState, type InventoryItem, type Rarity } from '@/lib/game';
-import { GEAR, type GearSlot } from '@/lib/gear';
+import { CRATES, QUOTES, RARITIES, awardMissionRewards, gameProgress, equipItem, equipCosmetic, equipCompanion, gameBalance, gameCreditStatus, getAchievements, getDailyQuote, getLevelCrates, getMissions, normalizeGame, openCrate, openLevelCrate, type GameState, type InventoryItem, type Rarity } from '@/lib/game';
+import { type GearSlot } from '@/lib/gear';
 import { normalizeProfile, type AthleteProfile } from '@/lib/strength';
 import { muscleActivity, type MuscleActivity } from '@/lib/muscles';
 import { levelRank } from '@/lib/rewards';
-import { saveData } from '@/lib/storage';
 import { playSound } from '@/lib/sound';
 import PixelAthlete from './PixelAthlete';
-import CharacterAvatar, { GearSprite, SLOT_LABELS } from './CharacterAvatar';
+import CharacterAvatar, { SLOT_LABELS } from './CharacterAvatar';
 import WardrobeV3 from './WardrobeV3';
 import CrateOpening from './CrateOpening';
 import CrateArtwork from './CrateArtwork';
 import './game-hub.css';
 import { formatCreditBalance, TEST_CREDITS } from '@/lib/test-credits';
+import type { Mission } from '@/lib/objectives';
 
-type Props = { data: AppData; onChange: Dispatch<SetStateAction<AppData>>; today: string; effectsEnabled: boolean; soundEnabled: boolean; initialTab?: Tab };
+type Props = { data: AppData; onChange: Dispatch<SetStateAction<AppData>>; today: string; effectsEnabled: boolean; soundEnabled: boolean; initialTab?: Tab; onPersist: (next: AppData) => Promise<void>; onSettings?: () => void };
 type Tab = 'goals' | 'body' | 'crates' | 'collection' | 'ascent';
 const tabs: { id: Tab; label: string; Icon: typeof Target }[] = [
   { id: 'goals', label: 'Objetivos', Icon: Target }, { id: 'body', label: 'Cuerpo', Icon: Heart },
@@ -71,12 +71,13 @@ function BodyFigure({ back, muscles, selected, onSelect }: { back: boolean; musc
   </svg></div>;
 }
 
-export default function GameHub({ data, onChange, today, effectsEnabled, soundEnabled, initialTab = 'goals' }: Props) {
+export default function GameHub({ data, onChange, today, effectsEnabled, soundEnabled, initialTab = 'goals', onPersist, onSettings }: Props) {
   const [tab, setTab] = useState<Tab>(initialTab);
   const [days, setDays] = useState(7);
   const [selectedMuscle, setSelectedMuscle] = useState('chest');
-  const [rarityFilter, setRarityFilter] = useState<Rarity | 'all'>('all');
-  const [kindFilter, setKindFilter] = useState<'all' | 'gear' | 'quote'>('all');
+  const [avoidCompanionDuplicates, setAvoidCompanionDuplicates] = useState(false);
+  const [rewardSlot, setRewardSlot] = useState<GearSlot | 'all'>('all');
+  const [missionFilter, setMissionFilter] = useState<'all' | 'pending' | 'rewarded'>('all');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [openingVisible, setOpeningVisible] = useState(Boolean(data.game?.pendingOpening));
@@ -93,23 +94,22 @@ export default function GameHub({ data, onChange, today, effectsEnabled, soundEn
   const muscles = useMemo(() => muscleActivity(data.workouts, today, days, data.profile), [data.workouts, today, days, data.profile]);
   const levelCrates = useMemo(() => getLevelCrates(game, data.workouts, data.profile), [game, data.workouts, data.profile]);
   const selected = muscles.find(muscle => muscle.id === selectedMuscle) ?? muscles[0];
-  const inventory = game.inventory.filter(item => !item.sold && item.id !== game.pendingOpening?.itemId);
-  const filteredInventory = inventory.filter(item => (rarityFilter === 'all' || item.rarity === rarityFilter) && (kindFilter === 'all' || (item.gearId ? 'gear' : 'quote') === kindFilter));
+  const inventory = game.inventory.filter(item => (!item.sold || Boolean(item.quoteId)) && item.id !== game.pendingOpening?.itemId);
   const [workoutGoal, setWorkoutGoal] = useState(game.weeklyWorkoutGoal);
   useEffect(()=>setTab(initialTab),[initialTab]);
   useEffect(() => { setWorkoutGoal(game.weeklyWorkoutGoal); }, [game.weeklyWorkoutGoal]);
   useEffect(() => { mounted.current = true; try { if (sessionStorage.getItem('grind-open-wardrobe')) { setTab('collection'); sessionStorage.removeItem('grind-open-wardrobe'); } } catch {} return () => { mounted.current = false; }; }, []);
   useEffect(() => { if (!notice) return; const timer = setTimeout(() => setNotice(''), 4500); return () => clearTimeout(timer); }, [notice]);
 
-  function updateGame(transform: (current: GameState) => GameState) {
+  async function updateGame(transform: (current: GameState) => GameState) {
     const latest = dataRef.current;
     const nextGame = transform(normalizeGame(latest.game));
     const next = { ...latest, game: nextGame };
     dataRef.current = next;
-    onChange(current => ({ ...current, game: nextGame }));
+    await onPersist(next);
   }
-  function equipPrize(item: InventoryItem) {
-    updateGame(current => item.gearId ? equipCosmetic(current,item.gearId) : item.companionId ? equipCompanion(current,item.companionId) : equipItem(current,item.id));
+  async function equipPrize(item: InventoryItem) {
+    await updateGame(current => item.gearId ? equipCosmetic(current,item.gearId) : item.companionId ? equipCompanion(current,item.companionId) : equipItem(current,item.id));
     setNotice(item.gearId ? 'Aspecto equipado para siempre. Activa sus cargas en Habilidades.' : item.companionId ? 'Compañera equipada. La verás junto a tu personaje.' : 'Nuevo lema equipado. Lo verás en tu resumen.');
     if (soundEnabled) playSound('confirm');
   }
@@ -117,20 +117,19 @@ export default function GameHub({ data, onChange, today, effectsEnabled, soundEn
     if (lock.current) return;
     lock.current = true; setBusy(true); setNotice('');
     const latest = dataRef.current;
-    const result = level ? openLevelCrate(normalizeGame(latest.game), latest.workouts, level, latest.profile) : openCrate(normalizeGame(latest.game), latest.workouts, crateId, latest.profile);
+    const result = level ? openLevelCrate(normalizeGame(latest.game), latest.workouts, level, latest.profile, rewardSlot === 'all' ? {} : { gearSlot: rewardSlot }) : openCrate(normalizeGame(latest.game), latest.workouts, crateId, latest.profile, { avoidCompanionDuplicates });
     if (!result) { setNotice(game.pendingOpening ? 'Termina la apertura pendiente antes de abrir otro cofre.' : 'No puedes abrir este cofre todavía. Revisa tu saldo o tu nivel.'); setBusy(false); lock.current = false; if (soundEnabled) playSound('error'); return; }
     const next = { ...latest, game: result.game };
     // Reserve synchronously in the parent before waiting for disk. Navigating away
     // and remounting must see the spent balance, and cannot reopen the same credit.
     dataRef.current = next;
-    onChange(current => ({ ...current, game: result.game }));
-    setLastPrize(null); setOpeningVisible(true);
-    if (soundEnabled) playSound('crate');
     try {
-      await saveData(next);
+      await onPersist(next);
+      setLastPrize(null); setOpeningVisible(true);
+      if (soundEnabled) playSound('crate');
       if (!mounted.current) return;
       setBusy(false); lock.current = false;
-    } catch { if (!mounted.current) return; setBusy(false); lock.current = false; setNotice('Tu recompensa está reservada, pero aún no se ha confirmado el guardado. Mantén abierta la app.'); if (soundEnabled) playSound('error'); }
+    } catch { if (!mounted.current) return; setBusy(false); lock.current = false; setNotice('No se ha confirmado el guardado del cofre. La reserva conserva el mismo premio y débito. Usa Reintentar guardado en el aviso de la app antes de continuar.'); if (soundEnabled) playSound('error'); }
   }
 
   return <div className={`game-hub ${effectsEnabled ? '' : 'game-hub-quiet'}`}>
@@ -144,30 +143,33 @@ export default function GameHub({ data, onChange, today, effectsEnabled, soundEn
       setTab(tabs[target].id); document.getElementById(`arcade-tab-${tabs[target].id}`)?.focus();
     }}>{tabs.map(({ id, label, Icon }) => <button key={id} id={`arcade-tab-${id}`} role="tab" tabIndex={tab === id ? 0 : -1} aria-selected={tab === id} aria-controls={`arcade-panel-${id}`} disabled={busy} onClick={() => { setTab(id); setNotice(''); }}><Icon size={17} /><span>{label}</span></button>)}</nav>
     {notice && <p className="arcade-notice" role="status">{notice}</p>}
+    {gameCreditStatus(game, data.workouts, data.profile).deficit > 0 && <p className="arcade-notice">Ajuste de actividad: {fmt(gameCreditStatus(game, data.workouts, data.profile).deficit)} créditos de compras anteriores ya no están respaldados por tu historial actual. Conservas los objetos; las nuevas ganancias cubren primero este ajuste. Tus movimientos originales siguen intactos.</p>}
     {game.pendingOpening && !openingVisible && <div className="opening-resume-banner"><Gift size={27}/><div><strong>Tu cofre sigue cerrado.</strong><p>La recompensa está a salvo. La rareza y el contenido aún te esperan.</p></div><button onClick={() => setOpeningVisible(true)}>Continuar apertura</button></div>}
     <section key={tab} id={`arcade-panel-${tab}`} role="tabpanel" aria-labelledby={`arcade-tab-${tab}`} className="arcade-panel">
       {tab === 'goals' && <>
         <div className="arcade-section-head"><div><span className="eyebrow">PEQUEÑAS VICTORIAS. PROGRESO REAL.</span><h2>La misión eres tú.</h2></div><span className="arcade-tag"><Check size={13} /> {missions.filter(mission => mission.complete).length}/{missions.length} completas</span></div>
         <div className="mission-xp-summary"><Zap size={18}/><p><strong>{fmt(progress.objectiveXp)} XP ganados con objetivos.</strong> Cada recompensa se suma automáticamente una sola vez. Los objetivos semanales se renuevan cada lunes.</p></div>
-        <form className="arcade-goal-editor" onSubmit={event => { event.preventDefault(); updateGame(current => awardMissionRewards({ ...current, weeklyWorkoutGoal: Math.max(1, Math.min(7, Math.round(workoutGoal || 1))) }, dataRef.current.workouts, today)); setNotice('Objetivo de días guardado. Construye una semana que puedas repetir.'); if (soundEnabled) playSound('confirm'); }}><div><Target size={22} /><h3>A tu ritmo.</h3><p>Elige cuántos días quieres entrenar por semana. Descansar también es parte del plan.</p></div><label>Días de entreno por semana<input type="number" min={1} max={7} required value={workoutGoal} onChange={event => setWorkoutGoal(Number(event.target.value))} /></label><button className="arcade-primary" type="submit">Guardar objetivos<Check size={16} /></button></form>
-        {(['weekly','career'] as const).map(scope=><section className="mission-category" key={scope} aria-label={scope==='weekly'?'Objetivos semanales':'Objetivos de trayectoria'}><div className="arcade-section-head"><div><span className="eyebrow">{scope==='weekly'?'NUEVA SEMANA. NUEVOS RETOS.':'CADA SESIÓN DEJA HUELLA'}</span><h2>{scope==='weekly'?'Esta semana cuenta.':'Tu camino en el hierro.'}</h2></div><span className="arcade-tag">{missions.filter(mission=>mission.scope===scope&&mission.complete).length}/{missions.filter(mission=>mission.scope===scope).length}</span></div><div className="arcade-missions">{missions.filter(mission=>mission.scope===scope).map((mission, index) => <article key={mission.id} data-mission-id={mission.id} data-mission-scope={mission.scope} data-mission-xp={mission.xp} className={`arcade-mission ${mission.complete ? 'completed' : ''}`} style={{ '--index': Math.min(index,8) } as CSSProperties}><div className="arcade-mission-top"><span className="arcade-mission-icon">{mission.complete ? <Check size={22} /> : index === 0 ? <Dumbbell size={22} /> : index === 1 ? <Flame size={22} /> : <Target size={22} />}</span><span>{mission.rewarded?'XP CONSEGUIDO':mission.complete?'CONQUISTADA':'EN PROGRESO'}</span>{mission.complete && <Sparkles size={16} />}</div><h3>{mission.title}</h3><p>{mission.description}</p><span className="mission-reward-badge"><Zap size={12}/>+{fmt(mission.xp)} XP{mission.rewarded&&<Check size={12}/>}</span><div className="arcade-mission-count"><strong>{fmt(mission.current)}<small> / {fmt(mission.target)}</small></strong><span>{mission.unit}</span></div><ProgressBar value={percent(mission.current, mission.target)} label={mission.title} /></article>)}</div></section>)}
-        <div className="arcade-section-head"><div><span className="eyebrow">TU VITRINA</span><h2>Hechos, no excusas.</h2></div><Award size={23} /></div>
+        <form className="arcade-goal-editor" onSubmit={async event => { event.preventDefault(); try { await updateGame(current => awardMissionRewards({ ...current, weeklyWorkoutGoal: Math.max(1, Math.min(7, Math.round(workoutGoal || 1))) }, dataRef.current.workouts, today)); setNotice('Objetivo de días guardado. Una recompensa ya obtenida conserva su meta hasta el próximo lunes.'); if (soundEnabled) playSound('confirm'); } catch { setNotice('No se ha confirmado el guardado. Reintenta desde el aviso de la app.'); } }}><div><Target size={22} /><h3>A tu ritmo.</h3><p>Elige cuántos días quieres entrenar por semana. Descansar también es parte del plan.</p></div><label>Días de entreno por semana<input type="number" min={1} max={7} required value={workoutGoal} onChange={event => setWorkoutGoal(Number(event.target.value))} /></label><button className="arcade-primary" type="submit">Guardar objetivos<Check size={16} /></button></form>
+        <label className="mission-filter">Mostrar objetivos<select value={missionFilter} onChange={event => setMissionFilter(event.target.value as typeof missionFilter)}><option value="all">Todos</option><option value="pending">Pendientes</option><option value="rewarded">Recompensados</option></select></label>
+        {(['weekly','career'] as const).map(scope => <MissionCategory key={scope} scope={scope} missions={missions.filter(mission => mission.scope === scope && (missionFilter === 'all' || (missionFilter === 'rewarded' ? mission.rewarded : !mission.rewarded)))}/>)}
+        <div className="arcade-section-head"><div><span className="eyebrow">TU VITRINA</span><h2>Tu constancia, a tu ritmo.</h2></div><Award size={23} /></div>
         <div className="arcade-achievements">{achievements.map(achievement => <article key={achievement.id} className={achievement.complete ? 'unlocked' : ''}><span>{achievement.complete ? <Trophy size={24} /> : <LockKeyhole size={22} />}</span><div><h3>{achievement.title}</h3><p>{achievement.description}</p><small>{fmt(achievement.current)} / {fmt(achievement.target)} {achievement.unit}</small><ProgressBar value={percent(achievement.current, achievement.target)} label={achievement.title} /></div>{achievement.complete && <Check size={16} />}</article>)}</div>
         <DailyMotivation data={data} today={today} />
-        <ProfileEditor profile={data.profile} onSave={profile => { const next={...dataRef.current,profile}; dataRef.current=next; onChange(current=>({...current,profile})); setNotice('Perfil guardado. El XP se adapta a tus marcas y tu peso.'); if(soundEnabled) playSound('confirm'); }}/>
+        {onSettings && <button className="arcade-primary" onClick={onSettings}>Editar mi perfil en Ajustes<ArrowRight size={16}/></button>}
       </>}
 
       {tab === 'body' && <>
         <div className="arcade-section-head"><div><span className="eyebrow">EL MAPA DE TU ESFUERZO</span><h2>Cada músculo cuenta.</h2></div><div className="arcade-segmented" aria-label="Período de actividad muscular">{[7, 14, 30].map(value => <button key={value} aria-pressed={days === value} onClick={() => setDays(value)}>{value} días</button>)}</div></div>
         <div className="arcade-body-grid"><article className="body-map-card"><div className="body-map-top"><span><ActivityDot /> ACTIVIDAD REGISTRADA</span><small>TOCA UN MÚSCULO</small></div><div className="body-figures"><BodyFigure back={false} muscles={muscles} selected={selectedMuscle} onSelect={setSelectedMuscle} /><BodyFigure back muscles={muscles} selected={selectedMuscle} onSelect={setSelectedMuscle} /></div><div className="body-legend">{[['#40344f', '0'], ['#7160a0', '0,5–3,5'], ['#b8a0ff', '4–8,5'], ['#d8ff3e', '9+']].map(([color, label]) => <span key={label}><i style={{ background: color }} />{label}</span>)}<small>series equivalentes</small></div></article>
-          <aside className="body-detail"><span className="eyebrow">TU FOCO</span><h3>{selected?.label}</h3><div className="muscle-level-panel"><div><span className="eyebrow">PROGRESIÓN DE POR VIDA</span><strong>NIVEL {selected?.level ?? 1}</strong><small>{selected?.rank}</small></div><div className="muscle-level-xp"><span>{fmt(selected?.levelXp ?? 0)} / {fmt(selected?.nextLevelXp ?? 500)} XP</span><ProgressBar value={selected?.percent ?? 0} label={'Nivel muscular de ' + selected?.label}/></div><p>{fmt(selected?.lifetimeSets ?? 0)} series equivalentes acumuladas. Más carga y repeticiones también construyen este nivel.</p></div><div className="body-detail-total" style={{ color: selected?.weightedSets ? activityColor(selected.weightedSets) : '#b59cc8' }}><strong>{fmt(selected?.weightedSets ?? 0)}</strong><span>SERIES EQUIVALENTES<br />EN {days} DÍAS</span></div><dl><div><dt>Series directas</dt><dd>{selected?.sets ?? 0}</dd></div><div><dt>Participación secundaria</dt><dd>{selected?.secondarySets ?? 0}</dd></div><div><dt>Repeticiones con participación</dt><dd>{fmt(selected?.reps ?? 0)}</dd></div><div><dt>Última actividad</dt><dd>{selected?.lastDate ? new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${selected.lastDate}T12:00:00Z`)) : 'Sin registrar'}</dd></div></dl><p>1 serie directa = 1 equivalente. Una participación secundaria suma 0,5.</p>{selected?.approximate && <p className="body-approximate">Incluye ejercicios personalizados: la asignación por grupo es aproximada.</p>}<div className="body-detail-hint"><Heart size={17} /><span>El color refleja actividad, no crecimiento ni recuperación muscular.</span></div></aside></div>
+          <aside className="body-detail"><span className="eyebrow">TU FOCO</span><h3>{selected?.label}</h3><div className="muscle-level-panel"><div><span className="eyebrow">ACTIVIDAD ACUMULADA</span><strong>NIVEL {selected?.level ?? 1}</strong><small>{selected?.rank}</small></div><div className="muscle-level-xp"><span>{fmt(selected?.levelXp ?? 0)} / {fmt(selected?.nextLevelXp ?? 500)} XP</span><ProgressBar value={selected?.percent ?? 0} label={'Nivel muscular de ' + selected?.label}/></div><p>{fmt(selected?.lifetimeSets ?? 0)} series equivalentes acumuladas. Nivel de juego basado en lo registrado; no mide condición física.</p></div><div className="body-detail-total" style={{ color: selected?.weightedSets ? activityColor(selected.weightedSets) : '#b59cc8' }}><strong>{fmt(selected?.weightedSets ?? 0)}</strong><span>SERIES EQUIVALENTES<br />EN {days} DÍAS</span></div><dl><div><dt>Series directas</dt><dd>{selected?.sets ?? 0}</dd></div><div><dt>Participación secundaria</dt><dd>{selected?.secondarySets ?? 0}</dd></div><div><dt>Repeticiones con participación</dt><dd>{fmt(selected?.reps ?? 0)}</dd></div><div><dt>Última actividad</dt><dd>{selected?.lastDate ? new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${selected.lastDate}T12:00:00Z`)) : 'Sin registrar'}</dd></div></dl><p>1 serie directa = 1 equivalente. Una participación secundaria suma 0,5.</p>{selected?.approximate && <p className="body-approximate">Incluye ejercicios personalizados: la asignación por grupo es aproximada.</p>}<div className="body-detail-hint"><Heart size={17} /><span>El color refleja actividad, no crecimiento ni recuperación muscular.</span></div></aside></div>
         <div className="muscle-list">{muscles.map(muscle => <button key={muscle.id} aria-pressed={selectedMuscle === muscle.id} onClick={() => setSelectedMuscle(muscle.id)}><span className="muscle-list-dot" style={{ background: activityColor(muscle.weightedSets) }} /><span>{muscle.label}<small className="muscle-list-level">NIVEL {muscle.level}</small></span><strong>{fmt(muscle.weightedSets)} <small>series</small></strong><ChevronRight size={15} /></button>)}</div>
       </>}
 
 
       {tab === 'crates' && <>
         <div className="arcade-crate-intro"><div><span className="eyebrow">DE LA SERIE AL SIGUIENTE DROP</span><h2>Un cofre. Mil versiones de ti.</h2><p>Ropa, compañeras, habilidades y frases. Primero gira la rareza; el contenido se descubre después.</p><div><span><Zap size={14} />5 XP = 1 crédito</span><span><Shirt size={14} />55% equipo · 25% frases · 20% compañeras</span></div></div><CharacterAvatar game={game} level={progress.level} animated={effectsEnabled} compact /></div>
-        {levelCrates.some(crate => !crate.claimed) && <LevelRewards crates={levelCrates} busy={busy || Boolean(game.pendingOpening)} onOpen={level => void buyCrate('level:' + level, level)} />}
+        {levelCrates.some(crate => !crate.claimed) && <LevelRewards crates={levelCrates} busy={busy || Boolean(game.pendingOpening)} selectedSlot={rewardSlot} onSlotChange={setRewardSlot} onOpen={level => void buyCrate('level:' + level, level)} />}
+        <label className="crate-reward-choice"><input type="checkbox" checked={avoidCompanionDuplicates} disabled={busy||Boolean(game.pendingOpening)} onChange={event=>setAvoidCompanionDuplicates(event.target.checked)}/><span>Evitar compañeras repetidas<small>Si ya obtuviste la compañera de la rareza sorteada, recibirás equipo de esa rareza. Solo aplica a las próximas compras con esta opción marcada.</small></span></label>
         <div className="arcade-crates">{CRATES.map((crate, index) => <article key={crate.id} className={'arcade-crate crate-' + index}><div className="crate-art" aria-hidden="true"><div className="crate-halo" /><CrateArtwork crateId={crate.id}/></div><span className="eyebrow">{index === 0 ? 'UN NUEVO COMIENZO' : index === 1 ? 'RECARGA TU SIGUIENTE NIVEL' : 'EL DROP MÁS LEGENDARIO'}</span><h3>{crate.name}</h3><p>{crate.description}</p><div className="crate-odds">{(Object.keys(RARITIES) as Rarity[]).map(rarity => <span key={rarity} style={rarityStyle(rarity)}><i />{RARITIES[rarity].label}<strong>{crate.odds[rarity]}%</strong></span>)}</div><button className="arcade-primary" disabled={busy || Boolean(game.pendingOpening) || balance < crate.cost} onClick={() => void buyCrate(crate.id)}><PackageOpen size={17} /><span>{busy ? 'Guardando recompensa…' : balance < crate.cost ? 'Necesitas más créditos' : 'Abrir cofre'}</span><strong>{fmt(crate.cost)} <Coins size={14} /></strong></button></article>)}</div>
         <p className="arcade-economy-note"><Coins size={15} />Créditos virtuales. Cada frase solo puede tocarte una vez. Si ya tienes todas las frases de una rareza, su probabilidad pasa a equipo de esa rareza. Los objetos no se pueden vender. El equipo duplicado añade cargas de habilidad.</p>
       </>}
@@ -179,23 +181,50 @@ export default function GameHub({ data, onChange, today, effectsEnabled, soundEn
       </>}
       {tab === 'ascent' && <>
         <div className="arcade-ascent-hero"><div><span className="eyebrow">NADIE SUBE POR TI</span><h2>Un escalón más.</h2><p>De la primera serie a tu siguiente versión.</p><div className="ascent-rank"><Crown size={22} /><span>NIVEL {progress.level}<strong>{levelRank(progress.level)}</strong></span></div><div className="ascent-xp"><span>{fmt(progress.levelXp)} / {fmt(progress.nextLevelXp)} XP</span><strong>{Math.round(progress.percent)}%</strong></div><ProgressBar value={progress.percent} label="Progreso del nivel actual" /></div><div className="ascent-art"><div className="ascent-staircase" aria-hidden="true">{[0, 1, 2, 3, 4].map(step => <i key={step} style={{ '--step': step } as CSSProperties} />)}</div><PixelAthlete pose="climb" animated={effectsEnabled} /><Gift size={42} className="ascent-chest" /></div></div>
-        <LevelRewards crates={levelCrates} busy={busy || Boolean(game.pendingOpening)} onOpen={level=>void buyCrate("level:"+level,level)}/><div className="ascent-path" aria-label="Camino de niveles">{Array.from({ length: 7 }, (_, index) => Math.max(1, progress.level - 2) + index).map(level => <div key={level} className={`ascent-stop ${level < progress.level ? 'passed' : level === progress.level ? 'current' : 'locked'}`}><span>{level < progress.level ? <Check size={20} /> : level === progress.level ? <Footprints size={22} /> : level % 5 === 0 ? <Gift size={22} /> : <LockKeyhole size={18} />}</span><div><small>{level === progress.level ? 'ESTÁS AQUÍ' : level < progress.level ? 'CONQUISTADO' : 'PRÓXIMO ESCALÓN'}</small><strong>Nivel {level}</strong><p>{levelRank(level)}</p></div><small>{fmt(1000 * (level - 1) + 125 * (level - 1) * (level - 2))} XP</small></div>)}</div>
+        <LevelRewards crates={levelCrates} busy={busy || Boolean(game.pendingOpening)} selectedSlot={rewardSlot} onSlotChange={setRewardSlot} onOpen={level=>void buyCrate("level:"+level,level)}/><div className="ascent-path" aria-label="Camino de niveles">{Array.from({ length: 7 }, (_, index) => Math.max(1, progress.level - 2) + index).map(level => <div key={level} className={`ascent-stop ${level < progress.level ? 'passed' : level === progress.level ? 'current' : 'locked'}`}><span>{level < progress.level ? <Check size={20} /> : level === progress.level ? <Footprints size={22} /> : level % 5 === 0 ? <Gift size={22} /> : <LockKeyhole size={18} />}</span><div><small>{level === progress.level ? 'ESTÁS AQUÍ' : level < progress.level ? 'CONQUISTADO' : 'PRÓXIMO ESCALÓN'}</small><strong>Nivel {level}</strong><p>{levelRank(level)}</p></div><small>{fmt(1000 * (level - 1) + 125 * (level - 1) * (level - 2))} XP</small></div>)}</div>
         <div className="arcade-xp-rules"><h3><Zap size={19} />Así se gana cada escalón.</h3><div><span>Serie confirmada<strong>30–130 XP</strong></span><span>Entreno finalizado<strong>+200 XP</strong></span><span>Récord personal comparable<strong>+75 XP</strong></span><span>3 grupos musculares en una sesión<strong>+100 XP</strong></span></div><p>Carga, repeticiones y progreso personal ajustan el XP de cada serie. Primer escalón: 1.000 XP; cada siguiente pide 250 más. Cada nivel desde el 2 desbloquea un cofre propio, gratis y con equipo garantizado.</p></div>
       </>}
     </section>
-    {openingVisible && (game.pendingOpening || lastPrize) && <CrateOpening game={game} result={lastPrize} effectsEnabled={effectsEnabled} soundEnabled={soundEnabled} onGameChange={updateGame} onFinished={setLastPrize} onClose={()=>{setOpeningVisible(false);setLastPrize(null)}} onEquip={equipPrize}/>}
+    {openingVisible && (game.pendingOpening || lastPrize) && <CrateOpening game={game} result={lastPrize} effectsEnabled={effectsEnabled} soundEnabled={soundEnabled} onGameChange={updateGame} onFinished={setLastPrize} onClose={()=>{setOpeningVisible(false);setLastPrize(null)}} onEquip={item => { void equipPrize(item).catch(() => setNotice('No se ha confirmado el aspecto. Reintenta desde el aviso de guardado.')); }}/>}
   </div>;
 }
 
 function ActivityDot() { return <i className="activity-dot" aria-hidden="true" />; }
 
-function LevelRewards({ crates, busy, onOpen }: { crates: ReturnType<typeof getLevelCrates>; busy: boolean; onOpen: (level: number) => void }) {
-  return <section className="level-rewards-section"><div className="arcade-section-head"><div><span className="eyebrow">ESTO TE LO HAS GANADO</span><h2>Un nivel. Un cofre propio.</h2></div><Gift size={23}/></div>{crates.length ? <div className="level-rewards-grid">{[...crates].reverse().map(crate=><article className={'level-reward-card '+(crate.claimed?'is-claimed':'')} key={crate.id}><span className="level-reward-icon">{crate.claimed?<Check size={30}/>:<Gift size={33}/>}</span><div><span className="eyebrow">NIVEL {crate.level}</span><h3>{crate.name}</h3><p>Equipo garantizado · Una recompensa por nivel</p><div className="level-reward-odds">{(Object.keys(RARITIES) as Rarity[]).filter(rarity=>crate.odds[rarity]>0).map(rarity=><span key={rarity} style={{color:RARITIES[rarity].color}}>{RARITIES[rarity].label} {crate.odds[rarity]}%</span>)}</div></div><button disabled={busy||crate.claimed} onClick={()=>onOpen(crate.level)}>{crate.claimed?'Reclamado':'Abrir gratis'}{!crate.claimed&&<ArrowRight size={15}/>}</button></article>)}</div>:<div className="level-reward-empty"><LockKeyhole size={22}/><p>Tu primer cofre de ascenso espera en el nivel 2. Después habrá uno nuevo en cada nivel.</p></div>}</section>;
+function MissionCategory({ scope, missions }: { scope: 'weekly' | 'career'; missions: Mission[] }) {
+  const ordered = [...missions].sort((a, b) => Number(a.rewarded) - Number(b.rewarded) || percent(b.current, b.target) - percent(a.current, a.target));
+  const focused = ordered.slice(0, 3), remaining = ordered.slice(3);
+  return <section className="mission-category" aria-label={scope === 'weekly' ? 'Objetivos semanales' : 'Objetivos de trayectoria'}>
+    <div className="arcade-section-head"><h2>{scope === 'weekly' ? 'Esta semana, a tu ritmo.' : 'Tu trayectoria.'}</h2><span className="arcade-tag">{missions.filter(mission => mission.complete).length}/{missions.length}</span></div>
+    <div className="arcade-missions">{focused.map(mission => <MissionCard key={mission.id} mission={mission}/>)}</div>
+    {remaining.length > 0 && <details className="more-missions"><summary>Ver {remaining.length} objetivos más</summary><div className="arcade-missions">{remaining.map(mission => <MissionCard key={mission.id} mission={mission}/>)}</div></details>}
+    {!missions.length && <p>No hay objetivos en este filtro.</p>}
+  </section>;
 }
 
-function ProfileEditor({profile,onSave}:{profile?:AthleteProfile;onSave:(profile:AthleteProfile)=>void}) {
+function MissionCard({ mission }: { mission: Mission }) {
+  return <article data-mission-id={mission.id} data-mission-scope={mission.scope} data-mission-xp={mission.xp} className={`arcade-mission ${mission.complete ? 'completed' : ''}`}>
+    <div className="arcade-mission-top"><span className="arcade-mission-icon">{mission.complete ? <Check size={22}/> : <Target size={22}/>}</span><span>{mission.rewarded ? 'XP CONSEGUIDO' : mission.complete ? 'CONQUISTADA' : 'EN PROGRESO'}</span></div>
+    <h3>{mission.title}</h3><p>{mission.description}</p><span className="mission-reward-badge"><Zap size={12}/>+{fmt(mission.xp)} XP{mission.rewarded && <Check size={12}/>}</span>
+    <div className="arcade-mission-count"><strong>{fmt(mission.current)}<small> / {fmt(mission.target)}</small></strong><span>{mission.unit}</span></div>
+    <ProgressBar value={percent(mission.current, mission.target)} label={mission.title}/>{mission.rewardNote && <p className="mission-reward-note">{mission.rewardNote}</p>}
+  </article>;
+}
+
+function LevelRewards({ crates, busy, onOpen, selectedSlot, onSlotChange }: { crates: ReturnType<typeof getLevelCrates>; busy: boolean; onOpen: (level: number) => void; selectedSlot: GearSlot | 'all'; onSlotChange:(slot:GearSlot|'all')=>void }) {
+  const ready=crates.filter(crate=>!crate.claimed), claimed=crates.filter(crate=>crate.claimed);
+  const cards=(items:typeof crates)=><div className="level-rewards-grid">{[...items].reverse().map(crate=><article className={'level-reward-card '+(crate.claimed?'is-claimed':'')} key={crate.id}><span className="level-reward-icon">{crate.claimed?<Check size={30}/>:<Gift size={33}/>}</span><div><span className="eyebrow">NIVEL {crate.level}</span><h3>{crate.name}</h3><p>Equipo garantizado · Una recompensa por nivel</p><div className="level-reward-odds">{(Object.keys(RARITIES) as Rarity[]).filter(rarity=>crate.odds[rarity]>0).map(rarity=><span key={rarity} style={{color:RARITIES[rarity].color}}>{RARITIES[rarity].label} {crate.odds[rarity]}%</span>)}</div></div><button disabled={busy||crate.claimed} onClick={()=>onOpen(crate.level)}>{crate.claimed?'Reclamado':'Abrir gratis'}{!crate.claimed&&<ArrowRight size={15}/>}</button></article>)}</div>;
+  return <section className="level-rewards-section"><div className="arcade-section-head"><div><span className="eyebrow">ESTO TE LO HAS GANADO</span><h2>Un nivel. Un cofre propio.</h2></div><Gift size={23}/></div><label className="mission-filter">Equipo de mi próximo cofre de ascenso<select value={selectedSlot} disabled={busy} onChange={event=>onSlotChange(event.target.value as GearSlot|'all')}><option value="all">Cualquier ranura · aleatorio</option>{(Object.entries(SLOT_LABELS) as [GearSlot,string][]).map(([slot,label])=><option key={slot} value={slot}>{label}</option>)}</select><small>Conserva las probabilidades de rareza. Si no existe equipo de esa rareza en la ranura, se sortea entre las demás.</small></label>{ready.length ? cards(ready) : <div className="level-reward-empty"><LockKeyhole size={22}/><p>{crates.length?'Has reclamado todos tus cofres de ascenso disponibles.':'Tu primer cofre de ascenso espera en el nivel 2. Después habrá uno nuevo en cada nivel.'}</p></div>}{claimed.length>0&&<details className="more-missions"><summary>Ver {claimed.length} cofres reclamados</summary>{cards(claimed)}</details>}</section>;
+}
+
+export function ProfileEditor({profile,onSave,data}:{profile?:AthleteProfile;onSave:(profile:AthleteProfile)=>void | Promise<void>;data?:AppData}) {
   const normalized=normalizeProfile(profile);
   const [editing,setEditing]=useState(normalized);
+  const [profileNotice,setProfileNotice]=useState('');
+  const previousXp=data ? gameProgress(normalizeGame(data.game),data.workouts,profile).xp : 0;
+  const nextXp=data ? gameProgress(normalizeGame(data.game),data.workouts,editing).xp : 0;
+  const previousBalance=data ? gameBalance(normalizeGame(data.game),data.workouts,profile) : 0;
+  const nextBalance=data ? gameBalance(normalizeGame(data.game),data.workouts,editing) : 0;
   useEffect(()=>setEditing(normalizeProfile(profile)),[profile]);
-  return <form className="athlete-profile-editor" onSubmit={event=>{event.preventDefault();onSave(normalizeProfile(editing))}}><div className="arcade-section-head"><div><span className="eyebrow">TU PUNTO DE PARTIDA</span><h2>El XP también se adapta a ti.</h2></div><Dumbbell size={24}/></div><p>La carga, las repeticiones y tus propias marcas construyen la recompensa de cada serie.</p><div className="athlete-profile-fields"><label>Peso corporal (kg)<input type="number" min={30} max={300} step={.1} required value={editing.weightKg} onChange={event=>setEditing(current=>({...current,weightKg:Number(event.target.value)}))}/></label><label>Altura (cm)<input type="number" min={120} max={230} step={1} required value={editing.heightCm} onChange={event=>setEditing(current=>({...current,heightCm:Number(event.target.value)}))}/></label><label>Edad<input type="number" min={16} max={100} step={1} required value={editing.age} onChange={event=>setEditing(current=>({...current,age:Number(event.target.value)}))}/></label><label>Sexo de referencia<select value={editing.sex} onChange={event=>setEditing(current=>({...current,sex:event.target.value as AthleteProfile['sex']}))}><option value="male">Hombre</option><option value="female">Mujer</option></select></label></div><div className="athlete-profile-foot"><p>Referencias orientativas del juego según tu peso; no son percentiles de población. Tu progreso se compara con tus propias sesiones. Edad, altura y sexo se guardan como perfil, sin multiplicadores inventados.</p><button className="arcade-primary" type="submit">Guardar perfil<Check size={16}/></button></div><small>En mancuernas, introduce el peso de una sola mancuerna. En barra, introduce barra y discos juntos.</small></form>;
+  return <form className="athlete-profile-editor" onSubmit={async event=>{event.preventDefault();try{await onSave(normalizeProfile(editing));setProfileNotice('Perfil guardado.')}catch{setProfileNotice('No se ha confirmado el guardado. Reintenta desde el aviso de la app.')}}}><div className="arcade-section-head"><div><span className="eyebrow">TU PUNTO DE PARTIDA</span><h2>El XP también se adapta a ti.</h2></div><Dumbbell size={24}/></div><p>La carga, las repeticiones y tus propias marcas construyen la recompensa de cada serie.</p><div className="athlete-profile-fields"><label>Peso corporal (kg)<input type="number" min={30} max={300} step={.1} required value={editing.weightKg} onChange={event=>setEditing(current=>({...current,weightKg:Number(event.target.value)}))}/></label><label>Altura (cm)<input type="number" min={120} max={230} step={1} required value={editing.heightCm} onChange={event=>setEditing(current=>({...current,heightCm:Number(event.target.value)}))}/></label><label>Edad<input type="number" min={16} max={100} step={1} required value={editing.age} onChange={event=>setEditing(current=>({...current,age:Number(event.target.value)}))}/></label><label>Sexo de referencia<select value={editing.sex} onChange={event=>setEditing(current=>({...current,sex:event.target.value as AthleteProfile['sex']}))}><option value="male">Hombre</option><option value="female">Mujer</option></select></label></div><p className="profile-economy-impact" role="status">{data && nextXp!==previousXp ? `Con las reglas actuales, este cambio recalcula tu historial: ${fmt(nextXp-previousXp)} XP y ${fmt(nextBalance-previousBalance)} créditos disponibles. Guardar confirma ese ajuste.` : 'El peso corporal participa en las reglas actuales de XP; cambiarlo puede recalcular el historial. La propuesta para congelar recompensas históricas aún no está activada.'}</p>{profileNotice&&<p role="status">{profileNotice}</p>}<div className="athlete-profile-foot"><p>Referencias orientativas del juego según tu peso; no son percentiles de población. Tu progreso se compara con tus propias sesiones. Edad, altura y sexo se guardan como perfil, sin multiplicadores inventados.</p><button className="arcade-primary" type="submit">Guardar perfil<Check size={16}/></button></div><small>En mancuernas, introduce el peso de una sola mancuerna. En barra, introduce barra y discos juntos.</small></form>;
 }
