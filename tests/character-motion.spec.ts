@@ -79,72 +79,70 @@ test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
 });
 
-test('five accessible animation modes move the articulated body independently', async ({ page }, info) => {
+test('five accessible modes move the assembled character without deformation', async ({ page }, info) => {
   await seed(page);
   const character = avatar(page);
-  const bodyJoints = character.locator('.character-body .character-joint');
-  await expect(bodyJoints).toHaveCount(10);
-  // Translation of the whole character cannot satisfy this check: the body joints
-  // themselves must rotate, and opposing limbs must have different transforms.
+  const assembly = character.locator('.character-layers');
+  // The same parent matrix moves skin and every registered garment together.
+  // The available art uses one pose; rotating independent cut limbs creates seams.
   for (const motion of motions) {
     const button = motionControls(page).getByRole('button', { name: motion.label, exact: true });
     await button.click();
     await expect(button).toHaveAttribute('aria-pressed', 'true');
     await expect(character).toHaveAttribute('data-motion', motion.id);
-    const first = await transforms(bodyJoints);
-    await expect.poll(() => transforms(bodyJoints), { message: `${motion.label} should animate the individual body joints` }).not.toEqual(first);
+    const first = await transforms(assembly);
+    await expect.poll(() => transforms(assembly), { message: `${motion.label} should animate the complete assembly` }).not.toEqual(first);
+    const scale = await assembly.evaluate(element => {
+      const matrix = new DOMMatrix(getComputedStyle(element).transform);
+      return { x: Math.hypot(matrix.a, matrix.b), y: Math.hypot(matrix.c, matrix.d), shear: matrix.a * matrix.c + matrix.b * matrix.d };
+    });
+    expect(Math.abs(scale.x - scale.y), 'Body width and height use the same scale').toBeLessThan(.0001);
+    expect(Math.abs(scale.shear), 'The pose must not shear').toBeLessThan(.0001);
   }
-  await motionControls(page).getByRole('button', { name: 'Caminar', exact: true }).click();
-  await expect.poll(async () => {
-    const left = await transforms(character.locator('.character-body [data-joint="left-thigh"]'));
-    const right = await transforms(character.locator('.character-body [data-joint="right-thigh"]'));
-    return left[0] !== right[0];
-  }).toBe(true);
   await page.getByRole('button', { name: 'Pausar animación', exact: true }).click();
   await expect.poll(() => runningAnimations(character)).toBe(0);
-  const still = await transforms(bodyJoints);
-  await expect.poll(() => transforms(bodyJoints)).toEqual(still);
+  const still = await transforms(assembly);
+  await expect.poll(() => transforms(assembly)).toEqual(still);
   await page.getByRole('button', { name: 'Reanudar animación', exact: true }).click();
-  await expect.poll(() => runningAnimations(character)).toBeGreaterThan(2);
+  await expect.poll(() => runningAnimations(character)).toBeGreaterThan(0);
   for (const width of [320, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
-    await page.locator('.wardrobe-character-preview').screenshot({ path: info.outputPath(`articulated-character-${width}.png`), animations: 'disabled' });
+    await page.locator('.wardrobe-character-preview').screenshot({ path: info.outputPath(`assembled-character-${width}.png`), animations: 'disabled' });
   }
 });
 
-test('held equipment and clothing share the body joint animation', async ({ page }) => {
+test('held equipment and clothing remain registered inside the moving assembly', async ({ page }) => {
   await seed(page);
   await motionControls(page).getByRole('button', { name: 'Entrenar', exact: true }).click();
   const character = avatar(page);
   await expect(character.locator('.character-equipped')).toHaveCount(5);
-  // Freeze every timeline at the same moment to compare complete attachment
-  // chains without timing differences between separate browser reads.
   const attachments = await character.evaluate(element => {
     for (const animation of element.getAnimations({ subtree: true })) {
       animation.pause();
       animation.currentTime = 375;
     }
-    return ['torso', 'right-upper-arm', 'right-forearm'].map(joint => {
-      const body = element.querySelector(`.character-body [data-joint="${joint}"]`)!;
-      const gear = element.querySelector(`.character-slot-hand [data-joint="${joint}"]`)!;
-      return { joint, body: getComputedStyle(body).transform, gear: getComputedStyle(gear).transform };
+    const assembly = element.querySelector('.character-layers')!;
+    const body = assembly.querySelector('.character-base')!.getBoundingClientRect();
+    return Array.from(assembly.querySelectorAll('.character-equipped')).map(gear => {
+      const bounds = gear.getBoundingClientRect();
+      return { id: gear.getAttribute('data-gear-id'), transform: getComputedStyle(gear).transform, body: { x: body.x, y: body.y, width: body.width, height: body.height }, bounds: { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height } };
     });
   });
-  for (const attachment of attachments) expect(attachment.gear, `The hand item follows ${attachment.joint}`).toBe(attachment.body);
-  await expect(character.locator('.character-slot-head [data-joint="head"]')).toHaveCount(1);
-  await expect(character.locator('.character-slot-top [data-joint="torso"]')).toHaveCount(1);
-  for (const side of ['left', 'right']) await expect(character.locator(`.character-slot-bottom [data-joint="${side}-thigh"]`)).toHaveCount(1);
+  for (const attachment of attachments) {
+    expect(attachment.transform, `${attachment.id} has no independent deformation`).toBe('none');
+    for (const key of ['x', 'y', 'width', 'height'] as const) expect(Math.abs(attachment.bounds[key] - attachment.body[key]), `${attachment.id} preserves the master's ${key}`).toBeLessThan(.5);
+  }
 });
 
-test('reduced motion and the saved effects preference stop articulated animations', async ({ page }) => {
+test('reduced motion and the saved effects preference stop all character animations', async ({ page }) => {
   await seed(page);
   await motionControls(page).getByRole('button', { name: 'Poder', exact: true }).click();
-  await expect.poll(() => runningAnimations(avatar(page))).toBeGreaterThan(2);
+  await expect.poll(() => runningAnimations(avatar(page))).toBeGreaterThan(0);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect.poll(() => runningAnimations(avatar(page))).toBe(0);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await expect.poll(() => runningAnimations(avatar(page))).toBeGreaterThan(2);
+  await expect.poll(() => runningAnimations(avatar(page))).toBeGreaterThan(0);
   await page.getByRole('button', { name: 'Ajustes de Cheesit', exact: true }).click();
   await page.getByRole('switch', { name: 'Efectos y confeti', exact: true }).click();
   await expect.poll(async () => (await stored(page)).preferences?.effects).toBe(false);
