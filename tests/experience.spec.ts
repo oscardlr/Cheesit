@@ -16,7 +16,7 @@ test('series celebrate once and XP survives edits, completion and reload', async
   page.on('console', message => { if (message.type() === 'error') browserErrors.push(message.text()); });
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Resumen' })).toBeVisible();
-  await page.locator('.hero-art img').evaluate(image => (image as HTMLImageElement).decode());
+  await page.locator('.summary-start img').evaluate(image => (image as HTMLImageElement).decode());
   await page.screenshot({ path: 'test-results/redesign-mobile.png', fullPage: true, animations: 'disabled' });
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({ path: 'test-results/redesign-desktop.png', fullPage: true, animations: 'disabled' });
@@ -45,7 +45,7 @@ test('series celebrate once and XP survives edits, completion and reload', async
   await expect(victory).toBeVisible();
   await expect(victory.locator('.celebration-reward')).toContainText('+350');
   await page.screenshot({ path: testInfo.outputPath('workout-victory.png'), animations: 'disabled' });
-  await page.getByRole('button', { name: 'A por el siguiente nivel' }).click();
+  await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(page.locator('.xp-label > strong')).toHaveText(/414 \/ 1\.?000 XP/);
   await expect(page.getByRole('status')).toContainText('Guardado en este dispositivo');
   await page.reload();
@@ -83,7 +83,7 @@ test('discarding historical edits through new session preserves the original wor
   await page.getByRole('button', { name: 'Confirmar serie 1' }).click();
   await page.getByRole('button', { name: 'Cerrar celebración' }).click();
   await page.getByRole('button', { name: 'Finalizar entrenamiento' }).click();
-  await page.getByRole('button', { name: 'A por el siguiente nivel' }).click();
+  await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(page.getByRole('status')).toContainText('Guardado en este dispositivo');
   await page.getByRole('navigation').getByRole('button', { name: 'Calendario', exact: true }).click();
   await page.locator('.list-card .list-row').click();

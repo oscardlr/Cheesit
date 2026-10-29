@@ -74,6 +74,12 @@ const guides: Record<string, [string, string, string]> = {
   'elevacion-piernas': ['Elevación de piernas con control del tronco.', 'Adapta el recorrido o flexiona las rodillas para mantener el movimiento controlado.', 'Suelo, banco o soporte'],
   'crunch-polea': ['Flexión del tronco contra una polea alta.', 'Acerca el tórax a la pelvis manteniendo las manos como apoyo de la carga.', 'Polea alta y cuerda'],
 };
-export const CATALOG: Exercise[] = entries.map(([id, name, group, mode]) => ({ id, name, group, mode: mode ?? 'external_load_reps', description: guides[id]?.[0], technique: guides[id]?.[1], equipment: guides[id]?.[2] }));
+export const CATALOG: Exercise[] = entries.map(([id, name, group, mode]) => ({ id, name, group, mode: mode ?? 'external_load_reps', image: `/assets/exercises/${id}.svg`, description: guides[id]?.[0], technique: guides[id]?.[1], equipment: guides[id]?.[2] }));
+const catalogImages = new Map(CATALOG.map(exercise => [exercise.id, exercise.image!]));
+/** Resolve stable catalog IDs in routines and historical snapshots without rewriting saved data. */
+export function exerciseImage(exerciseId: string, image?: string): string | null {
+  const source = image ?? catalogImages.get(exerciseId);
+  return source && /^\/assets\/exercises\/[a-z0-9-]+\.svg$/.test(source) ? source : null;
+}
 export const GROUPS = [...new Set(CATALOG.map((exercise) => exercise.group))];
 export function normalizeSearch(value: string): string { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, ' '); }

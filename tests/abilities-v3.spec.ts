@@ -45,7 +45,7 @@ test('duplicate gear charges stack and one completed useful workout consumes one
   await expect(page.getByRole('dialog',{name:'SESIÓN COMPLETADA.'})).toBeVisible();
   await expect.poll(async()=>(await stored(page)).game?.abilityUses?.length??0).toBe(1);
   const saved=await stored(page);expect(saved.workouts[0].abilityId).toBe('lime-shorts');expect(saved.workouts[0].abilityReward?.bonusXp).toBeGreaterThan(0);
-  await page.getByRole('button',{name:'A por el siguiente nivel'}).click();await collection(page);await subtab(page,'Habilidades');
+  await page.getByRole('button',{name:'Continuar'}).click();await collection(page);await subtab(page,'Habilidades');
   await expect(page.locator('.ability-card[data-ability-id="lime-shorts"] .ability-charge-row strong')).toHaveText('1');
   await page.reload();await collection(page);await subtab(page,'Habilidades');
   await expect(page.locator('.ability-card[data-ability-id="lime-shorts"] .ability-charge-row strong')).toHaveText('1');

@@ -99,7 +99,7 @@ test('training updates direct and secondary muscle XP for life independently of 
   await page.getByRole('button',{name:'Cerrar celebración'}).click();
   await page.getByRole('button',{name:'Finalizar entrenamiento'}).click();
   await expect(page.locator('.celebration-session-total')).toContainText('410 XP');
-  await page.getByRole('button',{name:'A por el siguiente nivel'}).click();
+  await page.getByRole('button',{name:'Continuar'}).click();
   await openArcade(page); await expect(wallet(page)).toHaveText(formatCreditBalance(initialBalance+82));
   await expect(page.locator('.arcade-wallet')).toHaveAttribute('aria-label',`${new Intl.NumberFormat('es-ES',{maximumFractionDigits:1}).format(initialBalance+82)} créditos disponibles`);
   await page.getByRole('tab',{name:'Cuerpo',exact:true}).click();
@@ -154,12 +154,13 @@ test('a real five second roulette moves, resumes after reload and automatically 
   // Exact landing geometry and reveal timing are covered by the controlled-clock test.
   // The real-clock recovery check may cross the short 800 ms reveal between browser commands.
   await expect(page.locator('.opening-item-result')).toBeVisible({timeout:4000});
-  await expect(page.locator('.opening-item-result')).toContainText(definition.description);
+  await expect(page.locator('.opening-item-result')).toContainText(definition.kind === 'quote' ? 'Frase guardada' : definition.description);
+  if(definition.kind === 'quote')await expect(opening).not.toContainText(definition.description);
   await expect.poll(async()=>(await savedData(page))?.game?.pendingOpening??null).toBeNull();
-  await page.getByRole('button',{name:item.gearId || item.companionId ? 'Usar aspecto' : 'Usar como lema',exact:true}).click();
+  await page.getByRole('button',{name:item.gearId || item.companionId ? 'Usar aspecto' : 'Guardar en colección',exact:true}).click();
   await page.getByRole('tab',{name:'Colección',exact:true}).click();
   await expect(page.locator('.loot-item-card')).toHaveCount(1);
-  await expect(page.locator('.loot-item-card .quote-equip').first()).toHaveAttribute('aria-pressed','true');
+  if(definition.kind !== 'quote')await expect(page.locator('.loot-item-card .quote-equip').first()).toHaveAttribute('aria-pressed','true');
   if(item.gearId) {
     const slot=definition.slot!;
     expect((await savedData(page))!.game!.cosmeticGear?.[slot]).toBe(item.gearId);
@@ -168,7 +169,8 @@ test('a real five second roulette moves, resumes after reload and automatically 
     await expect(page.locator('.wardrobe-stage .character-party .companion-sprite')).toHaveAttribute('data-companion-id',item.companionId);
   } else {
     await navigation(page).getByRole('button',{name:'Resumen',exact:true}).click();
-    await expect(page.locator('.arcade-daily blockquote')).toContainText(definition.description);
+    await expect(page.locator('.arcade-daily, blockquote')).toHaveCount(0);
+    await expect(page.getByRole('main')).not.toContainText(definition.description);
     await openArcade(page); await page.getByRole('tab',{name:'Colección',exact:true}).click();
   }
   await expect(page.getByRole('button',{name:/Vender/})).toHaveCount(0);
@@ -180,7 +182,8 @@ test('a real five second roulette moves, resumes after reload and automatically 
   await expect(wallet(page)).toHaveText(formatCreditBalance(initialBalance-100));
   await page.getByRole('tab',{name:'Colección',exact:true}).click();
   await expect(page.locator('.loot-item-card')).toHaveCount(1);
-  await expect(page.locator('.loot-item-card .quote-equip').first()).toHaveAttribute('aria-pressed','true');
+  if(definition.kind === 'quote')await expect(page.locator('.loot-item-card .quote-equip')).toHaveCount(0);
+  else await expect(page.locator('.loot-item-card .quote-equip').first()).toHaveAttribute('aria-pressed','true');
 });
 
 for (const reducedMotion of ['no-preference', 'reduce'] as const) test(`effects off reveals statically with ${reducedMotion} motion`, async ({page})=>{

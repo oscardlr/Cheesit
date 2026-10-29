@@ -57,17 +57,22 @@ test.beforeEach(async({page})=>{
   await page.emulateMedia({reducedMotion:'reduce'});
 });
 
-test('inventory groups legacy quote duplicates without counters and keeps equipment quantities, filters and persistence',async({page},info)=>{
+test('inventory hides legacy motivational text and equip actions while keeping rewards, quantities and persistence',async({page},info)=>{
   const date=new Date().toISOString();
   const inventory=[item('gear','lime-shorts',date),item('gear','lime-shorts',date),item('gear','lime-shorts',date),item('gear','purple-tank',date),item('quote','show-up',date),item('quote','show-up',date),item('quote','one-rep',date),item('companion','athlete',date),item('companion','athlete',date)];
   delete inventory[4].kind; // Original quote saves have no kind field.
   const initial=owned(inventory);
+  initial.equippedQuoteId='show-up'; // Previously equipped mottos remain in stored data without displaying them.
   await seed(page,initial);await collection(page);
   const gear=card(page,'gear','lime-shorts'),quote=card(page,'quote','show-up'),companion=card(page,'companion','athlete');
   await expect(page.locator('.quote-collection .loot-item-card')).toHaveCount(5);
   await expect(gear).toHaveCount(1);await expect(gear.locator('.inventory-quantity')).toHaveText('3x');
   await expect(gear).toContainText('1 carga por copia revelada.');
   await expect(quote).toHaveCount(1);await expect(quote.locator('.inventory-quantity')).toHaveCount(0);
+  await expect(quote).toContainText('Frase guardada');
+  await expect(quote.getByRole('button')).toHaveCount(0);
+  await expect(page.locator('.arcade-daily, blockquote')).toHaveCount(0);
+  for(const definition of QUOTES)await expect(page.getByRole('main')).not.toContainText(definition.text);
   await expect(page.locator('.loot-item-card[data-item-kind="quote"] .inventory-quantity')).toHaveCount(0);
   await expect(companion).toHaveCount(1);await expect(companion.locator('.inventory-quantity')).toHaveText('2x');
   await expect(card(page,'quote','one-rep')).toHaveCount(1);
@@ -88,8 +93,8 @@ test('inventory groups legacy quote duplicates without counters and keeps equipm
   await page.locator('.collection-filters').getByRole('button',{name:'Todas las rarezas',exact:true}).click();
   await page.locator('.collection-type-filters').getByRole('button',{name:'Frases',exact:true}).click();
   await expect(page.locator('.quote-collection .loot-item-card')).toHaveCount(2);
-  await quote.getByRole('button',{name:'Equipar lema',exact:true}).click();
-  await expect(quote.getByRole('button',{name:'Quitar lema',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(quote.getByRole('button')).toHaveCount(0);
+  await expect(page.getByRole('button',{name:/lema/i})).toHaveCount(0);
   await page.locator('.collection-type-filters').getByRole('button',{name:'Compañeras',exact:true}).click();
   await expect(page.locator('.quote-collection .loot-item-card')).toHaveCount(1);
   await companion.getByRole('button',{name:'Equipar compañera',exact:true}).click();
@@ -107,11 +112,58 @@ test('inventory groups legacy quote duplicates without counters and keeps equipm
   await expect(page.locator('.loot-item-card[data-item-kind="quote"] .inventory-quantity')).toHaveCount(0);
   await expect(companion.locator('.inventory-quantity')).toHaveText('2x');
   await expect(gear.getByRole('button',{name:'Quitar aspecto',exact:true})).toHaveAttribute('aria-pressed','true');
-  await expect(quote.getByRole('button',{name:'Quitar lema',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(quote.getByRole('button')).toHaveCount(0);
   await expect(companion.getByRole('button',{name:'Quitar compañera',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(page.getByRole('button',{name:/Vender/})).toHaveCount(0);
   expect((await stored(page)).game?.inventory).toEqual(initial.inventory);
   expect((await stored(page)).game?.transactions).toEqual(initial.transactions);
+  expect((await stored(page)).game?.equippedQuoteId).toBe('show-up');
+  await page.getByRole('navigation',{name:'Navegación principal'}).getByRole('button',{name:'Resumen',exact:true}).click();
+  await expect(page.locator('.arcade-daily, blockquote')).toHaveCount(0);
+  for(const definition of QUOTES)await expect(page.getByRole('main')).not.toContainText(definition.text);
+});
+
+test('a reserved phrase reward reveals without motivational content and preserves its item and debit',async({page})=>{
+  const date=new Date().toISOString(),reward=item('quote','show-up',date);
+  const game=owned([reward]);
+  game.pendingOpening={itemId:reward.id,startedAt:date,stage:'spinning'};
+  await seed(page,game);await collection(page);
+  const opening=page.getByRole('dialog');
+  await expect(opening).toBeVisible();
+  await page.getByRole('button',{name:'Revelar ahora · sin animación',exact:true}).click();
+  await expect(page.locator('.opening-item-result')).toContainText('Frase guardada');
+  for(const definition of QUOTES)await expect(opening).not.toContainText(definition.text);
+  await expect(opening.getByRole('button',{name:/lema|aspecto/i})).toHaveCount(0);
+  await opening.getByRole('button',{name:'Guardar en colección',exact:true}).click();
+  await expect(card(page,'quote','show-up').getByRole('button')).toHaveCount(0);
+  const saved=(await stored(page)).game!;
+  expect(saved.pendingOpening).toBeNull();
+  expect(saved.inventory).toEqual(game.inventory);
+  expect(saved.transactions).toEqual(game.transactions);
+  await page.reload();await collection(page);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(card(page,'quote','show-up')).toContainText('Frase guardada');
+  expect((await stored(page)).game?.inventory).toEqual(game.inventory);
+  expect((await stored(page)).game?.transactions).toEqual(game.transactions);
+});
+
+test('game empty states use functional copy and keep their navigation actions',async({page})=>{
+  await seed(page,owned([]));await collection(page);
+  await expect(page.getByRole('heading',{name:'No hay recompensas en el inventario.',exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Explorar cofres',exact:true})).toBeVisible();
+  await page.locator('.collection-subtabs').getByRole('button',{name:'Aspectos',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Sin elementos disponibles',exact:true})).toBeVisible();
+  await page.locator('.collection-subtabs').getByRole('button',{name:'Habilidades',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Sin elementos disponibles',exact:true})).toBeVisible();
+  await expect(page.getByText('Elige una antes de empezar un entrenamiento nuevo.',{exact:false})).toBeVisible();
+  await page.getByRole('button',{name:'Explorar cofres',exact:true}).click();
+  await expect(page.getByRole('tab',{name:'Cofres',exact:true})).toHaveAttribute('aria-selected','true');
+  await expect(page.getByRole('heading',{name:'Cofres disponibles',exact:true})).toBeVisible();
+  for(const name of ['Objetivos','Cuerpo','Ascenso','Colección']){
+    await page.getByRole('tab',{name,exact:true}).click();
+    await expect(page.locator('.arcade-daily, blockquote')).toHaveCount(0);
+    for(const definition of QUOTES)await expect(page.getByRole('main')).not.toContainText(definition.text);
+  }
 });
 
 test('inventory quantities exclude historical sales and a duplicate awaiting its reveal',async({page})=>{

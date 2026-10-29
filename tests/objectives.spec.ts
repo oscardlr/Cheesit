@@ -84,7 +84,7 @@ test('52 objectives show their XP and automatically award one completed workout 
   await page.getByRole('button',{name:'Finalizar entrenamiento',exact:true}).click();
   await expect(page.getByRole('dialog',{name:'SESIÓN COMPLETADA.',exact:true})).toBeVisible();
   await expect.poll(async()=>(await stored(page)).game?.missionRewards?.length??0).toBe(2);
-  await page.getByRole('button',{name:'A por el siguiente nivel',exact:true}).click();
+  await page.getByRole('button',{name:'Continuar',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Resumen'})).toBeVisible();
   await expect(page.locator('.xp-label > strong')).toHaveText(/410\s*\/\s*1\.?000 XP/);
 
