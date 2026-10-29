@@ -50,7 +50,7 @@ export default function ArcadeExperience({ loaded, effectsEnabled, soundEnabled 
 
   return intro ? <aside className={`arcade-intro ${effectsEnabled ? '' : 'arcade-intro-quiet'}`} aria-label="Bienvenido a Cheesit">
     <PixelAthlete pose="bench" animated={effectsEnabled} />
-    <div><span><Dumbbell size={12} /> CHEESIT · TU SESIÓN</span><strong>OTRA REPE.<br/><em>OTRO NIVEL.</em></strong><small>Elige rutina, registra y confirma tus series.</small></div>
+    <div><span><Dumbbell size={12} /> CHEESIT · TU SESIÓN</span><strong>REGISTRA<br/><em>TU SESIÓN.</em></strong><small>Elige rutina, registra y confirma tus series.</small></div>
     <button aria-label="Cerrar bienvenida" onClick={() => setIntro(false)}><X size={15}/></button>
   </aside> : null;
 }

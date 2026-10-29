@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { todayMadrid, addDays, isCivilDate, weekStart } from '../src/lib/dates';
-import { COLORS, WORKOUT_COLOR, newWorkout, parseWeight, validSet, type Routine, type Workout, type WorkoutExercise } from '../src/lib/model';
+import { COLORS, LEGACY_ROUTINE_COLORS, WORKOUT_COLOR, newWorkout, parseWeight, validSet, type Routine, type Workout, type WorkoutExercise } from '../src/lib/model';
 import { comparableSets, totals } from '../src/lib/metrics';
 import { createBackup, previewBackup } from '../src/lib/backup';
 
@@ -28,7 +28,7 @@ test('backups round-trip lime sessions alongside historical and routine colors',
   const restored = previewBackup(backup, empty).merged;
   assert.deepEqual(restored, saved);
   assert.equal(restored.workouts[0].color, WORKOUT_COLOR);
-  assert.equal(restored.workouts[1].color, COLORS[0]);
+  assert.equal(restored.workouts[1].color, LEGACY_ROUTINE_COLORS[0]);
   assert.equal(restored.routines[0].color, COLORS[0]);
   const invalid = structuredClone(saved);
   invalid.workouts[0].color = '#ffffff';

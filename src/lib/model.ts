@@ -15,11 +15,25 @@ export type ExercisePrescription = { repsMin?: number | null; repsMax?: number |
 export type WorkoutExercise = ExerciseMetadata & ExercisePrescription & { id: string; exerciseId: string; name: string; group: string; mode: ExerciseMode; sets: WorkoutSet[] };
 export type Workout = { id: string; date: string; name: string; color: string; status: 'draft' | 'finished' | 'deleted'; createdAt: string; updatedAt: string; exercises: WorkoutExercise[]; abilityId?:string|null; abilityReward?:AbilityUse; notes?: string; startedAt?: string; finishedAt?: string; autoRest?: boolean; defaultRestSeconds?: number; restTimer?: { endsAt: string | null; remainingSeconds: number; durationSeconds: number } };
 export type RoutineExercise = ExercisePrescription & { id: string; exerciseId: string; sets: number };
-export type Routine = { id: string; name: string; color: string; archived: boolean; exercises: RoutineExercise[]; notes?: string };
+export const ROUTINE_ICONS = ['dumbbell', 'biceps-flexed', 'target', 'flame', 'activity', 'timer', 'mountain', 'heart-pulse'] as const;
+export type RoutineIconId = typeof ROUTINE_ICONS[number];
+export const DEFAULT_ROUTINE_ICON: RoutineIconId = 'dumbbell';
+export const isRoutineIcon = (value: unknown): value is RoutineIconId => typeof value === 'string' && (ROUTINE_ICONS as readonly string[]).includes(value);
+/** Missing icons in historical snapshots resolve without rewriting their data. */
+export const resolvedRoutineIcon = (value: unknown): RoutineIconId => isRoutineIcon(value) ? value : DEFAULT_ROUTINE_ICON;
+export type Routine = { id: string; name: string; color: string; icon?: RoutineIconId; archived: boolean; exercises: RoutineExercise[]; notes?: string };
 export type RoutineDraft = Omit<Routine, 'exercises'> & { exercises: (Omit<RoutineExercise, 'sets'> & { sets: number | null })[] };
 export type AppData = { routines: Routine[]; workouts: Workout[]; customExercises: Exercise[]; routineDraft?: RoutineDraft; game?: GameState; profile?: AthleteProfile; preferences?: { effects: boolean; sound: boolean } };
 
-export const COLORS = ['#0057C2', '#6638A6', '#176B43', '#A61B29', '#8B4500', '#475569'] as const;
+export const ROUTINE_COLOR_OPTIONS = [
+  { value: '#d8ff3e', label: 'lima' }, { value: '#61C9A8', label: 'jade' },
+  { value: '#7BB7F0', label: 'azul cielo' }, { value: '#B8A0FF', label: 'lavanda' },
+  { value: '#F2C56B', label: 'ámbar' }, { value: '#EC8997', label: 'coral' },
+] as const;
+export const COLORS = ROUTINE_COLOR_OPTIONS.map(color => color.value);
+/** Historical colors remain valid for local data, backups and account sync. */
+export const LEGACY_ROUTINE_COLORS = ['#0057C2', '#6638A6', '#176B43', '#A61B29', '#8B4500', '#475569'] as const;
+export const isRoutineColor = (value: unknown): value is string => typeof value === 'string' && ([...COLORS, ...LEGACY_ROUTINE_COLORS] as readonly string[]).includes(value);
 export const WORKOUT_COLOR = '#d8ff3e';
 export const emptyData = (): AppData => ({ routines: [], workouts: [], customExercises: [] });
 export const newId = (): string => crypto.randomUUID();

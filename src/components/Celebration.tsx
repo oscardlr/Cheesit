@@ -134,9 +134,9 @@ export default function Celebration({ event, onDismiss, effectsEnabled, soundEna
         {isWorkout ? <div className="celebration-athlete-stage" aria-hidden="true"><span className="celebration-orbit"/><PixelAthlete pose={levelUp ? 'climb' : 'victory'} animated={effectsEnabled}/><span className="celebration-player-label">{levelUp ? 'LEVEL UP' : 'WORKOUT CLEAR'}</span></div>
           : <div className="celebration-emblem" aria-hidden="true"><span /><Icon strokeWidth={1.7} /></div>}
         <div className="celebration-content">
-          <div className="celebration-kicker"><Sparkles size={12} />{isWorkout ? 'MISIÓN COMPLETADA · JACKPOT' : isRecord ? 'TU MEJOR MARCA' : 'UNA MÁS PARA TI'}</div>
+          <div className="celebration-kicker"><Sparkles size={12} />{isWorkout ? 'ENTRENAMIENTO GUARDADO' : isRecord ? 'TU MEJOR MARCA' : 'SERIE CONFIRMADA'}</div>
           <h2 id={`celebration-title-${event.id}`}>{title}</h2>
-          <p className="celebration-detail">{isWorkout ? event.title || 'Entrenamiento completado. Te lo has ganado.' : <>{event.weight > 0 ? `${new Intl.NumberFormat('es-ES').format(event.weight)} kg × ` : ''}{event.reps} repeticiones. Cada una cuenta.</>}</p>
+          <p className="celebration-detail">{isWorkout ? event.title || 'Entrenamiento completado.' : <>{event.weight > 0 ? `${new Intl.NumberFormat('es-ES').format(event.weight)} kg × ` : ''}{event.reps} repeticiones.</>}</p>
         </div>
         <span className="celebration-sr" aria-live="polite" aria-atomic="true">{title} Has ganado {event.xp} XP.{levelUp ? ` Has alcanzado el nivel ${event.levelAfter}.` : ''}</span>
         <div className="celebration-reward" aria-label={`${event.xp} XP ganados`}><span aria-hidden="true">+<CountUp value={event.xp} animated={effectsEnabled} eventId={event.id}/></span><small>{isWorkout ? 'XP NUEVOS · BONUS DE SESIÓN' : 'XP GANADOS'}</small></div>
@@ -146,7 +146,7 @@ export default function Celebration({ event, onDismiss, effectsEnabled, soundEna
         {levelUp && <div className="celebration-level-scene">
           <div className="celebration-level-copy"><Gift size={18}/><span>NUEVO NIVEL DESBLOQUEADO</span><strong>{event.levelAfter}</strong></div>
           <div className="celebration-stairs" aria-hidden="true"><i/><i/><i/><i/><PixelAthlete pose="climb" animated={effectsEnabled}/><Gift className="celebration-chest" size={30}/></div>
-          <p>Nivel {event.levelBefore} <ArrowUpRight size={14}/> Nivel {event.levelAfter}. Sigue construyéndote.</p>
+          <p>Nivel {event.levelBefore} <ArrowUpRight size={14}/> Nivel {event.levelAfter}.</p>
           <p>Tu cofre de nivel te espera en Universo RPG → Cofres.</p>
         </div>}
         {isWorkout && <>
@@ -155,9 +155,8 @@ export default function Celebration({ event, onDismiss, effectsEnabled, soundEna
           {event.breakdown && event.breakdown.length > 0 && <div className="celebration-breakdown">{event.breakdown.map((row, index) => <div key={`${row.label}-${index}`}><span>{row.label}</span><strong>+{new Intl.NumberFormat('es-ES').format(row.xp)} XP</strong></div>)}</div>}
           {event.totalXp !== undefined && <div className="celebration-session-total"><span>TOTAL DE ESTA SESIÓN</span><strong>{new Intl.NumberFormat('es-ES').format(event.totalXp)} XP</strong><small>Incluye las series que ya has cobrado.</small></div>}
           {!!event.historicalAdjustment && <p className="celebration-history-note">Al añadir esta sesión anterior se han recalculado el progreso y los récords del historial: {event.historicalAdjustment>0?'+':''}{new Intl.NumberFormat('es-ES').format(event.historicalAdjustment)} XP de ajuste.</p>}
-          <div className="celebration-workout-stats"><span><Check size={16} /> Guardado en tu historial</span><strong>{event.reps} <small>repeticiones de esfuerzo real</small></strong></div>
-          <button className="celebration-continue" onClick={onDismiss}>A por el siguiente nivel <ArrowUpRight size={20} /></button>
-          <p className="celebration-footer">EL PROGRESO SE GANA. TÚ ACABAS DE HACERLO.</p>
+          <div className="celebration-workout-stats"><span><Check size={16} /> Guardado en tu historial</span><strong>{event.reps} <small>repeticiones</small></strong></div>
+          <button className="celebration-continue" onClick={onDismiss}>Continuar <ArrowUpRight size={20} /></button>
         </>}
       </section>
     </div>

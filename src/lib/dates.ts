@@ -21,3 +21,14 @@ export function weekStart(value: string): string {
   const day = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
   return addDays(value, -((day + 6) % 7));
 }
+
+/** Monday–Sunday rows containing only this month's dates and inert alignment gaps. */
+export function calendarMonth(value: string): (string | null)[] {
+  if (!isCivilDate(value)) throw new Error('Fecha no válida');
+  const first = `${value.slice(0, 7)}-01`;
+  const [year, month] = first.split('-').map(Number);
+  const offset = (new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7;
+  const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return Array.from({ length: Math.ceil((offset + days) / 7) * 7 }, (_, index) =>
+    index < offset || index >= offset + days ? null : `${first.slice(0, 8)}${String(index - offset + 1).padStart(2, '0')}`);
+}

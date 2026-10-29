@@ -1,0 +1,20 @@
+@media (max-width: 600px) {
+  .library:global(.exercise-library) :global(.catalog-entry) {
+    flex-wrap: wrap;
+  }
+
+  .library:global(.exercise-library) :global(.catalog-entry > .list-row) {
+    flex-basis: 100%;
+    gap: 10px;
+    padding: 12px 10px;
+  }
+
+  .library:global(.exercise-library) :global(.catalog-entry > .text-action) {
+    min-height: 36px;
+    padding: 0 10px;
+  }
+
+  .library:global(.exercise-library) :global(.list-row + .text-action) {
+    margin-left: auto;
+  }
+}

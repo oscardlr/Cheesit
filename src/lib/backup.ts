@@ -2,7 +2,7 @@ import { CATALOG, GROUPS } from './catalog';
 import { isAthleteProfile } from './strength';
 import { GEAR, type GearSlot } from './gear';
 import { isCivilDate, todayMadrid } from './dates';
-import { COLORS, WORKOUT_COLOR, copiedName, newId, snapshotLoadConventions, validName, validPlannedSets, validSet, type AppData, type Exercise, type Routine, type Workout, type WorkoutSet } from './model';
+import { WORKOUT_COLOR, copiedName, isRoutineColor, isRoutineIcon, newId, resolvedRoutineIcon, snapshotLoadConventions, validName, validPlannedSets, validSet, type AppData, type Exercise, type Routine, type Workout, type WorkoutSet } from './model';
 import { getAbilityCharges, isGameState, normalizeGame, unlockedCompanions, unlockedGear, type GameState } from './game';
 import { getAbilityDefinition, isAbilityUse } from './abilities';
 import { MUSCLES } from './muscles';
@@ -11,7 +11,8 @@ const record = (value: unknown): value is Record<string, unknown> => typeof valu
 const uuid = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 const name = (value: unknown): value is string => typeof value === 'string' && validName(value);
 const mode = (value: unknown) => value === 'external_load_reps' || value === 'bodyweight_reps';
-const color = (value: unknown) => typeof value === 'string' && (COLORS as readonly string[]).includes(value);
+const color = isRoutineColor;
+const routineIcon = (value: unknown) => value === undefined || isRoutineIcon(value);
 const workoutColor = (value: unknown) => value === WORKOUT_COLOR || color(value);
 const bounded = (value: unknown, max: number): value is unknown[] => Array.isArray(value) && value.length <= max;
 const fail = (what: string): never => { throw new Error(`Copia no válida: ${what}. No se ha importado nada.`); };
@@ -45,7 +46,7 @@ function validateData(value: unknown): AppData {
   const knownExercises = new Set([...CATALOG.map((exercise) => exercise.id), ...value.customExercises.map((exercise) => (exercise as Exercise).id)]);
   if (value.routineDraft !== undefined) {
     const draft = value.routineDraft;
-    if (!record(draft) || !uuid(draft.id) || typeof draft.name !== 'string' || draft.name.length > 80 || !color(draft.color) || typeof draft.archived !== 'boolean' || !optionalText(draft.notes) || !bounded(draft.exercises, 50)) return fail('borrador de rutina');
+    if (!record(draft) || !uuid(draft.id) || typeof draft.name !== 'string' || draft.name.length > 80 || !color(draft.color) || !routineIcon(draft.icon) || typeof draft.archived !== 'boolean' || !optionalText(draft.notes) || !bounded(draft.exercises, 50)) return fail('borrador de rutina');
     // This is an editor snapshot of a saved routine; its identifiers may intentionally match it.
     const draftIds = new Set<string>([draft.id]);
     for (const exercise of draft.exercises) {
@@ -54,7 +55,7 @@ function validateData(value: unknown): AppData {
     }
   }
   for (const routine of value.routines) {
-    if (!record(routine) || !name(routine.name) || !color(routine.color) || typeof routine.archived !== 'boolean' || !bounded(routine.exercises, 50) || !optionalText(routine.notes)) return fail('rutina');
+    if (!record(routine) || !name(routine.name) || !color(routine.color) || !routineIcon(routine.icon) || typeof routine.archived !== 'boolean' || !bounded(routine.exercises, 50) || !optionalText(routine.notes)) return fail('rutina');
     add(routine.id);
     for (const exercise of routine.exercises) {
       if (!record(exercise) || typeof exercise.exerciseId !== 'string' || !knownExercises.has(exercise.exerciseId) || !validPlannedSets(exercise.sets as number) || !prescription(exercise)) return fail('ejercicio de rutina');
@@ -153,10 +154,10 @@ export function previewBackup(raw: unknown, current: AppData, resolutions: Recor
   const remappedExercises = new Map<string, string>();
   const conflict = (detail: BackupConflict) => { conflictDetails.push(detail); const choice = resolutions[detail.key]; if (!choice || !detail.choices.includes(choice)) conflicts.push(`${detail.kind}: ${detail.name} (${detail.id})`); return choice; };
   function duplicate<T extends { id: string }>(kind: keyof Counts, item: T, existingNames: string[]): T {
-    const copy = structuredClone(item) as T & { name?: string; exercises?: { id: string; sets?: { id: string }[] }[] };
+    const copy = structuredClone(item) as T & { name?: string; exercises?: { id: string; sets?: number | { id: string }[] }[] };
     copy.id = newId();
     if (copy.name) copy.name = copiedName(copy.name, existingNames);
-    for (const exercise of copy.exercises ?? []) { exercise.id = newId(); for (const set of exercise.sets ?? []) set.id = newId(); }
+    for (const exercise of copy.exercises ?? []) { exercise.id = newId(); for (const set of Array.isArray(exercise.sets) ? exercise.sets : []) set.id = newId(); }
     if (kind === 'customExercises') remappedExercises.set(item.id, copy.id);
     return copy;
   }
@@ -166,7 +167,7 @@ export function previewBackup(raw: unknown, current: AppData, resolutions: Recor
     for (const item of additions) {
       const found = byId.get(item.id);
       if (found) {
-        const snapshot = (value: T, profile: AppData['profile']) => kind === 'workouts' ? snapshotLoadConventions({ routines: [], customExercises: [], workouts: [value as unknown as Workout], profile }).workouts[0] : value;
+        const snapshot = (value: T, profile: AppData['profile']) => kind === 'workouts' ? snapshotLoadConventions({ routines: [], customExercises: [], workouts: [value as unknown as Workout], profile }).workouts[0] : kind === 'routines' ? { ...value, icon: resolvedRoutineIcon((value as unknown as Routine).icon) } : value;
         if (canonical(snapshot(found, current.profile)) === canonical(snapshot(item, incoming.profile))) duplicateCounts[kind]++;
         else {
           const choices: BackupResolution[] = kind === 'workouts' && (item as unknown as Workout).abilityReward ? ['local', 'incoming'] : ['local', 'incoming', 'duplicate'];
@@ -182,7 +183,8 @@ export function previewBackup(raw: unknown, current: AppData, resolutions: Recor
   const customExercises = merge<Exercise>('customExercises', current.customExercises, incoming.customExercises);
   if (remappedExercises.size) incoming = { ...incoming, ...(incoming.routineDraft ? { routineDraft: { ...incoming.routineDraft, exercises: incoming.routineDraft.exercises.map(exercise => ({ ...exercise, exerciseId: remappedExercises.get(exercise.exerciseId) ?? exercise.exerciseId })) } } : {}), routines: incoming.routines.map(routine => ({ ...routine, exercises: routine.exercises.map(exercise => ({ ...exercise, exerciseId: remappedExercises.get(exercise.exerciseId) ?? exercise.exerciseId })) })), workouts: incoming.workouts.map(workout => ({ ...workout, exercises: workout.exercises.map(exercise => ({ ...exercise, exerciseId: remappedExercises.get(exercise.exerciseId) ?? exercise.exerciseId })) })) };
   const merged: AppData = { customExercises, routines: merge<Routine>('routines', current.routines, incoming.routines), workouts: merge<Workout>('workouts', current.workouts, incoming.workouts) };
-  if (current.routineDraft && incoming.routineDraft && canonical(current.routineDraft) !== canonical(incoming.routineDraft)) {
+  const draftSnapshot = (draft: AppData['routineDraft']) => draft ? { ...draft, icon: resolvedRoutineIcon(draft.icon) } : draft;
+  if (current.routineDraft && incoming.routineDraft && canonical(draftSnapshot(current.routineDraft)) !== canonical(draftSnapshot(incoming.routineDraft))) {
     const choice = conflict({ key: 'routineDraft:recovery', kind: 'routineDraft', id: incoming.routineDraft.id, name: 'Borrador de rutina pendiente', local: current.routineDraft, incoming: incoming.routineDraft, choices: ['local', 'incoming'] });
     merged.routineDraft = choice === 'incoming' ? incoming.routineDraft : current.routineDraft;
   } else if (current.routineDraft ?? incoming.routineDraft) merged.routineDraft = current.routineDraft ?? incoming.routineDraft;

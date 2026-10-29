@@ -36,6 +36,9 @@ test('verified offline shell recovers an incomplete decimal draft after offline 
   await page.reload({ waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
   await checkDraft(page);
+  const thumbnail = page.locator('.exercise-head img');
+  await expect(thumbnail).toBeVisible();
+  expect(await thumbnail.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
   await expect(page.locator('.offline-shell')).toContainText('Disponible sin conexión');
   await context.setOffline(false);
   await expect(page.getByRole('status')).toContainText('Guardado en este dispositivo');

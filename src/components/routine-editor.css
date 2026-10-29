@@ -1,0 +1,9 @@
+.routine-colors .color-choice{width:44px;height:44px;min-height:44px;color:#1c1923;flex-shrink:0}
+.routine-colors .legacy-color{color:#fff}
+.routine-icon-field{padding:0;margin:0 0 24px;border:0;min-width:0}
+.routine-icon-field legend{font-size:12px;font-weight:500;margin-bottom:13px;color:#c8bbd4}
+.routine-icon-choices{display:flex;flex-wrap:wrap;gap:9px}
+.routine-icon-choice{display:grid;place-items:center;min-width:44px;min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:#c8bbd4}
+.routine-icon-choice:hover{border-color:var(--purple);color:var(--text)}
+.routine-icon-choice.selected{border-color:var(--lime);background:#d8ff3e12;color:var(--lime)}
+.routine-icon-choice:focus-visible,.routine-colors .color-choice:focus-visible{outline:2px solid var(--text);outline-offset:4px}

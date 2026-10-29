@@ -6,7 +6,7 @@ test('routine, confirmed series, recovery and calendar persist locally', async (
   await page.getByRole('navigation').getByRole('button', { name: 'Rutinas' }).click();
   await page.getByRole('button', { name: '＋ Crear rutina' }).click();
   await page.getByLabel('Nombre de la rutina').fill('Fuerza de prueba');
-  await page.getByRole('button', { name: 'Color morado', exact: true }).click();
+  await page.getByRole('button', { name: 'Color lavanda', exact: true }).click();
   await page.getByRole('button', { name: '＋ Añadir ejercicio' }).click();
   await page.getByRole('dialog').getByRole('button', { name: /Press de banca con barra/ }).click();
   await page.getByRole('button', { name: 'Guardar rutina' }).click();
@@ -37,7 +37,7 @@ test('routine, confirmed series, recovery and calendar persist locally', async (
   });
   await page.getByRole('button', { name: 'Finalizar entrenamiento' }).click();
   await expect(page.getByRole('dialog', { name: 'SESIÓN COMPLETADA.' })).toBeVisible();
-  await page.getByRole('button', { name: 'A por el siguiente nivel' }).click();
+  await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(page.getByRole('heading', { name: 'Resumen' })).toBeVisible();
   await expect(page.getByRole('status')).toContainText('Guardado en este dispositivo');
   await expect(page.locator('.stat-card').filter({ hasText: 'Series' }).locator('strong')).toHaveText('1');
