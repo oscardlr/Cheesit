@@ -1,0 +1,30 @@
+/* Stable portrait window; motion lives on independent, padded layers. */
+.companion-sprite[data-companion-id]{position:relative;isolation:isolate;display:inline-block;aspect-ratio:3/5;background:none;overflow:hidden;animation:none!important;vertical-align:middle;filter:none}
+.cheesit-figure{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform-origin:50% 94%;image-rendering:auto;animation:cheesit-poise var(--cheesit-idle) ease-in-out infinite;animation-play-state:paused}
+.cheesit-aura{position:absolute;z-index:-1;inset:15% 5% 8%;border-radius:50%;background:radial-gradient(ellipse,color-mix(in srgb,var(--companion-aura) 20%,transparent),transparent 68%);opacity:.4;animation:cheesit-glow var(--cheesit-idle) ease-in-out infinite;animation-play-state:paused}
+.cheesit-sparks{position:absolute;inset:5% 8%;pointer-events:none;opacity:0}
+.cheesit-spark{position:absolute;left:50%;top:45%;width:4px;height:4px;border-radius:50%;background:var(--companion-aura);box-shadow:0 0 8px var(--companion-aura);animation:var(--cheesit-spark) var(--cheesit-celebration) ease-in-out infinite;animation-delay:calc(var(--spark-index) * -.43s);animation-play-state:paused}
+.companion-sprite[data-running=true] .cheesit-figure,.companion-sprite[data-running=true] .cheesit-aura,.companion-sprite[data-running=true] .cheesit-spark{animation-play-state:running}
+.companion-sprite[data-motion=celebrate] .cheesit-figure{animation-name:cheesit-salute;animation-duration:var(--cheesit-celebration)}
+.companion-sprite[data-motion=celebrate] .cheesit-aura{animation-name:cheesit-celebration-glow;animation-duration:var(--cheesit-celebration)}
+.companion-sprite[data-motion=celebrate][data-running=true] .cheesit-sparks{opacity:1}
+.companion-sprite[data-rhythm=guard] .cheesit-aura,.companion-sprite[data-rhythm=clock] .cheesit-aura{inset:32% 5% 15%;border:1px solid color-mix(in srgb,var(--companion-aura) 14%,transparent);border-radius:35%}
+.companion-sprite[data-rhythm=spell] .cheesit-aura{inset:0 10% 40%}
+.companion-sprite[data-rhythm=regal] .cheesit-aura{inset:5% 8% 30%;border:1px solid #ffcf6317}
+.companion-sprite[data-rhythm=tide] .cheesit-aura{background:radial-gradient(ellipse at 50% 80%,#56dfd733,transparent 68%)}
+.companion-sprite[data-rhythm=dance] .cheesit-aura{background:radial-gradient(ellipse at 50% 35%,#ffb84e35,transparent 66%)}
+.companion-sprite[data-rhythm=astral] .cheesit-aura{border:1px dashed #b68aff25;rotate:-15deg}
+.cheesit-art-fallback{position:absolute;inset:8%;display:grid;place-items:center;color:var(--companion-aura);border:1px dashed currentColor;border-radius:40%;font-size:28px}
+.cosmetic-locked-art>.companion-sprite[data-companion-id]{filter:grayscale(1) opacity(.65)}
+@keyframes cheesit-poise{0%,100%{transform:rotate(0)}50%{transform:rotate(var(--cheesit-turn))}}
+@keyframes cheesit-salute{0%,100%{transform:rotate(0)}30%{transform:rotate(calc(var(--cheesit-turn) * -2))}65%{transform:rotate(calc(var(--cheesit-turn) * 3))}}
+@keyframes cheesit-glow{0%,100%{opacity:.3}50%{opacity:.65}}
+@keyframes cheesit-celebration-glow{0%,100%{opacity:.35}35%,65%{opacity:.95}}
+@keyframes cheesit-rise{0%{transform:translate(-30px,45px);opacity:0}35%{opacity:.8}100%{transform:translate(25px,-65px);opacity:0}}
+@keyframes cheesit-shield{0%,100%{transform:rotate(0) translateX(28px);opacity:0}50%{transform:rotate(180deg) translateX(28px);opacity:.8}}
+@keyframes cheesit-orbit{0%,100%{transform:rotate(0) translateX(36px);opacity:0}30%,70%{opacity:.8}99%{transform:rotate(350deg) translateX(36px)}}
+@keyframes cheesit-crown{0%,100%{transform:translate(-24px,-30px);opacity:0}50%{transform:translate(18px,-65px);opacity:.85}}
+@keyframes cheesit-wave{0%,100%{transform:translate(-32px,30px);opacity:0}50%{transform:translate(32px,-15px);opacity:.8}}
+.effects-disabled .companion-sprite *,.companion-sprite:not(.is-animated) *,html[data-arcade-effects=false] .companion-sprite *{animation:none!important}
+.effects-disabled .cheesit-sparks,html[data-arcade-effects=false] .cheesit-sparks{opacity:0!important}
+@media(prefers-reduced-motion:reduce){.companion-sprite[data-companion-id] *{animation:none!important;transform:none!important}.companion-sprite .cheesit-sparks{opacity:0!important}}

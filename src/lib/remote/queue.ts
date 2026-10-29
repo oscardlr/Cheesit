@@ -1,4 +1,6 @@
 import type { Action, EntityPayload, EntityType, LocalEntity, Operation, Receipt } from './types';
+import { preserveWorkoutPassiveEvent } from '../cheesit-passives';
+import type { Workout } from '../model';
 
 const DB = 'entrenos-remote-v1';
 const ENTITIES = 'entities';
@@ -117,6 +119,9 @@ export async function resolveRevision(owner: string, operationId: string, choice
     local.revision = remote.revision; delete local.conflict;
     if (choice === 'server') { local.payload = remote.payload; local.deleted = remote.deleted; }
     else {
+      // The server's captured passive event already won a revision. Keep local
+      // training edits without retrying or replacing that frozen reward.
+      if (op.type === 'session') local.payload = preserveWorkoutPassiveEvent(local.payload as unknown as Workout, remote.payload as unknown as Workout) as unknown as EntityPayload;
       const counter = (await result<number | undefined>(meta.get('counter')) ?? 0) + 1;
       const replacement: Operation = { owner, operationId: crypto.randomUUID(), deviceId, type: op.type, entityId: op.entityId, action: local.deleted ? 'delete' : 'upsert', payload: local.deleted ? null : local.payload, order: counter, baseRevision: remote.revision, state: 'queued' };
       operations.put(replacement); meta.put(counter, 'counter');

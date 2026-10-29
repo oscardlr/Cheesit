@@ -87,7 +87,10 @@ test('reward choices affect only explicit future draws and retain rarity and def
   const inventory:InventoryItem[]=[{id:crypto.randomUUID(),kind:'companion',companionId:companion.id,rarity:companion.rarity,acquiredAt:new Date().toISOString(),crateId:'starter',sold:false}];
   assert.equal(rewardForRoll('common',.9,0,false,inventory).kind,'companion');
   const choice=rewardForRoll('common',.9,0,false,inventory,{avoidCompanionDuplicates:true});
-  assert.equal(choice.kind,'gear');assert.equal(choice.rarity,'common');
+  assert.equal(choice.kind,'companion');assert.equal(choice.rarity,'common');
+  assert.notEqual(choice.id,companion.id,'another common cheesit remains obtainable');
+  const completedRarity:InventoryItem[]=COMPANIONS.filter(value=>value.rarity==='common').map(value=>({...inventory[0],id:crypto.randomUUID(),companionId:value.id}));
+  assert.equal(rewardForRoll('common',.9,0,false,completedRarity,{avoidCompanionDuplicates:true}).kind,'gear');
   assert.equal(inventory.length,1);
   const target=GEAR.find(value=>value.rarity==='rare'&&value.slot==='top')!;
   const selected=rewardForRoll('rare',.9,0,true,inventory,{gearSlot:target.slot});

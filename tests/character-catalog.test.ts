@@ -1,12 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { GEAR } from '../src/lib/gear';
+import { COMPANIONS } from '../src/lib/companions';
 import { CHARACTER_EQUIPMENT_COMBINATIONS, CHARACTER_PARTY_COMBINATIONS, CHARACTER_SLOT_COUNTS, enumerateCharacterEquipment, type CharacterEquipment } from '../src/lib/character-catalog';
 
-test('the original catalog has 32,256 compatible outfits and five independent companion options', () => {
+test('the catalog preserves 32,256 compatible outfits and adds eight independent cheesits plus the empty option', () => {
   assert.deepEqual(CHARACTER_SLOT_COUNTS, { head: 7, top: 8, bottom: 7, hand: 7, back: 6 });
   assert.equal(CHARACTER_EQUIPMENT_COMBINATIONS, 32_256);
-  assert.equal(CHARACTER_PARTY_COMBINATIONS, 161_280);
+  assert.equal(COMPANIONS.length, 8);
+  assert.equal(CHARACTER_PARTY_COMBINATIONS, 290_304);
 });
 
 test('all full-catalog outfits are unique, use the correct slots and cover every item and empty slot', () => {

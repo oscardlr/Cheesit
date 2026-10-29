@@ -65,22 +65,29 @@ test('mythic equipment and companions cannot be sold and stay equipped through r
   await expect(page.locator('.wardrobe-stage .character-party .companion-sprite')).toHaveAttribute('data-companion-id','dragon-queen');
   await subtab(page,'Aspectos');await expect(page.locator('.cosmetic-card').filter({hasText:'Armadura celestial'})).toBeVisible();
   await subtab(page,'Inventario');
-  await expect(page.locator('.collection-subtabs').getByRole('button',{name:'Compañeras',exact:true})).toHaveCount(0);
-  await expect(page.locator('.loot-item-card[data-definition-id="dragon-queen"]').getByRole('button',{name:'Quitar compañera',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('.collection-subtabs').getByRole('button',{name:'Cheesits',exact:true})).toHaveCount(0);
+  await expect(page.locator('.loot-item-card[data-definition-id="dragon-queen"]').getByRole('button',{name:'Quitar cheesit',exact:true})).toHaveAttribute('aria-pressed','true');
   await nav(page).getByRole('button',{name:'Resumen',exact:true}).click();await page.reload();await expect(page.locator('.character-summary-card .character-slot-top')).toHaveCount(1);await expect(page.locator('.character-summary-card .companion-sprite')).toHaveAttribute('data-companion-id','dragon-queen');
   expect((await stored(page)).game).toEqual(before.game);
 });
 
-test('character, legendary aura and companion visibly idle and stop for reduced motion',async({page})=>{
+test('the equipped rigid character and cheesit visibly idle and stop for reduced motion',async({page})=>{
   await seed(page,['phoenix-crown'],['sorceress'],true);
+  await page.locator('.character-summary-card').scrollIntoViewIfNeeded();
   const layers=page.locator('.character-summary-card .character-layers');
-  await expect(layers).toHaveCSS('animation-name','character-living-idle');
+  await expect(layers).toHaveCSS('animation-name','character-idle');
   const first=await layers.evaluate(element=>getComputedStyle(element).transform);
   await expect.poll(()=>layers.evaluate(element=>getComputedStyle(element).transform)).not.toBe(first);
-  await expect(page.locator('.character-summary-card .character-equipped')).toHaveCSS('animation-name','gear-living-aura');
-  await expect(page.locator('.character-summary-card .companion-sprite')).toHaveCSS('animation-name','companion-living-idle');
+  await expect(page.locator('.character-summary-card .character-equipped')).toHaveCSS('animation-name','none');
+  await expect(page.locator('.character-summary-card .character-equipped')).toHaveCSS('transform','none');
+  const cheesit=page.locator('.character-summary-card .companion-sprite');
+  await expect(cheesit).toHaveAttribute('data-motion','idle');
+  await expect(cheesit).toHaveAttribute('data-running','true');
+  const cheesitLayers=cheesit.locator('.cheesit-figure,.cheesit-aura,.cheesit-spark');
+  await expect.poll(()=>cheesitLayers.evaluateAll(elements=>elements.filter(element=>getComputedStyle(element).animationName.split(',').some(name=>name.trim().startsWith('cheesit-'))).length)).toBeGreaterThan(0);
   await page.emulateMedia({reducedMotion:'reduce'});
-  await expect(layers).toHaveCSS('animation-name','none');await expect(page.locator('.character-summary-card .companion-sprite')).toHaveCSS('animation-name','none');
+  await expect(layers).toHaveCSS('animation-name','none');
+  await expect.poll(()=>cheesitLayers.evaluateAll(elements=>elements.every(element=>getComputedStyle(element).animationName==='none'))).toBe(true);
 });
 
 test('all wardrobe sections and the equipped party fit narrow mobile through desktop',async({page},info)=>{

@@ -29,7 +29,7 @@ test('level thresholds grow and finish popup distinguishes previously earned ser
     { ...exercise([series(30, 8)]), exerciseId: 'squat', group: 'Pierna y glúteo' },
   ], 'finished', '2026-10-27');
   assert.deepEqual(workoutReward(current, [previous, current]), {
-    sets: 3, setXp: 184, finishXp: 200, varietyXp: 100, recordXp: 75, abilityXp: 0, abilityCredits: 0,
+    sets: 3, setXp: 184, finishXp: 200, varietyXp: 100, recordXp: 75, abilityXp: 0, abilityCredits: 0, companionXp: 0, companionCredits: 0,
     records: 1, bonusXp: 375, totalXp: 559, credits: 111,
   });
   assert.equal(workoutReward({ ...current, status: 'draft' }, [previous]).totalXp, 184);
