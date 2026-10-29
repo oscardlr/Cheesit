@@ -8,6 +8,7 @@ import { TEST_CREDITS } from './test-credits';
 import { abilityMatches, getAbilityDefinition, isAbilityUse, type AbilityUse } from './abilities';
 import { getAvailableAbilityCharges, getLegacyAbilityUseIds, validateAbilityChargeHistory } from './ability-charges';
 import { awardObjectiveMissions, getObjectiveMissions, missionRewardXp, validMissionRewards, type Mission, type MissionReward } from './objectives';
+import { workoutPassiveReward } from './cheesit-passives';
 
 export type Rarity = 'common' | 'rare' | 'epic' | 'legendary';
 export const RARITIES: Record<Rarity, { label: string; color: string; sellValue: number; order: number }> = {
@@ -36,7 +37,7 @@ export const QUOTES: Quote[] = [
 ];
 export type Crate = { id: string; name: string; description: string; cost: number; odds: Record<Rarity, number> };
 export const CRATES: Crate[] = [
-  { id: 'starter', name: 'Cofre de hierro', description: 'Equipo, una frase o una compañera para tu colección.', cost: 100, odds: { common: 70, rare: 23, epic: 6, legendary: 1 } },
+  { id: 'starter', name: 'Cofre de hierro', description: 'Equipo, una frase o un cheesit para tu colección.', cost: 100, odds: { common: 70, rare: 23, epic: 6, legendary: 1 } },
   { id: 'charged', name: 'Cofre de energía', description: 'Más posibilidades de conseguir equipo épico.', cost: 250, odds: { common: 35, rare: 43, epic: 18, legendary: 4 } },
   { id: 'legend', name: 'Cofre de leyenda', description: 'Una recompensa rara o mejor, garantizada.', cost: 500, odds: { common: 0, rare: 55, epic: 35, legendary: 10 } },
 ];
@@ -125,7 +126,9 @@ export function isGameState(value: unknown): value is GameState {
     if (!record(item) || !id(item.id) || ids.has(item.id) || !date(item.acquiredAt) || typeof item.sold !== 'boolean' || typeof item.crateId !== 'string') return false;
     const isGear = item.kind === 'gear' && typeof item.gearId === 'string' && item.quoteId === undefined && item.companionId === undefined && GEAR.some(gear => gear.id === item.gearId && gear.rarity === item.rarity);
     const isQuote = (item.kind === undefined || item.kind === 'quote') && item.gearId === undefined && item.companionId === undefined && typeof item.quoteId === 'string' && QUOTES.some(quote => quote.id === item.quoteId && quote.rarity === item.rarity);
-    const isCompanion = item.kind === 'companion' && typeof item.companionId === 'string' && item.quoteId === undefined && item.gearId === undefined && COMPANIONS.some(companion => companion.id === item.companionId && companion.rarity === item.rarity);
+    // Forward-compatible cheesits stay in the ledger, but unknown IDs cannot be
+    // equipped for an effect. One future character must not erase the inventory.
+    const isCompanion = item.kind === 'companion' && typeof item.companionId === 'string' && /^[a-z0-9][a-z0-9-]{0,79}$/.test(item.companionId) && item.quoteId === undefined && item.gearId === undefined && Object.hasOwn(RARITIES, item.rarity as string) && (!COMPANIONS.some(companion => companion.id === item.companionId) || COMPANIONS.some(companion => companion.id === item.companionId && companion.rarity === item.rarity));
     if (!isGear && !isQuote && !isCompanion) return false;
     const level = sourceLevel(item.crateId);
     const crate = level === null ? CRATES.find(crate => crate.id === item.crateId) : levelCrate(level);
@@ -229,7 +232,13 @@ export function gameCreditStatus(game: GameState, history: Workout[], profile?: 
       !(game.abilityUses ?? []).some(use => use.workoutId === workout.id && use.abilityId === workout.abilityReward!.abilityId && use.bonusCredits === workout.abilityReward!.bonusCredits)) return sum;
     unique.add(workout.id); return sum + workout.abilityReward.bonusCredits;
   }, 0);
-  const rawEarned=100+Math.floor(gameProgress(game,history,profile).xp/5)+abilityCredits+game.transactions.filter(transaction=>!transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0);
+  const passiveSessions = new Set<string>();
+  const companionCredits = history.reduce((sum, workout) => {
+    if (passiveSessions.has(workout.id)) return sum;
+    passiveSessions.add(workout.id);
+    return sum + workoutPassiveReward(workout).bonusCredits;
+  }, 0);
+  const rawEarned=100+Math.floor(gameProgress(game,history,profile).xp/5)+abilityCredits+companionCredits+game.transactions.filter(transaction=>!transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0);
   const earned=Math.max(0,rawEarned);
   const testing=testAllowance>0?testAllowance+game.transactions.filter(transaction=>transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0):0;
   return { balance: Math.max(0,earned+testing), earnedBalance: earned, deficit: Math.max(0,-rawEarned), testingBalance: testing };

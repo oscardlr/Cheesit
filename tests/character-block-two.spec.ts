@@ -17,7 +17,7 @@ test('the actual catalog enumerates every valid independent combination exactly 
   expect(GEAR).toHaveLength(35);
   expect(INSPECTION_SLOTS.map(slot => INSPECTION_SLOT_ITEMS[slot].length)).toEqual([7, 8, 7, 7, 6]);
   expect(CHARACTER_COMBINATION_COUNT).toBe(32256);
-  expect(PARTY_COMBINATION_COUNT).toBe(161280);
+  expect(PARTY_COMBINATION_COUNT).toBe(290304);
   expect(PARTY_COMBINATION_COUNT).toBe(CHARACTER_COMBINATION_COUNT * (COMPANIONS.length + 1));
   expect(Object.values(CHARACTER_ART).filter(art => art.origin === 'tailored')).toHaveLength(29);
   expect(Object.values(CHARACTER_ART).filter(art => art.origin === 'reused')).toHaveLength(6);
@@ -53,7 +53,7 @@ test('the local tool inspects all 35 garments with their matching thumbnail and 
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await openInspection(page);
   await expect(page.locator('.character-inspection > header')).toContainText('32.256');
-  await expect(page.locator('.character-inspection > header')).toContainText('161.280');
+  await expect(page.locator('.character-inspection > header')).toContainText('290.304');
   await expect(page.locator('[data-inspection-gear]')).toHaveCount(35);
   for (const item of GEAR) {
     const card = page.locator(`[data-inspection-gear="${item.id}"]`);
@@ -106,7 +106,7 @@ test('inspection mixes every slot and companion, pauses motion and respects effe
   await openInspection(page);
   const labels = ['Cabeza', 'Torso', 'Piernas', 'Mano', 'Espalda'];
   for (let index = 0; index < INSPECTION_SLOTS.length; index++) await page.getByRole('combobox', { name: labels[index], exact: true }).selectOption(`ronin-${INSPECTION_SLOTS[index]}`);
-  await page.getByRole('combobox', { name: 'Compañera', exact: true }).selectOption('dragon-queen');
+  await page.getByRole('combobox', { name: 'Cheesit', exact: true }).selectOption('dragon-queen');
   await expect(live(page).locator('.character-equipped')).toHaveCount(5);
   await expect(live(page).locator('.character-companion')).toHaveCount(1);
   await page.getByRole('navigation', { name: 'Animaciones de inspección' }).getByRole('button', { name: 'Poder', exact: true }).click();

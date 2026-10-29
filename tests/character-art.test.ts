@@ -4,13 +4,14 @@ import { readFileSync } from 'node:fs';
 import sharp from 'sharp';
 import { GEAR } from '../src/lib/gear';
 import { COMPANIONS } from '../src/lib/companions';
+import { CHEESIT_ART, CHEESIT_MOTION } from '../src/lib/cheesit-art';
 import { CHARACTER_ART, CHARACTER_ATLAS, CHARACTER_MASTER, CHARACTER_MASKS, CHARACTER_VIEWBOX, COMPANION_ART } from '../src/lib/character-art';
 import { CHARACTER_EQUIPMENT_COMBINATIONS, enumerateCharacterEquipment } from '../src/lib/character-catalog';
 
 const frame = CHARACTER_VIEWBOX.split(/\s+/).map(Number);
 const atlas = readFileSync(new URL(`../public${CHARACTER_ATLAS.src}`, import.meta.url));
 const fitsFrame = ([x, y, width, height]: readonly number[]) => x >= frame[0] && y >= frame[1] && x + width <= frame[0] + frame[2] && y + height <= frame[1] + frame[3];
-const originalCompanionIds = COMPANIONS.map(companion => companion.id);
+const originalCompanionIds = ['athlete', 'warrior', 'sorceress', 'dragon-queen'];
 
 test('one final transparent atlas contains the 35 stable gear IDs and four existing companions', () => {
   assert.deepEqual([...atlas.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
@@ -129,4 +130,50 @@ test('companion crops include complete independent original characters without f
       assert.ok(largest / visible > .995, `${companionId}: foreign disconnected fragments remain`);
     }
   }
+});
+
+test('eight independent cheesit images share a transparent stable frame with safe animation margins', async () => {
+  assert.deepEqual(new Set(Object.keys(CHEESIT_ART)), new Set(COMPANIONS.map(item => item.id)));
+  const contents = new Set<string>();
+  for (const companion of COMPANIONS) {
+    const art = CHEESIT_ART[companion.id];
+    assert.equal(art.src, `/assets/cheesits/${companion.id}.png`);
+    assert.deepEqual([art.width, art.height], [384, 640]);
+    const png = readFileSync(new URL(`../public${art.src}`, import.meta.url));
+    const metadata = await sharp(png).metadata();
+    assert.equal(metadata.format, 'png');
+    assert.equal(metadata.hasAlpha, true, `${companion.id}: real alpha channel`);
+    assert.deepEqual([metadata.width, metadata.height], [art.width, art.height]);
+    contents.add(png.toString('base64'));
+    const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    let visible = 0, transparent = 0, minX = info.width, minY = info.height, maxX = -1, maxY = -1;
+    for (let pixel = 0; pixel < info.width * info.height; pixel++) {
+      const alpha = data[pixel * info.channels + 3];
+      if (alpha === 0) transparent++;
+      if (alpha < 24) continue;
+      visible++;
+      const x = pixel % info.width, y = Math.floor(pixel / info.width);
+      minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+    }
+    assert.ok(transparent > info.width * info.height * .15, `${companion.id}: no opaque background`);
+    assert.ok(visible > 8_000, `${companion.id}: character remains legible at its native size`);
+    assert.ok(minX >= 8 && minY >= 8 && maxX < info.width - 8 && maxY < info.height - 8, `${companion.id}: all visible art has an eight-pixel safe margin (${minX},${minY})–(${maxX},${maxY})`);
+    assert.ok(maxY - minY > 350, `${companion.id}: full-height character, rather than a small icon`);
+  }
+  assert.equal(contents.size, COMPANIONS.length, 'each cheesit has its own image');
+});
+
+test('each cheesit has its own bounded motion profile for idle and celebration', () => {
+  assert.deepEqual(new Set(Object.keys(CHEESIT_MOTION)), new Set(COMPANIONS.map(item => item.id)));
+  const personalities = new Set<string>();
+  for (const companion of COMPANIONS) {
+    const motion = CHEESIT_MOTION[companion.id];
+    assert.ok(Number.isFinite(motion.idle) && motion.idle >= 1 && motion.idle <= 15, `${companion.id}: slow idle cadence`);
+    assert.ok(Number.isFinite(motion.celebration) && motion.celebration >= 1 && motion.celebration <= 15, `${companion.id}: readable celebration cadence`);
+    assert.ok(Number.isFinite(motion.turn) && Math.abs(motion.turn) <= 1, `${companion.id}: subtle rigid portrait rotation`);
+    assert.ok(motion.spark.startsWith('cheesit-'));
+    personalities.add(`${motion.rhythm}:${motion.idle}:${motion.celebration}:${motion.turn}:${motion.spark}`);
+  }
+  assert.equal(personalities.size, COMPANIONS.length, 'the catalog does not reuse one identical animation profile');
 });

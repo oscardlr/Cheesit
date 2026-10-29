@@ -1,6 +1,7 @@
 import { validSet, type Workout, type WorkoutExercise, type WorkoutSet } from './model';
 import { effectiveLoad, normalizeProfile, strengthReference, type AthleteProfile } from './strength';
 import { isAbilityUse } from './abilities';
+import { workoutPassiveReward } from './cheesit-passives';
 
 /** Base only: the full series reward also reflects reps, load and personal progress. */
 export const SET_XP = 30;
@@ -103,8 +104,10 @@ function sessionReward(workout: Workout, index: Map<string, SetReward>, visited 
   const finishXp = finished ? WORKOUT_XP : 0, varietyXp = finished && groups.size >= 3 ? VARIETY_XP : 0;
   if (!finished) { records = 0; abilityXp = 0; }
   const abilityCredits = finished && isAbilityUse(workout.abilityReward) && workout.abilityReward.workoutId === workout.id && workout.abilityReward.abilityId === workout.abilityId ? workout.abilityReward.bonusCredits : 0;
-  const recordXp = records * RECORD_XP, bonusXp = finishXp + varietyXp + recordXp + abilityXp, totalXp = setXp + bonusXp;
-  return { sets, setXp, finishXp, varietyXp, recordXp, records, abilityXp, abilityCredits, bonusXp, totalXp, credits: Math.floor(totalXp / 5) + abilityCredits };
+  const passive = finished ? workoutPassiveReward(workout) : { bonusXp: 0, bonusCredits: 0 };
+  const companionXp = passive.bonusXp, companionCredits = passive.bonusCredits;
+  const recordXp = records * RECORD_XP, bonusXp = finishXp + varietyXp + recordXp + abilityXp + companionXp, totalXp = setXp + bonusXp;
+  return { sets, setXp, finishXp, varietyXp, recordXp, records, abilityXp, abilityCredits, companionXp, companionCredits, bonusXp, totalXp, credits: Math.floor(totalXp / 5) + abilityCredits + companionCredits };
 }
 
 /** Series are earned during the draft; only bonusXp is new on finish. */
@@ -115,8 +118,11 @@ export function workoutReward(workout: Workout, history: Workout[], profile?: At
 /** Recompute saved activity instead of accumulating awards, including after edits/deletions. */
 export function rewardProgress(history: Workout[], profile?: AthleteProfile) {
   const index = rewardSetIndex(history, profile), visited = new Set<string>();
+  const sessions = new Set<string>();
   let sets = 0, workouts = 0, xp = 0;
   for (const workout of history) {
+    if (sessions.has(workout.id)) continue;
+    sessions.add(workout.id);
     const reward = sessionReward(workout, index, visited);
     sets += reward.sets; xp += reward.totalXp;
     if (reward.finishXp) workouts++;

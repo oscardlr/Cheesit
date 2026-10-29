@@ -4,6 +4,7 @@ import type { GameState } from './game';
 import type { AthleteProfile } from './strength';
 import type { AbilityUse } from './abilities';
 import type { MuscleId } from './muscles';
+import { snapshotWorkoutPassive, type CompanionPassiveAward, type CompanionPassiveSnapshot } from './cheesit-passives';
 
 export type ExerciseMode = 'external_load_reps' | 'bodyweight_reps';
 /** Reps count the movements performed: alternating/single loads are never doubled. */
@@ -13,7 +14,7 @@ export type Exercise = ExerciseMetadata & { id: string; name: string; group: str
 export type WorkoutSet = { id: string; weight: number | null; reps: number | null; confirmed: boolean; rpe?: number | null; rir?: number | null; weightText?: string; repsText?: string };
 export type ExercisePrescription = { repsMin?: number | null; repsMax?: number | null; targetWeight?: number | null; restSeconds?: number | null; notes?: string };
 export type WorkoutExercise = ExerciseMetadata & ExercisePrescription & { id: string; exerciseId: string; name: string; group: string; mode: ExerciseMode; sets: WorkoutSet[] };
-export type Workout = { id: string; date: string; name: string; color: string; status: 'draft' | 'finished' | 'deleted'; createdAt: string; updatedAt: string; exercises: WorkoutExercise[]; abilityId?:string|null; abilityReward?:AbilityUse; notes?: string; startedAt?: string; finishedAt?: string; autoRest?: boolean; defaultRestSeconds?: number; restTimer?: { endsAt: string | null; remainingSeconds: number; durationSeconds: number } };
+export type Workout = { id: string; date: string; name: string; color: string; status: 'draft' | 'finished' | 'deleted'; createdAt: string; updatedAt: string; exercises: WorkoutExercise[]; abilityId?:string|null; abilityReward?:AbilityUse; companionPassive?: CompanionPassiveSnapshot | null; companionReward?: CompanionPassiveAward; notes?: string; startedAt?: string; finishedAt?: string; autoRest?: boolean; defaultRestSeconds?: number; restTimer?: { endsAt: string | null; remainingSeconds: number; durationSeconds: number } };
 export type RoutineExercise = ExercisePrescription & { id: string; exerciseId: string; sets: number };
 export const ROUTINE_ICONS = ['dumbbell', 'biceps-flexed', 'target', 'flame', 'activity', 'timer', 'mountain', 'heart-pulse'] as const;
 export type RoutineIconId = typeof ROUTINE_ICONS[number];
@@ -40,11 +41,11 @@ export const newId = (): string => crypto.randomUUID();
 export const newSet = (): WorkoutSet => ({ id: newId(), weight: null, reps: null, confirmed: false });
 
 /** Copies exercise information at the time a session starts. */
-export function newWorkout(routine?: Routine, exercises: Exercise[] = CATALOG, profile?: AthleteProfile): Workout {
+export function newWorkout(routine?: Routine, exercises: Exercise[] = CATALOG, profile?: AthleteProfile, game?: GameState): Workout {
   if (routine?.exercises.some(item => !validPlannedSets(item.sets))) throw new Error('Las series previstas deben ser un entero entre 1 y 20.');
   if (routine?.exercises.some(item => !validRoutinePrescription(item))) throw new Error('Revisa los rangos de repeticiones, carga y descanso de la rutina.');
   const now = new Date().toISOString();
-  return {
+  return snapshotWorkoutPassive({
     id: newId(), date: todayMadrid(), name: routine?.name ?? 'Entrenamiento', color: WORKOUT_COLOR,
     status: 'draft', createdAt: now, updatedAt: now, startedAt: now, ...(routine?.notes ? { notes: routine.notes } : {}),
     exercises: (routine?.exercises ?? []).flatMap((item) => {
@@ -54,7 +55,7 @@ export function newWorkout(routine?: Routine, exercises: Exercise[] = CATALOG, p
       return [{ ...prescription, ...exerciseSnapshot(exercise, profile), id: newId(),
         sets: Array.from({ length: item.sets }, () => ({ ...newSet(), weight: exercise.mode === 'bodyweight_reps' ? 0 : item.targetWeight ?? null, reps: item.repsMin ?? null })) }];
     }),
-  };
+  }, game);
 }
 
 export function validSet(set: WorkoutSet, mode: ExerciseMode): boolean {

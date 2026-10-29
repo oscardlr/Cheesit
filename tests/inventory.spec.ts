@@ -4,6 +4,8 @@ import { COMPANIONS } from '../src/lib/companions';
 import { getAbilityCharges, isGameState, normalizeGame, QUOTES, RARITIES, type GameState, type InventoryItem } from '../src/lib/game';
 import type { AppData } from '../src/lib/model';
 import { DEFAULT_PROFILE } from '../src/lib/strength';
+import { CHARACTER_ATLAS } from '../src/lib/character-art';
+import { CHEESIT_ART } from '../src/lib/cheesit-art';
 
 async function stored(page:Page):Promise<AppData>{
   return page.evaluate(()=>new Promise<AppData>((resolve,reject)=>{
@@ -95,9 +97,9 @@ test('inventory hides legacy motivational text and equip actions while keeping r
   await expect(page.locator('.quote-collection .loot-item-card')).toHaveCount(2);
   await expect(quote.getByRole('button')).toHaveCount(0);
   await expect(page.getByRole('button',{name:/lema/i})).toHaveCount(0);
-  await page.locator('.collection-type-filters').getByRole('button',{name:'Compañeras',exact:true}).click();
+  await page.locator('.collection-type-filters').getByRole('button',{name:'Cheesits',exact:true}).click();
   await expect(page.locator('.quote-collection .loot-item-card')).toHaveCount(1);
-  await companion.getByRole('button',{name:'Equipar compañera',exact:true}).click();
+  await companion.getByRole('button',{name:'Equipar cheesit',exact:true}).click();
   await page.locator('.collection-type-filters').getByRole('button',{name:'Todo',exact:true}).click();
   await gear.getByRole('button',{name:'Usar aspecto',exact:true}).click();
   await expect.poll(async()=>(await stored(page)).game?.cosmeticGear?.bottom).toBe('lime-shorts');
@@ -113,7 +115,7 @@ test('inventory hides legacy motivational text and equip actions while keeping r
   await expect(companion.locator('.inventory-quantity')).toHaveText('2x');
   await expect(gear.getByRole('button',{name:'Quitar aspecto',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(quote.getByRole('button')).toHaveCount(0);
-  await expect(companion.getByRole('button',{name:'Quitar compañera',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(companion.getByRole('button',{name:'Quitar cheesit',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(page.getByRole('button',{name:/Vender/})).toHaveCount(0);
   expect((await stored(page)).game?.inventory).toEqual(initial.inventory);
   expect((await stored(page)).game?.transactions).toEqual(initial.transactions);
@@ -202,7 +204,7 @@ test('inventory orders each rarity by companion, equipment and phrases while loo
   const kinds=()=>page.locator('.loot-item-card').evaluateAll(elements=>elements.map(element=>element.getAttribute('data-item-kind')));
   await expect.poll(()=>rarities('.loot-item-card')).toEqual(rarestFirst.flatMap(rarity=>[rarity,rarity,rarity]));
   await expect.poll(kinds).toEqual(rarestFirst.flatMap(()=>['companion','gear','quote']));
-  await page.locator('.collection-type-filters').getByRole('button',{name:'Compañeras',exact:true}).click();
+  await page.locator('.collection-type-filters').getByRole('button',{name:'Cheesits',exact:true}).click();
   await expect.poll(()=>rarities('.loot-item-card')).toEqual(rarestFirst);
   await page.locator('.collection-type-filters').getByRole('button',{name:'Todo',exact:true}).click();
   await page.locator('.collection-filters').getByRole('button',{name:'Rara',exact:true}).click();
@@ -229,29 +231,29 @@ test('companions equip from inventory and the sixth wardrobe slot and persist wi
   await expect(page.locator('.collection-subtabs').getByRole('button')).toHaveText(['Inventario','Aspectos','Habilidades']);
   const slot=page.locator('.wardrobe-slot[data-slot="companion"]');
   await expect(page.locator('.wardrobe-slot')).toHaveCount(6);
-  await expect(slot).toContainText('Compañera');
+  await expect(slot).toContainText('Cheesit');
   await expect(slot.locator('select')).toHaveCount(0);
   await expect(slot.locator('.companion-sprite')).toHaveCount(0);
-  await card(page,'companion','athlete').getByRole('button',{name:'Equipar compañera',exact:true}).click();
+  await card(page,'companion','athlete').getByRole('button',{name:'Equipar cheesit',exact:true}).click();
   await expect(slot.locator('.companion-sprite')).toHaveAttribute('data-companion-id','athlete');
   await expect(slot.locator('.companion-sprite')).toHaveAttribute('data-companion-id','athlete');
   await expect(page.locator('.wardrobe-stage .character-party .companion-sprite')).toHaveAttribute('data-companion-id','athlete');
-  await slot.getByRole('button',{name:'Ver aspectos de Compañera',exact:true}).click();
+  await slot.getByRole('button',{name:'Ver aspectos de Cheesit',exact:true}).click();
   await expect(page.locator('.collection-subtabs').getByRole('button',{name:'Aspectos',exact:true})).toHaveAttribute('aria-pressed','true');
-  await expect(page.getByRole('navigation',{name:'Filtrar aspectos por ranura'}).getByRole('button',{name:'Compañera',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(page.getByRole('navigation',{name:'Filtrar aspectos por ranura'}).getByRole('button',{name:'Cheesit',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('.cosmetic-card[data-gear-id]')).toHaveCount(0);
-  await page.locator('.cosmetic-card[data-companion-id="dragon-queen"]').getByRole('button',{name:'Equipar compañera',exact:true}).click();
+  await page.locator('.cosmetic-card[data-companion-id="dragon-queen"]').getByRole('button',{name:'Equipar cheesit',exact:true}).click();
   await page.locator('.collection-subtabs').getByRole('button',{name:'Inventario',exact:true}).click();
   await expect(slot.locator('.companion-sprite')).toHaveAttribute('data-companion-id','dragon-queen');
-  await expect(card(page,'companion','dragon-queen').getByRole('button',{name:'Quitar compañera',exact:true})).toHaveAttribute('aria-pressed','true');
-  await expect(card(page,'companion','athlete').getByRole('button',{name:'Equipar compañera',exact:true})).toHaveAttribute('aria-pressed','false');
+  await expect(card(page,'companion','dragon-queen').getByRole('button',{name:'Quitar cheesit',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(card(page,'companion','athlete').getByRole('button',{name:'Equipar cheesit',exact:true})).toHaveAttribute('aria-pressed','false');
   await expect.poll(async()=>(await stored(page)).game?.equippedCompanionId).toBe('dragon-queen');
   await page.getByRole('navigation',{name:'Navegación principal'}).getByRole('button',{name:'Resumen',exact:true}).click();
   await page.reload();
   await expect(page.locator('.character-summary-card .character-party .companion-sprite')).toHaveAttribute('data-companion-id','dragon-queen');
   await collection(page);
   await expect(slot.locator('.companion-sprite')).toHaveAttribute('data-companion-id','dragon-queen');
-  await slot.getByRole('button',{name:'Quitar compañera del armario',exact:true}).click();
+  await slot.getByRole('button',{name:'Quitar cheesit del armario',exact:true}).click();
   await expect(slot.locator('.companion-sprite')).toHaveCount(0);
   await expect(page.locator('.wardrobe-stage .character-party .companion-sprite')).toHaveCount(0);
   await expect.poll(async()=>(await stored(page)).game?.equippedCompanionId).toBeNull();
@@ -273,7 +275,7 @@ test('all six wardrobe shortcuts open their aspect filter by keyboard when empty
     {slot:'bottom',shortcut:'Piernas',filter:'Piernas'},
     {slot:'hand',shortcut:'Mano',filter:'Manos'},
     {slot:'back',shortcut:'Espalda',filter:'Espalda'},
-    {slot:'companion',shortcut:'Compañera',filter:'Compañera'},
+    {slot:'companion',shortcut:'Cheesit',filter:'Cheesit'},
   ];
   const filters=page.getByRole('navigation',{name:'Filtrar aspectos por ranura',exact:true});
   const looks=page.getByRole('region',{name:'Aspectos del armario',exact:true});
@@ -296,8 +298,8 @@ test('all six wardrobe shortcuts open their aspect filter by keyboard when empty
     await filteredTo(slot,filter);
     await expect(looks).toBeFocused();
     const first=page.locator('.cosmetic-card').first();
-    await first.getByRole('button',{name:slot==='companion'?'Equipar compañera':'Usar aspecto',exact:true}).click();
-    await expect(first.getByRole('button',{name:slot==='companion'?'Quitar compañera':'Quitar aspecto',exact:true})).toHaveAttribute('aria-pressed','true');
+    await first.getByRole('button',{name:slot==='companion'?'Equipar cheesit':'Usar aspecto',exact:true}).click();
+    await expect(first.getByRole('button',{name:slot==='companion'?'Quitar cheesit':'Quitar aspecto',exact:true})).toHaveAttribute('aria-pressed','true');
     await expect(stageSlot.getByRole('button',{name:/^Quitar /})).toHaveCount(1);
   }
   await expect.poll(async()=>Object.keys((await stored(page)).game?.cosmeticGear??{}).length).toBe(5);
@@ -308,7 +310,7 @@ test('all six wardrobe shortcuts open their aspect filter by keyboard when empty
     await page.locator(`.wardrobe-slot[data-slot="${slot}"]`).getByRole('button',{name:`Ver aspectos de ${shortcut}`,exact:true}).click();
     await filteredTo(slot,filter);
     await expect(looks).toBeFocused();
-    await expect(page.locator('.cosmetic-card').getByRole('button',{name:slot==='companion'?'Quitar compañera':'Quitar aspecto',exact:true})).toHaveCount(1);
+    await expect(page.locator('.cosmetic-card').getByRole('button',{name:slot==='companion'?'Quitar cheesit':'Quitar aspecto',exact:true})).toHaveCount(1);
   }
 
   // The same categories also work directly, and Todos restores the complete
@@ -325,8 +327,8 @@ test('all six wardrobe shortcuts open their aspect filter by keyboard when empty
     await page.setViewportSize({width,height:1000});
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
     await page.locator('.wardrobe-stage').screenshot({path:info.outputPath(`wardrobe-slot-shortcuts-${width}.png`),animations:'disabled'});
-    await filters.getByRole('button',{name:'Compañera',exact:true}).click();
-    await filteredTo('companion','Compañera');
+    await filters.getByRole('button',{name:'Cheesit',exact:true}).click();
+    await filteredTo('companion','Cheesit');
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
     await looks.screenshot({path:info.outputPath(`companion-aspects-${width}.png`),animations:'disabled'});
     await filters.getByRole('button',{name:'Todos',exact:true}).click();
@@ -341,38 +343,38 @@ test('companions equip and unequip as permanent aspects and stay synchronized wi
   const game=owned([item('gear','purple-tank',date),item('companion','athlete',date),item('companion','dragon-queen',date)]);
   await seed(page,game);await collection(page);
   const slot=page.locator('.wardrobe-slot[data-slot="companion"]');
-  await slot.getByRole('button',{name:'Ver aspectos de Compañera',exact:true}).click();
+  await slot.getByRole('button',{name:'Ver aspectos de Cheesit',exact:true}).click();
   const filters=page.getByRole('navigation',{name:'Filtrar aspectos por ranura',exact:true});
-  await expect(filters.getByRole('button',{name:'Compañera',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(filters.getByRole('button',{name:'Cheesit',exact:true})).toHaveAttribute('aria-pressed','true');
   const queen=page.locator('.cosmetic-card[data-companion-id="dragon-queen"]');
   const athlete=page.locator('.cosmetic-card[data-companion-id="athlete"]');
   await expect(page.locator('.cosmetic-card')).toHaveCount(2);
   await expect(queen).toHaveAttribute('data-slot','companion');
   await expect(athlete).toHaveAttribute('data-slot','companion');
-  await expect(queen.getByRole('button',{name:'Equipar compañera',exact:true})).toHaveAttribute('aria-pressed','false');
-  await queen.getByRole('button',{name:'Equipar compañera',exact:true}).click();
+  await expect(queen.getByRole('button',{name:'Equipar cheesit',exact:true})).toHaveAttribute('aria-pressed','false');
+  await queen.getByRole('button',{name:'Equipar cheesit',exact:true}).click();
   await expect(slot.locator('.companion-sprite')).toHaveAttribute('data-companion-id','dragon-queen');
   await expect(page.locator('.wardrobe-stage .character-party .companion-sprite')).toHaveAttribute('data-companion-id','dragon-queen');
   await expect.poll(async()=>(await stored(page)).game?.equippedCompanionId).toBe('dragon-queen');
   await page.locator('.collection-subtabs').getByRole('button',{name:'Inventario',exact:true}).click();
-  await expect(card(page,'companion','dragon-queen').getByRole('button',{name:'Quitar compañera',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(card(page,'companion','dragon-queen').getByRole('button',{name:'Quitar cheesit',exact:true})).toHaveAttribute('aria-pressed','true');
   await page.reload();await collection(page);
   await expect(slot.locator('.companion-sprite')).toHaveAttribute('data-companion-id','dragon-queen');
-  await slot.getByRole('button',{name:'Ver aspectos de Compañera',exact:true}).click();
-  await expect(queen.getByRole('button',{name:'Quitar compañera',exact:true})).toHaveAttribute('aria-pressed','true');
-  await athlete.getByRole('button',{name:'Equipar compañera',exact:true}).click();
-  await expect(queen.getByRole('button',{name:'Equipar compañera',exact:true})).toHaveAttribute('aria-pressed','false');
+  await slot.getByRole('button',{name:'Ver aspectos de Cheesit',exact:true}).click();
+  await expect(queen.getByRole('button',{name:'Quitar cheesit',exact:true})).toHaveAttribute('aria-pressed','true');
+  await athlete.getByRole('button',{name:'Equipar cheesit',exact:true}).click();
+  await expect(queen.getByRole('button',{name:'Equipar cheesit',exact:true})).toHaveAttribute('aria-pressed','false');
   await expect(slot.locator('.companion-sprite')).toHaveAttribute('data-companion-id','athlete');
-  await athlete.getByRole('button',{name:'Quitar compañera',exact:true}).click();
+  await athlete.getByRole('button',{name:'Quitar cheesit',exact:true}).click();
   await expect(slot.locator('.companion-sprite')).toHaveCount(0);
   await expect(page.locator('.wardrobe-stage .character-party .companion-sprite')).toHaveCount(0);
   await expect(page.locator('.cosmetic-card')).toHaveCount(2);
   await expect.poll(async()=>(await stored(page)).game?.equippedCompanionId).toBeNull();
   await page.reload();await collection(page);
-  await expect(card(page,'companion','athlete').getByRole('button',{name:'Equipar compañera',exact:true})).toHaveAttribute('aria-pressed','false');
-  await slot.getByRole('button',{name:'Ver aspectos de Compañera',exact:true}).click();
-  await expect(queen.getByRole('button',{name:'Equipar compañera',exact:true})).toHaveAttribute('aria-pressed','false');
-  await expect(athlete.getByRole('button',{name:'Equipar compañera',exact:true})).toHaveAttribute('aria-pressed','false');
+  await expect(card(page,'companion','athlete').getByRole('button',{name:'Equipar cheesit',exact:true})).toHaveAttribute('aria-pressed','false');
+  await slot.getByRole('button',{name:'Ver aspectos de Cheesit',exact:true}).click();
+  await expect(queen.getByRole('button',{name:'Equipar cheesit',exact:true})).toHaveAttribute('aria-pressed','false');
+  await expect(athlete.getByRole('button',{name:'Equipar cheesit',exact:true})).toHaveAttribute('aria-pressed','false');
   expect((await stored(page)).game?.inventory).toEqual(game.inventory);
   expect((await stored(page)).game?.transactions).toEqual(game.transactions);
 });
@@ -389,22 +391,22 @@ test('a companion-only wardrobe keeps historical unlocked aspects and hides an u
   game.pendingOpening={itemId:queen.id,startedAt:date,stage:'spinning'};
   await seed(page,game);await collection(page);
   await page.getByRole('button',{name:'Guardar apertura para después',exact:true}).click();
-  await expect(page.locator('.loot-item-card')).toHaveCount(2);
+  await expect(page.locator('.loot-item-card')).toHaveCount(COMPANIONS.length-2);
   const slot=page.locator('.wardrobe-slot[data-slot="companion"]');
-  await slot.getByRole('button',{name:'Ver aspectos de Compañera',exact:true}).click();
-  await expect(page.locator('.cosmetic-card')).toHaveCount(3);
+  await slot.getByRole('button',{name:'Ver aspectos de Cheesit',exact:true}).click();
+  await expect(page.locator('.cosmetic-card')).toHaveCount(COMPANIONS.length-1);
   await expect(page.locator('.cosmetic-card[data-gear-id]')).toHaveCount(0);
   await expect(page.locator('.cosmetic-card[data-companion-id="dragon-queen"]')).toHaveCount(0);
   await expect(page.locator('.cosmetic-locked-card[data-companion-id="dragon-queen"]')).toHaveCount(1);
   await expect(page.locator('.cosmetic-locked-card[data-companion-id="warrior"]')).toHaveCount(0);
-  await expect.poll(()=>page.locator('.cosmetic-card').evaluateAll(elements=>elements.map(element=>element.getAttribute('data-rarity')))).toEqual(['epic','rare','common']);
+  await expect.poll(()=>page.locator('.cosmetic-card').evaluateAll(elements=>elements.map(element=>element.getAttribute('data-rarity')))).toEqual(COMPANIONS.filter(companion=>companion.id!=='dragon-queen').sort((left,right)=>RARITIES[right.rarity].order-RARITIES[left.rarity].order).map(companion=>companion.rarity));
   const filters=page.getByRole('navigation',{name:'Filtrar aspectos por ranura',exact:true});
   await filters.getByRole('button',{name:'Torso',exact:true}).click();
   await expect(page.locator('.cosmetic-card')).toHaveCount(0);
   await filters.getByRole('button',{name:'Todos',exact:true}).click();
-  await expect(page.locator('.cosmetic-card')).toHaveCount(3);
+  await expect(page.locator('.cosmetic-card')).toHaveCount(COMPANIONS.length-1);
   const permanent=page.locator('.cosmetic-card[data-companion-id="warrior"]');
-  await permanent.getByRole('button',{name:'Equipar compañera',exact:true}).click();
+  await permanent.getByRole('button',{name:'Equipar cheesit',exact:true}).click();
   await expect(slot.locator('.companion-sprite')).toHaveAttribute('data-companion-id','warrior');
   await expect(page.locator('.wardrobe-stage .character-party .companion-sprite')).toHaveAttribute('data-companion-id','warrior');
   await expect.poll(async()=>(await stored(page)).game?.equippedCompanionId).toBe('warrior');
@@ -413,8 +415,8 @@ test('a companion-only wardrobe keeps historical unlocked aspects and hides an u
   await expect(card(page,'companion','dragon-queen')).toHaveCount(0);
   await page.reload();await collection(page);
   await page.getByRole('button',{name:'Guardar apertura para después',exact:true}).click();
-  await slot.getByRole('button',{name:'Ver aspectos de Compañera',exact:true}).click();
-  await expect(permanent.getByRole('button',{name:'Quitar compañera',exact:true})).toHaveAttribute('aria-pressed','true');
+  await slot.getByRole('button',{name:'Ver aspectos de Cheesit',exact:true}).click();
+  await expect(permanent.getByRole('button',{name:'Quitar cheesit',exact:true})).toHaveAttribute('aria-pressed','true');
   const saved=(await stored(page)).game!;
   expect(saved.inventory).toEqual(game.inventory);expect(saved.transactions).toEqual(game.transactions);
   expect(saved.pendingOpening).toEqual(game.pendingOpening);
@@ -431,7 +433,8 @@ test('locked aspects show grayscale gear and companion artwork without equip act
   await expect(cards).toHaveCount(expected);
   await expect(page.locator('.cosmetic-card')).toHaveCount(2);
   await expect(page.locator('.wardrobe-looks details')).toHaveCount(0);
-  await expect(cards.locator('.cosmetic-locked-badge')).toHaveText(Array(expected).fill('Sin desbloquear'));
+  await expect(locked.locator('.cosmetic-locked-card[data-gear-id] .cosmetic-locked-badge')).toHaveText(Array(GEAR.length-1).fill('Sin desbloquear'));
+  await expect(locked.locator('.cosmetic-locked-card[data-companion-id] .cosmetic-locked-badge')).toHaveText(Array(COMPANIONS.length-1).fill('Pendiente de conseguir'));
   await expect(locked.locator('button,[role="button"],input,select')).toHaveCount(0);
   await expect(cards.locator('.is-equipped')).toHaveCount(0);
   await expect(locked.locator('[data-gear-id="purple-tank"],[data-companion-id="athlete"]')).toHaveCount(0);
@@ -439,21 +442,21 @@ test('locked aspects show grayscale gear and companion artwork without equip act
   await expect(artwork).toHaveCount(expected);
   const images=await artwork.evaluateAll(elements=>Promise.all(elements.map(async element=>{
     const style=getComputedStyle(element);
-    const source=style.backgroundImage==='none'?element.querySelector('image')?.getAttribute('href'):style.backgroundImage.match(/url\(["']?([^"')]+)["']?\)/)?.[1];
+    const source=element.querySelector('img')?.getAttribute('src')??(style.backgroundImage==='none'?element.querySelector('image')?.getAttribute('href'):style.backgroundImage.match(/url\(["']?([^"')]+)["']?\)/)?.[1]);
     const image=new Image();
     if(source)image.src=source;
     try{if(source)await image.decode()}catch{/* A missing or corrupt atlas is asserted below. */}
-    return {filter:style.filter,source,loaded:image.complete&&image.naturalWidth>0};
+    return {filter:style.filter,source,companionId:element.getAttribute('data-companion-id'),loaded:image.complete&&image.naturalWidth>0};
   })));
   for(const image of images){
-    expect(image.filter).toContain('grayscale(1)');
-    expect(image.source).toMatch(/grind-(gear|companions)/);
+    expect(image.filter,`Locked artwork remains grayscale: ${image.companionId??image.source}`).toContain('grayscale(1)');
+    expect(image.source).toBe(image.companionId?CHEESIT_ART[image.companionId].src:CHARACTER_ATLAS.src);
     expect(image.loaded,`Locked artwork must load: ${image.source}`).toBe(true);
   }
   const ranks=await cards.evaluateAll(elements=>elements.map(element=>({common:0,rare:1,epic:2,legendary:3}[element.getAttribute('data-rarity') as 'common'|'rare'|'epic'|'legendary'])));
   expect(ranks).toEqual([...ranks].sort((left,right)=>right-left));
   const filters=page.getByRole('navigation',{name:'Filtrar aspectos por ranura',exact:true});
-  for(const [slot,label] of [['head','Cabeza'],['top','Torso'],['bottom','Piernas'],['hand','Manos'],['back','Espalda'],['companion','Compañera']]){
+  for(const [slot,label] of [['head','Cabeza'],['top','Torso'],['bottom','Piernas'],['hand','Manos'],['back','Espalda'],['companion','Cheesit']]){
     await filters.getByRole('button',{name:label,exact:true}).click();
     const count=slot==='companion'?COMPANIONS.length-1:GEAR.filter(gear=>gear.slot===slot&&gear.id!=='purple-tank').length;
     await expect(cards).toHaveCount(count);

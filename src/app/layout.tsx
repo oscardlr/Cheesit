@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "Cheesit — cada rep cuenta",
   description: "Tu zona. Tus reglas. Registra tus series, conquista tus marcas y sube de nivel.",
   manifest: "/manifest.webmanifest",
-  icons: { icon: "/icon.svg", apple: "/icon-192.png" },
+  icons: { icon: { url: "/icon-32.png", sizes: "32x32", type: "image/png" }, apple: { url: "/icon-180.png", sizes: "180x180", type: "image/png" } },
   appleWebApp: { capable: true, title: "Cheesit", statusBarStyle: "black-translucent" },
 };
 

@@ -6,6 +6,7 @@ import { WORKOUT_COLOR, copiedName, isRoutineColor, isRoutineIcon, newId, resolv
 import { getAbilityCharges, isGameState, normalizeGame, unlockedCompanions, unlockedGear, type GameState } from './game';
 import { getAbilityDefinition, isAbilityUse } from './abilities';
 import { MUSCLES } from './muscles';
+import { isCompanionPassiveAward, isCompanionPassiveSnapshot, preserveWorkoutPassiveEvent } from './cheesit-passives';
 
 const record = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 const uuid = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -69,6 +70,8 @@ function validateData(value: unknown): AppData {
     add(workout.id);
     if(workout.abilityId!==undefined&&workout.abilityId!==null&&(typeof workout.abilityId!=='string'||!getAbilityDefinition(workout.abilityId)))return fail('habilidad de entrenamiento');
     if(workout.abilityReward!==undefined&&(!isAbilityUse(workout.abilityReward)||workout.abilityReward.workoutId!==workout.id||workout.abilityReward.abilityId!==workout.abilityId||workout.status==='draft'))return fail('recompensa de habilidad');
+    if (workout.companionPassive !== undefined && workout.companionPassive !== null && (!isCompanionPassiveSnapshot(workout.companionPassive) || workout.companionPassive.workoutId !== workout.id)) return fail('pasiva de cheesit');
+    if (workout.companionReward !== undefined && (!isCompanionPassiveAward(workout.companionReward) || workout.companionReward.workoutId !== workout.id || workout.status === 'draft' || !isCompanionPassiveSnapshot(workout.companionPassive) || canonical(workout.companionPassive) !== canonical(Object.fromEntries(Object.entries(workout.companionReward).filter(([key]) => !['awardedAt', 'bonusXp', 'bonusCredits', 'eligible', 'reason'].includes(key)))))) return fail('recompensa de cheesit');
     let confirmed = 0;
     for (const exercise of workout.exercises) {
       if (!record(exercise) || typeof exercise.exerciseId !== 'string' || !exercise.exerciseId || !name(exercise.name) || !GROUPS.includes(exercise.group as string) || !mode(exercise.mode) || !bounded(exercise.sets, 50) || !metadata(exercise) || !prescription(exercise)) return fail('ejercicio de entrenamiento');
@@ -159,6 +162,12 @@ export function previewBackup(raw: unknown, current: AppData, resolutions: Recor
     if (copy.name) copy.name = copiedName(copy.name, existingNames);
     for (const exercise of copy.exercises ?? []) { exercise.id = newId(); for (const set of Array.isArray(exercise.sets) ? exercise.sets : []) set.id = newId(); }
     if (kind === 'customExercises') remappedExercises.set(item.id, copy.id);
+    // A historical copy is not a newly started session. Never copy its frozen
+    // passive event or turn the source's award into a second credit/XP grant.
+    if (kind === 'workouts') {
+      delete (copy as unknown as Workout).companionReward;
+      (copy as unknown as Workout).companionPassive = null;
+    }
     return copy;
   }
   function merge<T extends { id: string }>(kind: keyof Counts, existing: T[], additions: T[]): T[] {
@@ -173,7 +182,17 @@ export function previewBackup(raw: unknown, current: AppData, resolutions: Recor
           const choices: BackupResolution[] = kind === 'workouts' && (item as unknown as Workout).abilityReward ? ['local', 'incoming'] : ['local', 'incoming', 'duplicate'];
           const key = `${kind}:${item.id}`;
           const choice = conflict({ key, kind, id: item.id, name: (item as T & { name?: string }).name ?? item.id, local: found, incoming: item, choices });
-          if (choice === 'incoming') result[result.findIndex(value => value.id === item.id)] = item;
+          if (choice === 'incoming') {
+            let replacement = item;
+            if (kind === 'workouts') {
+              const local = found as unknown as Workout, selected = item as unknown as Workout;
+              // Choosing training edits cannot replace the event captured when
+              // this local ID began. A matching draft may accept its first real
+              // completion from another device; completed legacy IDs stay legacy.
+              replacement = preserveWorkoutPassiveEvent(selected, local) as unknown as T;
+            }
+            result[result.findIndex(value => value.id === item.id)] = replacement;
+          }
           else if (choice === 'duplicate' && choices.includes('duplicate')) { const copy = duplicate(kind, item, result.flatMap(value => { const name = (value as T & { name?: string }).name; return name ? [name] : []; })); result.push(copy); newCounts[kind]++; }
         }
       } else { result.push(item); byId.set(item.id, item); newCounts[kind]++; }
