@@ -19,14 +19,24 @@ for (const width of [390, 1440]) {
     await expect(art.locator('svg')).toHaveAttribute('preserveAspectRatio', 'xMidYMid meet');
     await expect(page.locator('.ascent-staircase, .ascent-chest')).toHaveCount(0);
 
-    const geometry = await scene.boundingBox();
+    // Panel entry and offline preparation can move the whole page. Compare
+    // against the artwork container in the same frame to detect character drift.
+    const registeredGeometry = () => scene.evaluate(element => {
+      const body = element.getBoundingClientRect();
+      const frame = element.parentElement!.getBoundingClientRect();
+      return { x: body.x - frame.x, y: body.y - frame.y, width: body.width, height: body.height };
+    });
+    const geometry = await registeredGeometry();
     const initialOpacity = await scene.evaluate(element => getComputedStyle(element, '::after').opacity);
     await expect.poll(() => scene.evaluate(element => getComputedStyle(element, '::after').opacity)).not.toBe(initialOpacity);
     for (let frame = 0; frame < 5; frame++) {
       await expect(scene).toHaveCSS('transform', 'none');
       await expect(scene).toHaveCSS('opacity', '1');
       await expect(art).toHaveCSS('transform', 'none');
-      expect(await scene.boundingBox()).toEqual(geometry);
+      const current = await registeredGeometry();
+      for (const key of ['x', 'y', 'width', 'height'] as const) {
+        expect(current[key], `The character keeps its ${key} inside the scene`).toBeCloseTo(geometry[key], 2);
+      }
       await page.waitForTimeout(350);
     }
     const size = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, content: document.documentElement.scrollWidth }));
