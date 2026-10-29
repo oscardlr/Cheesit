@@ -10,6 +10,7 @@ import { CHARACTER_EQUIPMENT_COMBINATIONS, enumerateCharacterEquipment } from '.
 const frame = CHARACTER_VIEWBOX.split(/\s+/).map(Number);
 const atlas = readFileSync(new URL(`../public${CHARACTER_ATLAS.src}`, import.meta.url));
 const fitsFrame = ([x, y, width, height]: readonly number[]) => x >= frame[0] && y >= frame[1] && x + width <= frame[0] + frame[2] && y + height <= frame[1] + frame[3];
+const originalCompanionIds = COMPANIONS.map(companion => companion.id);
 
 test('one final transparent atlas contains the 35 stable gear IDs and four existing companions', () => {
   assert.deepEqual([...atlas.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
@@ -18,10 +19,11 @@ test('one final transparent atlas contains the 35 stable gear IDs and four exist
   assert.equal(atlas.readUInt32BE(20), CHARACTER_ATLAS.height);
   assert.ok([4, 6].includes(atlas[25]), 'atlas has an alpha channel');
   assert.deepEqual(new Set(Object.keys(CHARACTER_ART)), new Set(GEAR.map(item => item.id)));
-  assert.deepEqual(new Set(Object.keys(COMPANION_ART)), new Set(COMPANIONS.map(item => item.id)));
+  assert.deepEqual(new Set(Object.keys(COMPANION_ART)), new Set(originalCompanionIds));
   assert.equal(CHARACTER_MASTER.stage, 'base-v1');
   assert.equal(CHARACTER_MASTER.src, '/assets/grind-avatar-base.png');
   assert.ok(CHARACTER_MASKS.rightHand);
+  assert.ok(CHARACTER_MASKS.handReplacement);
   assert.ok(CHARACTER_MASKS.backClasp);
 });
 
@@ -47,11 +49,24 @@ test('all tailored clothes retain their authored scale and reused accessories us
       assert.equal(art.origin, 'reused');
     }
   }
-  assert.equal(tailored.length, 16);
-  assert.equal(reused.length, 19);
+  assert.equal(tailored.length, 29);
+  assert.equal(reused.length, 6);
   assert.equal(tailored.filter(id => GEAR.find(item => item.id === id)?.slot === 'top').length, 8);
   assert.equal(tailored.filter(id => GEAR.find(item => item.id === id)?.slot === 'bottom').length, 7);
-  assert.ok(tailored.includes('starlight-gauntlet'));
+  assert.equal(tailored.filter(id => GEAR.find(item => item.id === id)?.slot === 'head').length, 7);
+  assert.equal(tailored.filter(id => GEAR.find(item => item.id === id)?.slot === 'hand').length, 7);
+  assert.ok(reused.every(id => GEAR.find(item => item.id === id)?.slot === 'back'));
+});
+
+test('every hand carries its own registered fingers and head art does not remove the original hand', () => {
+  for (const gear of GEAR) {
+    const art = CHARACTER_ART[gear.id];
+    assert.equal(!!art.replacesHand, gear.slot === 'hand', `${gear.id}: original hand is removed only for authored hand layers`);
+    if (gear.slot !== 'head' && gear.slot !== 'hand') continue;
+    assert.equal(art.origin, 'tailored', `${gear.id}: drawn on the actual master`);
+    assert.equal(art.source[2], art.target[2], `${gear.id}: no horizontal fit adjustment`);
+    assert.equal(art.source[3], art.target[3], `${gear.id}: no vertical fit adjustment`);
+  }
 });
 
 test('every valid combination resolves only complete, correctly slotted art in the same body frame', () => {
@@ -72,31 +87,46 @@ test('every valid combination resolves only complete, correctly slotted art in t
 });
 
 test('companion crops include complete independent original characters without foreign fragments', async () => {
-  for (const companion of COMPANIONS) {
-    const art = COMPANION_ART[companion.id];
+  for (const companionId of originalCompanionIds) {
+    const art = COMPANION_ART[companionId];
     const source = Array.isArray(art) ? art : art.source;
     const [x, y, width, height] = source;
-    assert.ok(source.every(Number.isSafeInteger), companion.id);
+    assert.ok(source.every(Number.isSafeInteger), companionId);
     assert.ok(x >= 0 && y >= 0 && width > 0 && height > 0);
-    assert.ok(x + width <= CHARACTER_ATLAS.width && y + height <= CHARACTER_ATLAS.height, companion.id);
+    assert.ok(x + width <= CHARACTER_ATLAS.width && y + height <= CHARACTER_ATLAS.height, companionId);
     const { data } = await sharp(atlas).extract({ left: x, top: y, width, height }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
     const visited = new Uint8Array(width * height), queue = new Int32Array(visited.length);
+    const components: { pixels: number; bounds: readonly [number, number, number, number] }[] = [];
     let visible = 0, largest = 0;
     for (let pixel = 0; pixel < visited.length; pixel++) {
       if (visited[pixel] || data[pixel * 4 + 3] < 24) continue;
       let start = 0, length = 1;
+      let minX = width, minY = height, maxX = -1, maxY = -1;
       queue[0] = pixel; visited[pixel] = 1;
       while (start < length) {
         const current = queue[start++], px = current % width, py = Math.floor(current / width);
+        minX = Math.min(minX, px); minY = Math.min(minY, py);
+        maxX = Math.max(maxX, px); maxY = Math.max(maxY, py);
         for (const next of [px > 0 ? current - 1 : -1, px < width - 1 ? current + 1 : -1, py > 0 ? current - width : -1, py < height - 1 ? current + width : -1]) {
           if (next >= 0 && !visited[next] && data[next * 4 + 3] >= 24) { visited[next] = 1; queue[length++] = next; }
         }
       }
       visible += length; largest = Math.max(largest, length);
+      components.push({ pixels: length, bounds: [minX, minY, maxX - minX + 1, maxY - minY + 1] });
     }
-    assert.ok(largest > 50_000, `${companion.id}: full original body remains`);
-    // Small disconnected orb wisps belong to Nyx. Large disconnected pieces were
-    // foreign hair, cloth and orb fragments from the neighbouring atlas columns.
-    assert.ok(largest / visible > .995, `${companion.id}: foreign disconnected fragments remain`);
+    assert.ok(largest > 50_000, `${companionId}: full original body remains`);
+    if (companionId === 'sorceress') {
+      // Nyx's intact orb is intentionally disconnected at this alpha threshold.
+      // Audit: 7,702 pixels in [11,15,114,135], upper left of her own crop.
+      // Permit that measured orb region only, rather than arbitrary second parts.
+      components.sort((a, b) => b.pixels - a.pixels);
+      const orb = components[1];
+      assert.ok(orb?.pixels > 5_000 && orb.pixels < 12_000, 'sorceress: complete independent orb remains');
+      const [ox, oy, ow, oh] = orb.bounds;
+      assert.ok(ox >= 0 && oy >= 0 && ox + ow <= 150 && oy + oh <= 175 && ow > 90 && oh > 100, `sorceress: second component is the expected upper-left orb (${orb.bounds})`);
+      assert.ok((largest + orb.pixels) / visible > .995, 'sorceress: foreign parts outside body and orb remain');
+    } else {
+      assert.ok(largest / visible > .995, `${companionId}: foreign disconnected fragments remain`);
+    }
   }
 });

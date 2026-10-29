@@ -85,7 +85,8 @@ test('all 35 cosmetics share registered icon and worn art without deforming thei
     }
     crops.push({ id: gear.id, source: metadata.source });
     sources.add(metadata.source.join(' '));
-    if (gear.slot === 'top' || gear.slot === 'bottom') assert.equal(metadata.origin, 'tailored', `${gear.id}: clothing is drawn for this master`);
+    if (gear.slot !== 'back') assert.equal(metadata.origin, 'tailored', `${gear.id}: clothing and accessories are drawn for this master`);
+    assert.equal(!!metadata.replacesHand, gear.slot === 'hand', `${gear.id}: authored grip replaces the open base hand`);
     const icon = renderToStaticMarkup(createElement(GearArtwork, { gearId: gear.id }));
     const worn = renderToStaticMarkup(createElement(GearArtwork, { gearId: gear.id, worn: true }));
     const content = renderToStaticMarkup(createElement('svg', null, createElement(GearArtwork, { gearId: gear.id, worn: true, contentOnly: true })));
@@ -108,11 +109,11 @@ test('all 35 cosmetics share registered icon and worn art without deforming thei
     assert.equal(icon.match(/<image [^>]+>/)?.[0], worn.match(/<image [^>]+>/)?.[0], `${gear.id}: thumbnail and worn image are identical`);
   }
   assert.equal(sources.size, GEAR.length);
-  assert.equal(GEAR.filter(gear => CHARACTER_ART[gear.id].origin === 'tailored').length, 16);
-  assert.equal(GEAR.filter(gear => CHARACTER_ART[gear.id].origin === 'reused').length, 19);
+  assert.equal(GEAR.filter(gear => CHARACTER_ART[gear.id].origin === 'tailored').length, 29);
+  assert.equal(GEAR.filter(gear => CHARACTER_ART[gear.id].origin === 'reused').length, 6);
   assert.equal(renderToStaticMarkup(createElement(GearArtwork, { gearId: 'unknown' })), '');
-  assert.equal(CHARACTER_ART['ronin-hand'].grip, true);
-  assert.equal(CHARACTER_ART['glacier-hand'].grip, true);
+  assert.equal(CHARACTER_ART['ronin-hand'].replacesHand, true);
+  assert.equal(CHARACTER_ART['glacier-hand'].replacesHand, true);
 });
 
 test('all 15 abilities apply real balanced rewards only to their intended exercise groups', () => {

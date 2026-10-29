@@ -1,8 +1,8 @@
 {
   "atlas": {
-    "src": "/assets/character/wardrobe-v2.png",
+    "src": "/assets/character/wardrobe-v3.png",
     "width": 2048,
-    "height": 3305
+    "height": 4733
   },
   "gear": {
     "purple-tank": {
@@ -58,87 +58,87 @@
       "source": [
         1090,
         8,
-        302,
-        359
+        247,
+        224
       ],
       "target": [
-        452.14,
-        18.12,
-        235.56,
-        280.02
+        444,
+        16,
+        247,
+        224
       ],
-      "origin": "reused"
+      "origin": "tailored"
     },
     "champion-crown": {
       "slot": "head",
       "source": [
-        1400,
+        1345,
         8,
-        302,
-        221
+        193,
+        124
       ],
       "target": [
-        475.64,
-        18,
-        199.32000000000002,
-        145.86
+        474,
+        24,
+        193,
+        124
       ],
-      "origin": "reused"
+      "origin": "tailored"
     },
     "headphones": {
       "slot": "head",
       "source": [
-        1710,
+        1546,
         8,
-        296,
-        241
+        220,
+        193
       ],
       "target": [
-        466.88,
-        61,
-        213.12,
-        173.51999999999998
+        459,
+        46,
+        220,
+        193
       ],
-      "origin": "reused"
+      "origin": "tailored"
     },
     "titan-sword": {
       "slot": "hand",
       "source": [
         8,
         405,
-        150,
-        414
+        324,
+        613
       ],
       "target": [
-        773,
-        408,
-        150,
-        414
+        777,
+        667,
+        324,
+        613
       ],
-      "origin": "reused",
-      "grip": true
+      "origin": "tailored",
+      "replacesHand": true
     },
     "plasma-blaster": {
       "slot": "hand",
       "source": [
-        166,
+        340,
         405,
-        377,
-        188
+        317,
+        172
       ],
       "target": [
-        775.6,
-        666.4,
-        301.6,
-        150.4
+        813,
+        667,
+        317,
+        172
       ],
-      "origin": "reused",
-      "grip": true
+      "origin": "tailored",
+      "replacesHand": true
     },
     "violet-cape": {
       "slot": "back",
       "source": [
-        551,
+        665,
         405,
         374,
         295
@@ -155,7 +155,7 @@
     "neon-wings": {
       "slot": "back",
       "source": [
-        933,
+        1047,
         405,
         401,
         247
@@ -171,7 +171,7 @@
     "golden-armor": {
       "slot": "top",
       "source": [
-        1342,
+        1456,
         405,
         329,
         393
@@ -187,8 +187,8 @@
     "training-tank": {
       "slot": "top",
       "source": [
-        1679,
-        405,
+        8,
+        1026,
         333,
         384
       ],
@@ -203,24 +203,24 @@
     "phoenix-crown": {
       "slot": "head",
       "source": [
-        8,
-        827,
-        387,
-        326
+        349,
+        1026,
+        271,
+        178
       ],
       "target": [
-        450.56,
-        -6.24,
-        247.68,
-        208.64000000000001
+        436,
+        24,
+        271,
+        178
       ],
-      "origin": "reused"
+      "origin": "tailored"
     },
     "celestial-armor": {
       "slot": "top",
       "source": [
-        403,
-        827,
+        628,
+        1026,
         329,
         414
       ],
@@ -235,8 +235,8 @@
     "storm-tank": {
       "slot": "top",
       "source": [
-        740,
-        827,
+        965,
+        1026,
         329,
         386
       ],
@@ -251,8 +251,8 @@
     "void-greaves": {
       "slot": "bottom",
       "source": [
-        1077,
-        827,
+        1302,
+        1026,
         380,
         390
       ],
@@ -267,8 +267,8 @@
     "mecha-shorts": {
       "slot": "bottom",
       "source": [
-        1465,
-        827,
+        8,
+        1448,
         364,
         208
       ],
@@ -283,41 +283,42 @@
     "thunder-hammer": {
       "slot": "hand",
       "source": [
-        8,
-        1249,
-        335,
-        406
+        380,
+        1448,
+        355,
+        624
       ],
       "target": [
-        703.65,
-        532.85,
-        284.75,
-        345.09999999999997
+        775,
+        650,
+        355,
+        624
       ],
-      "origin": "reused",
-      "grip": true
+      "origin": "tailored",
+      "replacesHand": true
     },
     "starlight-gauntlet": {
       "slot": "hand",
       "source": [
-        351,
-        1249,
-        134,
-        162
+        743,
+        1448,
+        138,
+        186
       ],
       "target": [
-        784,
-        680,
-        134,
-        162
+        789,
+        650,
+        138,
+        186
       ],
-      "origin": "tailored"
+      "origin": "tailored",
+      "replacesHand": true
     },
     "solar-cape": {
       "slot": "back",
       "source": [
-        493,
-        1249,
+        889,
+        1448,
         447,
         388
       ],
@@ -333,24 +334,24 @@
     "ronin-head": {
       "slot": "head",
       "source": [
-        948,
-        1249,
-        323,
-        309
+        1344,
+        1448,
+        255,
+        223
       ],
       "target": [
-        432.87,
-        -15.13,
-        281.01,
-        268.83
+        439,
+        17,
+        255,
+        223
       ],
-      "origin": "reused"
+      "origin": "tailored"
     },
     "ronin-top": {
       "slot": "top",
       "source": [
-        1279,
-        1249,
+        1607,
+        1448,
         350,
         389
       ],
@@ -365,8 +366,8 @@
     "ronin-bottom": {
       "slot": "bottom",
       "source": [
-        1637,
-        1249,
+        8,
+        2080,
         397,
         218
       ],
@@ -381,25 +382,25 @@
     "ronin-hand": {
       "slot": "hand",
       "source": [
-        8,
-        1663,
-        125,
-        349
+        413,
+        2080,
+        357,
+        508
       ],
       "target": [
-        778.15,
-        420.15,
-        143.75,
-        401.34999999999997
+        775,
+        650,
+        357,
+        508
       ],
-      "origin": "reused",
-      "grip": true
+      "origin": "tailored",
+      "replacesHand": true
     },
     "ronin-back": {
       "slot": "back",
       "source": [
-        141,
-        1663,
+        778,
+        2080,
         278,
         330
       ],
@@ -414,24 +415,24 @@
     "glacier-head": {
       "slot": "head",
       "source": [
-        427,
-        1663,
-        319,
-        241
+        1064,
+        2080,
+        218,
+        148
       ],
       "target": [
-        456.72,
-        -8.56,
-        229.67999999999998,
-        173.51999999999998
+        463,
+        4,
+        218,
+        148
       ],
-      "origin": "reused"
+      "origin": "tailored"
     },
     "glacier-top": {
       "slot": "top",
       "source": [
-        754,
-        1663,
+        1290,
+        2080,
         329,
         393
       ],
@@ -446,8 +447,8 @@
     "glacier-bottom": {
       "slot": "bottom",
       "source": [
-        1091,
-        1663,
+        1627,
+        2080,
         365,
         276
       ],
@@ -462,25 +463,25 @@
     "glacier-hand": {
       "slot": "hand",
       "source": [
-        1464,
-        1663,
-        249,
-        331
+        8,
+        2596,
+        345,
+        464
       ],
       "target": [
-        722,
-        511,
-        249,
-        331
+        777,
+        650,
+        345,
+        464
       ],
-      "origin": "reused",
-      "grip": true
+      "origin": "tailored",
+      "replacesHand": true
     },
     "glacier-back": {
       "slot": "back",
       "source": [
-        8,
-        2064,
+        361,
+        2596,
         327,
         305
       ],
@@ -496,24 +497,24 @@
     "cosmic-head": {
       "slot": "head",
       "source": [
-        343,
-        2064,
-        326,
-        205
+        696,
+        2596,
+        240,
+        111
       ],
       "target": [
-        448.76,
-        65.76,
-        247.76,
-        155.8
+        452,
+        92,
+        240,
+        111
       ],
-      "origin": "reused"
+      "origin": "tailored"
     },
     "cosmic-top": {
       "slot": "top",
       "source": [
-        677,
-        2064,
+        944,
+        2596,
         333,
         388
       ],
@@ -528,8 +529,8 @@
     "cosmic-bottom": {
       "slot": "bottom",
       "source": [
-        1018,
-        2064,
+        1285,
+        2596,
         364,
         216
       ],
@@ -544,24 +545,25 @@
     "cosmic-hand": {
       "slot": "hand",
       "source": [
-        1390,
-        2064,
-        209,
-        260
+        1657,
+        2596,
+        146,
+        197
       ],
       "target": [
-        790.57,
-        686.57,
-        119.13,
-        148.2
+        783,
+        650,
+        146,
+        197
       ],
-      "origin": "reused"
+      "origin": "tailored",
+      "replacesHand": true
     },
     "cosmic-back": {
       "slot": "back",
       "source": [
-        1607,
-        2064,
+        8,
+        3068,
         324,
         287
       ],
@@ -577,32 +579,32 @@
   "companions": {
     "athlete": {
       "source": [
-        8,
-        2460,
+        340,
+        3068,
         396,
         808
       ]
     },
     "warrior": {
       "source": [
-        412,
-        2460,
+        744,
+        3068,
         405,
         812
       ]
     },
     "sorceress": {
       "source": [
-        825,
-        2460,
+        1157,
+        3068,
         444,
         795
       ]
     },
     "dragon-queen": {
       "source": [
-        1277,
-        2460,
+        8,
+        3888,
         475,
         837
       ]

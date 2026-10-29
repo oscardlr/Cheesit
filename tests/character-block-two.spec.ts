@@ -19,6 +19,8 @@ test('the actual catalog enumerates every valid independent combination exactly 
   expect(CHARACTER_COMBINATION_COUNT).toBe(32256);
   expect(PARTY_COMBINATION_COUNT).toBe(161280);
   expect(PARTY_COMBINATION_COUNT).toBe(CHARACTER_COMBINATION_COUNT * (COMPANIONS.length + 1));
+  expect(Object.values(CHARACTER_ART).filter(art => art.origin === 'tailored')).toHaveLength(29);
+  expect(Object.values(CHARACTER_ART).filter(art => art.origin === 'reused')).toHaveLength(6);
   for (const gear of GEAR) {
     const art = CHARACTER_ART[gear.id];
     expect(art, `${gear.id} has a registered resource`).toBeDefined();
@@ -26,6 +28,11 @@ test('the actual catalog enumerates every valid independent combination exactly 
     expect(Math.abs(art.source[2] / art.target[2] - art.source[3] / art.target[3]), `${gear.id} uses uniform scaling`).toBeLessThan(.001);
     expect(art.source[0] + art.source[2]).toBeLessThanOrEqual(CHARACTER_ATLAS.width);
     expect(art.source[1] + art.source[3]).toBeLessThanOrEqual(CHARACTER_ATLAS.height);
+    if (gear.slot === 'head' || gear.slot === 'hand') {
+      expect(art.origin, `${gear.id} is drawn on this master`).toBe('tailored');
+      expect(art.source.slice(2), `${gear.id} preserves authored pixels`).toEqual(art.target.slice(2));
+    }
+    expect(!!art.replacesHand, `${gear.id} has its own hand only in the hand slot`).toBe(gear.slot === 'hand');
   }
   const seen = new Set<string>();
   const covered = new Set<string>();
@@ -68,6 +75,30 @@ test('the local tool inspects all 35 garments with their matching thumbnail and 
   await page.locator('.inspection-catalog').screenshot({ path: info.outputPath('all-35-worn-and-thumbnails.png'), animations: 'disabled' });
   const databases = await page.evaluate(() => indexedDB.databases());
   expect(databases.some(database => database.name === 'entrenos-local')).toBe(false);
+});
+
+test('all seven authored grips replace the open hand only while equipped and keep the same canvas', async ({ page }, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await openInspection(page);
+  const bodyImage = live(page).locator('.character-body image');
+  const canvasBox = () => live(page).locator('.character-layers').evaluate(element => {
+    const canvas = element.getBoundingClientRect(), container = element.closest('.inspection-live')!.getBoundingClientRect();
+    return { x: canvas.x - container.x, y: canvas.y - container.y, width: canvas.width, height: canvas.height };
+  });
+  const initial = await canvasBox();
+  await expect(bodyImage).not.toHaveAttribute('mask');
+  for (const hand of GEAR.filter(gear => gear.slot === 'hand')) {
+    await page.getByRole('combobox', { name: 'Mano', exact: true }).selectOption(hand.id);
+    await expect(live(page).locator(`.character-equipped[data-gear-id="${hand.id}"]`)).toHaveCount(1);
+    await expect(bodyImage).toHaveAttribute('mask', /url\(#.+\)/);
+    await expect(live(page).locator('.character-foreground')).toHaveCount(0);
+    expect(await canvasBox()).toEqual(initial);
+    await live(page).screenshot({ path: info.outputPath(`authored-grip-${hand.id}.png`), animations: 'disabled' });
+  }
+  await page.getByRole('button', { name: 'Quitar todo', exact: true }).click();
+  await expect(bodyImage).not.toHaveAttribute('mask');
+  await expect(live(page).locator('.character-equipped')).toHaveCount(0);
+  expect(await canvasBox()).toEqual(initial);
 });
 
 test('inspection mixes every slot and companion, pauses motion and respects effects and reduced motion', async ({ page }) => {
@@ -175,6 +206,10 @@ test('failed clothing images keep a stable character frame', async ({ page }, in
   const after = await live(page).locator('.character-layers').boundingBox();
   expect(after).toEqual(before);
   await expect(live(page).locator('.character-body image')).toHaveCount(1);
+  await page.getByRole('combobox', { name: 'Mano', exact: true }).selectOption('titan-sword');
+  await expect(live(page).locator('[data-art-fallback="titan-sword"]')).toHaveCount(1);
+  await expect(live(page).locator('.character-body image')).not.toHaveAttribute('mask');
+  expect(await live(page).locator('.character-layers').boundingBox()).toEqual(before);
   await page.locator('.inspection-live').screenshot({ path: info.outputPath('stable-clothing-fallback.png'), animations: 'disabled' });
   expect(errors).toEqual([]);
 });
