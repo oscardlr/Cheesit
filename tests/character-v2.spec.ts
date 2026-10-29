@@ -41,13 +41,15 @@ test('five gear layers render and unequipping preserves inventory through reload
   for(const width of [390,1440]){
     await page.setViewportSize({width,height:1000});
     await page.locator('.character-summary-card').screenshot({path:info.outputPath(`avatar-equipado-${width}.png`),animations:'disabled'});
-    const base=await page.locator('.character-summary-card .character-base').boundingBox();
-    expect(base).not.toBeNull();
-    for(const layer of await page.locator('.character-summary-card .character-equipped').all()){
-      const fitted=await layer.boundingBox();
-      expect(fitted).not.toBeNull();
+    // Read all rectangles in one frame. The production offline banner changes
+    // height after cache preparation and can reflow the entire page between awaits.
+    const {base,layers}=await page.locator('.character-summary-card').evaluate(card=>({
+      base:card.querySelector('.character-base')!.getBoundingClientRect().toJSON(),
+      layers:Array.from(card.querySelectorAll('.character-equipped'),layer=>layer.getBoundingClientRect().toJSON()),
+    }));
+    for(const fitted of layers){
       for(const key of ['x','y','width','height'] as const){
-        expect(Math.abs(fitted![key]-base![key]),`Every worn piece shares the body's ${key} at ${width}px`).toBeLessThan(.5);
+        expect(Math.abs(fitted[key]-base[key]),`Every worn piece shares the body's ${key} at ${width}px`).toBeLessThan(.5);
       }
     }
   }

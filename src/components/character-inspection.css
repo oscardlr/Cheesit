@@ -1,0 +1,42 @@
+.character-inspection { max-width: 1500px; margin: auto; padding: 30px; color: #ede2f7; }
+.character-inspection > header { margin-bottom: 28px; }
+.character-inspection a { display: inline-block; color: #d8ff3e; margin-bottom: 18px; }
+.character-inspection .eyebrow { display: block; color: #bba2ce; font-size: 11px; letter-spacing: 1px; }
+.character-inspection h1 { margin: 9px 0 15px; font-size: clamp(28px, 4vw, 42px); }
+.character-inspection h2 { margin: 0 0 14px; font-size: 23px; }
+.character-inspection p { margin: 8px 0 16px; color: #bda8cf; font-size: 13px; line-height: 1.7; }
+.character-inspection section { margin-bottom: 35px; }
+.inspection-workbench { display: grid; grid-template-columns: minmax(260px, 380px) minmax(0, 1fr); gap: 28px; padding: 22px; border: 1px solid #82609877; border-radius: 14px; background: #2a1e37; }
+.inspection-live { display: grid; place-items: center; min-width: 0; }
+.inspection-live > .character-party { width: 100%; max-width: 380px; overflow: visible; }
+.character-inspection .character-avatar { min-width: 0; overflow: visible; }
+.inspection-selects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.character-inspection label { color: #dccbea; font-size: 12px; }
+.inspection-selects select { margin-top: 6px; width: 100%; min-width: 0; font-size: 12px; }
+.character-inspection button { min-height: 44px; padding: 10px 13px; border: 1px solid #8a6ba5; border-radius: 7px; color: #e0cdef; background: #33233f; font-size: 12px; }
+.character-inspection button:disabled { opacity: .4; cursor: default; }
+.character-inspection button[aria-pressed=true] { color: #d8ff3e; border-color: #d8ff3e; }
+.inspection-motions, .inspection-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; align-items: center; }
+.inspection-actions label { display: inline-flex; align-items: center; gap: 7px; padding: 8px; }
+.inspection-actions input { width: 17px; min-height: 17px; margin: 0; }
+.inspection-enumeration { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; padding-top: 16px; border-top: 1px solid #6f4d86; }
+.inspection-enumeration label { flex-basis: 100%; }
+.inspection-enumeration input { width: 160px; min-height: 44px; margin-top: 5px; }
+.inspection-catalog, .inspection-risk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.inspection-item, .inspection-figure { min-width: 0; margin: 0; padding: 16px; border: 1px solid #70528677; border-radius: 12px; background: #251c30; }
+.inspection-item-art { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.inspection-item-art > .character-avatar { width: min(75%, 230px); flex: 1 1 70%; }
+.inspection-item-art > .gear-sprite { width: 65px; max-width: 28%; flex: 0 0 65px; }
+.inspection-item figcaption h3 { font-size: 14px; line-height: 1.5; margin: 12px 0 6px; }
+.inspection-item figcaption > span { color: #b49bc8; font-size: 11px; overflow-wrap: anywhere; }
+.inspection-figure > .character-avatar { width: min(100%, 260px); margin: auto; }
+.inspection-figure figcaption { font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; margin-top: 12px; }
+.inspection-risk-grid { margin-top: 16px; }
+@media (max-width: 760px) {
+  .character-inspection { padding: 20px 14px; }
+  .inspection-workbench { grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 16px; }
+  .inspection-live > .character-party { max-width: 290px; }
+  .inspection-selects { grid-template-columns: minmax(0, 1fr); }
+  .inspection-catalog, .inspection-risk-grid { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
+  .inspection-motions > button { flex: 1 1 80px; }
+}

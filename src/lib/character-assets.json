@@ -1,0 +1,611 @@
+{
+  "atlas": {
+    "src": "/assets/character/wardrobe-v2.png",
+    "width": 2048,
+    "height": 3305
+  },
+  "gear": {
+    "purple-tank": {
+      "slot": "top",
+      "source": [
+        8,
+        8,
+        327,
+        389
+      ],
+      "target": [
+        406,
+        266,
+        327,
+        389
+      ],
+      "origin": "tailored"
+    },
+    "lime-shorts": {
+      "slot": "bottom",
+      "source": [
+        343,
+        8,
+        367,
+        203
+      ],
+      "target": [
+        386,
+        642,
+        367,
+        203
+      ],
+      "origin": "tailored"
+    },
+    "crimson-shorts": {
+      "slot": "bottom",
+      "source": [
+        718,
+        8,
+        364,
+        212
+      ],
+      "target": [
+        387,
+        628,
+        364,
+        212
+      ],
+      "origin": "tailored"
+    },
+    "dragon-head": {
+      "slot": "head",
+      "source": [
+        1090,
+        8,
+        302,
+        359
+      ],
+      "target": [
+        452.14,
+        18.12,
+        235.56,
+        280.02
+      ],
+      "origin": "reused"
+    },
+    "champion-crown": {
+      "slot": "head",
+      "source": [
+        1400,
+        8,
+        302,
+        221
+      ],
+      "target": [
+        475.64,
+        18,
+        199.32000000000002,
+        145.86
+      ],
+      "origin": "reused"
+    },
+    "headphones": {
+      "slot": "head",
+      "source": [
+        1710,
+        8,
+        296,
+        241
+      ],
+      "target": [
+        466.88,
+        61,
+        213.12,
+        173.51999999999998
+      ],
+      "origin": "reused"
+    },
+    "titan-sword": {
+      "slot": "hand",
+      "source": [
+        8,
+        405,
+        150,
+        414
+      ],
+      "target": [
+        773,
+        408,
+        150,
+        414
+      ],
+      "origin": "reused",
+      "grip": true
+    },
+    "plasma-blaster": {
+      "slot": "hand",
+      "source": [
+        166,
+        405,
+        377,
+        188
+      ],
+      "target": [
+        775.6,
+        666.4,
+        301.6,
+        150.4
+      ],
+      "origin": "reused",
+      "grip": true
+    },
+    "violet-cape": {
+      "slot": "back",
+      "source": [
+        551,
+        405,
+        374,
+        295
+      ],
+      "target": [
+        199,
+        272,
+        748,
+        590
+      ],
+      "origin": "reused",
+      "foregroundMask": "M420 270H725V348H420Z"
+    },
+    "neon-wings": {
+      "slot": "back",
+      "source": [
+        933,
+        405,
+        401,
+        247
+      ],
+      "target": [
+        147.27,
+        274.45,
+        838.0899999999999,
+        516.23
+      ],
+      "origin": "reused"
+    },
+    "golden-armor": {
+      "slot": "top",
+      "source": [
+        1342,
+        405,
+        329,
+        393
+      ],
+      "target": [
+        404,
+        267,
+        329,
+        393
+      ],
+      "origin": "tailored"
+    },
+    "training-tank": {
+      "slot": "top",
+      "source": [
+        1679,
+        405,
+        333,
+        384
+      ],
+      "target": [
+        400,
+        267,
+        333,
+        384
+      ],
+      "origin": "tailored"
+    },
+    "phoenix-crown": {
+      "slot": "head",
+      "source": [
+        8,
+        827,
+        387,
+        326
+      ],
+      "target": [
+        450.56,
+        -6.24,
+        247.68,
+        208.64000000000001
+      ],
+      "origin": "reused"
+    },
+    "celestial-armor": {
+      "slot": "top",
+      "source": [
+        403,
+        827,
+        329,
+        414
+      ],
+      "target": [
+        404,
+        248,
+        329,
+        414
+      ],
+      "origin": "tailored"
+    },
+    "storm-tank": {
+      "slot": "top",
+      "source": [
+        740,
+        827,
+        329,
+        386
+      ],
+      "target": [
+        404,
+        266,
+        329,
+        386
+      ],
+      "origin": "tailored"
+    },
+    "void-greaves": {
+      "slot": "bottom",
+      "source": [
+        1077,
+        827,
+        380,
+        390
+      ],
+      "target": [
+        382,
+        628,
+        380,
+        390
+      ],
+      "origin": "tailored"
+    },
+    "mecha-shorts": {
+      "slot": "bottom",
+      "source": [
+        1465,
+        827,
+        364,
+        208
+      ],
+      "target": [
+        386,
+        633,
+        364,
+        208
+      ],
+      "origin": "tailored"
+    },
+    "thunder-hammer": {
+      "slot": "hand",
+      "source": [
+        8,
+        1249,
+        335,
+        406
+      ],
+      "target": [
+        703.65,
+        532.85,
+        284.75,
+        345.09999999999997
+      ],
+      "origin": "reused",
+      "grip": true
+    },
+    "starlight-gauntlet": {
+      "slot": "hand",
+      "source": [
+        351,
+        1249,
+        134,
+        162
+      ],
+      "target": [
+        784,
+        680,
+        134,
+        162
+      ],
+      "origin": "tailored"
+    },
+    "solar-cape": {
+      "slot": "back",
+      "source": [
+        493,
+        1249,
+        447,
+        388
+      ],
+      "target": [
+        170,
+        269,
+        804.6,
+        698.4
+      ],
+      "origin": "reused",
+      "foregroundMask": "M420 270H725V348H420Z"
+    },
+    "ronin-head": {
+      "slot": "head",
+      "source": [
+        948,
+        1249,
+        323,
+        309
+      ],
+      "target": [
+        432.87,
+        -15.13,
+        281.01,
+        268.83
+      ],
+      "origin": "reused"
+    },
+    "ronin-top": {
+      "slot": "top",
+      "source": [
+        1279,
+        1249,
+        350,
+        389
+      ],
+      "target": [
+        400,
+        262,
+        350,
+        389
+      ],
+      "origin": "tailored"
+    },
+    "ronin-bottom": {
+      "slot": "bottom",
+      "source": [
+        1637,
+        1249,
+        397,
+        218
+      ],
+      "target": [
+        370,
+        628,
+        397,
+        218
+      ],
+      "origin": "tailored"
+    },
+    "ronin-hand": {
+      "slot": "hand",
+      "source": [
+        8,
+        1663,
+        125,
+        349
+      ],
+      "target": [
+        778.15,
+        420.15,
+        143.75,
+        401.34999999999997
+      ],
+      "origin": "reused",
+      "grip": true
+    },
+    "ronin-back": {
+      "slot": "back",
+      "source": [
+        141,
+        1663,
+        278,
+        330
+      ],
+      "target": [
+        335.7,
+        263.4,
+        472.59999999999997,
+        561
+      ],
+      "origin": "reused"
+    },
+    "glacier-head": {
+      "slot": "head",
+      "source": [
+        427,
+        1663,
+        319,
+        241
+      ],
+      "target": [
+        456.72,
+        -8.56,
+        229.67999999999998,
+        173.51999999999998
+      ],
+      "origin": "reused"
+    },
+    "glacier-top": {
+      "slot": "top",
+      "source": [
+        754,
+        1663,
+        329,
+        393
+      ],
+      "target": [
+        404,
+        266,
+        329,
+        393
+      ],
+      "origin": "tailored"
+    },
+    "glacier-bottom": {
+      "slot": "bottom",
+      "source": [
+        1091,
+        1663,
+        365,
+        276
+      ],
+      "target": [
+        385,
+        628,
+        365,
+        276
+      ],
+      "origin": "tailored"
+    },
+    "glacier-hand": {
+      "slot": "hand",
+      "source": [
+        1464,
+        1663,
+        249,
+        331
+      ],
+      "target": [
+        722,
+        511,
+        249,
+        331
+      ],
+      "origin": "reused",
+      "grip": true
+    },
+    "glacier-back": {
+      "slot": "back",
+      "source": [
+        8,
+        2064,
+        327,
+        305
+      ],
+      "target": [
+        231.2,
+        278.2,
+        686.7,
+        640.5
+      ],
+      "origin": "reused",
+      "foregroundMask": "M420 270H725V348H420Z"
+    },
+    "cosmic-head": {
+      "slot": "head",
+      "source": [
+        343,
+        2064,
+        326,
+        205
+      ],
+      "target": [
+        448.76,
+        65.76,
+        247.76,
+        155.8
+      ],
+      "origin": "reused"
+    },
+    "cosmic-top": {
+      "slot": "top",
+      "source": [
+        677,
+        2064,
+        333,
+        388
+      ],
+      "target": [
+        400,
+        267,
+        333,
+        388
+      ],
+      "origin": "tailored"
+    },
+    "cosmic-bottom": {
+      "slot": "bottom",
+      "source": [
+        1018,
+        2064,
+        364,
+        216
+      ],
+      "target": [
+        386,
+        628,
+        364,
+        216
+      ],
+      "origin": "tailored"
+    },
+    "cosmic-hand": {
+      "slot": "hand",
+      "source": [
+        1390,
+        2064,
+        209,
+        260
+      ],
+      "target": [
+        790.57,
+        686.57,
+        119.13,
+        148.2
+      ],
+      "origin": "reused"
+    },
+    "cosmic-back": {
+      "slot": "back",
+      "source": [
+        1607,
+        2064,
+        324,
+        287
+      ],
+      "target": [
+        286.77,
+        286.77,
+        573.48,
+        507.99
+      ],
+      "origin": "reused"
+    }
+  },
+  "companions": {
+    "athlete": {
+      "source": [
+        8,
+        2460,
+        396,
+        808
+      ]
+    },
+    "warrior": {
+      "source": [
+        412,
+        2460,
+        405,
+        812
+      ]
+    },
+    "sorceress": {
+      "source": [
+        825,
+        2460,
+        444,
+        795
+      ]
+    },
+    "dragon-queen": {
+      "source": [
+        1277,
+        2460,
+        475,
+        837
+      ]
+    }
+  }
+}

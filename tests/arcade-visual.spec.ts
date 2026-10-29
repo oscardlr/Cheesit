@@ -1,13 +1,13 @@
 import { test, expect } from '@playwright/test';
 
-test('the welcome bench press advances through its image frames and respects reduced motion', async ({ page }) => {
+test('the welcome uses the complete bench illustration without deforming it', async ({ page }) => {
   await page.goto('/');
-  const athlete = page.locator('.arcade-intro .pixel-athlete-bench > span');
+  const athlete = page.locator('.arcade-intro .pixel-athlete-bench > .pixel-athlete-art');
   await expect(athlete).toBeVisible();
-  await expect(athlete).toHaveCSS('background-image', /grind-bench-frames\.png/);
-  await expect(athlete).toHaveCSS('animation-name', 'pixel-bench-frames');
-  const initialFrame = await athlete.evaluate(element => getComputedStyle(element).backgroundPositionX);
-  await expect.poll(() => athlete.evaluate(element => getComputedStyle(element).backgroundPositionX)).not.toBe(initialFrame);
+  await expect(athlete.locator('svg')).toHaveAttribute('preserveAspectRatio', 'xMidYMid meet');
+  await expect(athlete.locator('image')).toHaveAttribute('href', '/assets/grind-athlete.png');
+  await expect(athlete).toHaveCSS('animation-name', 'none');
+  await expect(athlete).toHaveCSS('transform', 'none');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(athlete).toHaveCSS('animation-name', 'none');
 });

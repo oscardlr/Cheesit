@@ -4,9 +4,8 @@ import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { GEAR } from '../src/lib/gear';
-import { GEAR_ART, GEAR_ART_ATLAS } from '../src/lib/gear-art';
+import { CHARACTER_ART, CHARACTER_ATLAS, CHARACTER_VIEWBOX, type CharacterRect } from '../src/lib/character-art';
 import { GearArtwork } from '../src/components/GearArtwork';
-import { AVATAR_VIEWBOX } from '../src/lib/avatar-fit';
 import { ABILITIES, abilityMatches, getAbilityDefinition, isAbilityUse } from '../src/lib/abilities';
 import { applyWorkoutAbility, equipCosmetic, gameBalance, getAbilityCharges, isGameState, normalizeGame, rewardForRoll, setActiveAbility, type GameState } from '../src/lib/game';
 import { createBackup, previewBackup } from '../src/lib/backup';
@@ -57,58 +56,63 @@ test('three complete native collections extend the original 20 stable gear defin
   }
 });
 
-test('all 15 pixel sprites use distinct valid atlas crops and anatomical worn art', () => {
-  const atlas = readFileSync(new URL(`../public${GEAR_ART_ATLAS.src}`, import.meta.url));
+test('all 35 cosmetics share registered icon and worn art without deforming their source', () => {
+  const atlas = readFileSync(new URL(`../public${CHARACTER_ATLAS.src}`, import.meta.url));
   assert.deepEqual([...atlas.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
   assert.equal(atlas.toString('ascii', 12, 16), 'IHDR');
-  assert.equal(atlas.readUInt32BE(16), GEAR_ART_ATLAS.width);
-  assert.equal(atlas.readUInt32BE(20), GEAR_ART_ATLAS.height);
+  assert.equal(atlas.readUInt32BE(16), CHARACTER_ATLAS.width);
+  assert.equal(atlas.readUInt32BE(20), CHARACTER_ATLAS.height);
   const sources = new Set<string>();
-  const crops: { id: string; source: readonly [number, number, number, number]; sourceClip?: string }[] = [];
-  for (const gear of expansion) {
-    const metadata = GEAR_ART[gear.id];
+  const crops: { id: string; source: CharacterRect }[] = [];
+  for (const gear of GEAR) {
+    const metadata = CHARACTER_ART[gear.id];
     assert.ok(metadata, gear.id);
-    assert.ok(metadata.bounds.every(Number.isFinite));
-    assert.ok(metadata.bounds[2] > 0 && metadata.bounds[3] > 0);
+    assert.equal(metadata.slot, gear.slot);
+    assert.ok(metadata.target.every(Number.isFinite));
+    assert.ok(metadata.target[2] > 0 && metadata.target[3] > 0);
     const [x, y, width, height] = metadata.source;
     assert.ok(metadata.source.every(Number.isSafeInteger), `${gear.id}: atlas pixel coordinates`);
     assert.ok(x >= 0 && y >= 0 && width > 32 && height > 32, `${gear.id}: meaningful sprite crop`);
-    assert.ok(x + width <= GEAR_ART_ATLAS.width && y + height <= GEAR_ART_ATLAS.height, `${gear.id}: crop stays inside the atlas`);
+    assert.ok(x + width <= CHARACTER_ATLAS.width && y + height <= CHARACTER_ATLAS.height, `${gear.id}: crop stays inside the atlas`);
+    const scaleX = metadata.target[2] / width;
+    const scaleY = metadata.target[3] / height;
+    assert.ok(Math.abs(scaleX - scaleY) < 1e-9, `${gear.id}: equipped art scales uniformly`);
+    if (metadata.origin === 'tailored') assert.equal(scaleX, 1, `${gear.id}: tailored pixels retain their master registration`);
     for (const crop of crops) {
       const [otherX, otherY, otherWidth, otherHeight] = crop.source;
       const disjoint = x + width <= otherX || otherX + otherWidth <= x || y + height <= otherY || otherY + otherHeight <= y;
-      assert.ok(disjoint || (metadata.sourceClip && crop.sourceClip), `${gear.id} and ${crop.id} need explicit silhouettes where their atlas rectangles overlap`);
+      assert.ok(disjoint, `${gear.id} and ${crop.id}: independent transparent crops cannot contain another cosmetic`);
     }
-    crops.push({ id: gear.id, source: metadata.source, sourceClip: metadata.sourceClip });
+    crops.push({ id: gear.id, source: metadata.source });
     sources.add(metadata.source.join(' '));
-    if (gear.slot === 'top') assert.equal(metadata.silhouette, 'torso');
-    if (gear.slot === 'bottom') {
-      assert.ok(metadata.fabric, `${gear.id}: replace the initial boxer colour`);
-      if (metadata.bounds[3] <= 200) assert.equal(metadata.silhouette, 'shorts');
-    }
+    if (gear.slot === 'top' || gear.slot === 'bottom') assert.equal(metadata.origin, 'tailored', `${gear.id}: clothing is drawn for this master`);
     const icon = renderToStaticMarkup(createElement(GearArtwork, { gearId: gear.id }));
     const worn = renderToStaticMarkup(createElement(GearArtwork, { gearId: gear.id, worn: true }));
     const content = renderToStaticMarkup(createElement('svg', null, createElement(GearArtwork, { gearId: gear.id, worn: true, contentOnly: true })));
     assert.match(icon, /gear-forge/);
     assert.ok(icon.includes(`viewBox="${metadata.source.join(' ')}"`));
-    assert.ok(icon.includes(`href="${GEAR_ART_ATLAS.src}"`));
+    assert.ok(icon.includes(`href="${CHARACTER_ATLAS.src}"`));
     assert.match(icon, /<image /);
-    if (metadata.sourceClip) {
-      assert.ok(icon.includes(`d="${metadata.sourceClip}"`));
-      assert.ok(content.includes(`d="${metadata.sourceClip}"`));
-    }
-    assert.ok(worn.includes(`viewBox="${AVATAR_VIEWBOX}"`));
+    assert.ok(worn.includes(`viewBox="${CHARACTER_VIEWBOX}"`));
     assert.ok(worn.includes(`character-slot-${gear.slot}`));
-    assert.ok(content.startsWith('<svg><g '));
+    assert.ok(content.startsWith('<svg><svg '));
     assert.ok(content.includes(`viewBox="${metadata.source.join(' ')}"`));
     assert.match(content, /overflow="hidden"/);
-    assert.ok(content.includes(`href="${GEAR_ART_ATLAS.src}"`));
+    assert.ok(content.includes(`href="${CHARACTER_ATLAS.src}"`));
     assert.doesNotMatch(content, /character-equipped/);
+    for (const rendered of [icon, worn, content]) {
+      assert.ok(rendered.includes(`data-art-source="${metadata.source.join(' ')}"`), `${gear.id}: identical source in every renderer`);
+      assert.match(rendered, /preserveAspectRatio="xMidYMid meet"/);
+      assert.doesNotMatch(rendered, /preserveAspectRatio="none"|transform="scale\(/);
+    }
+    assert.equal(icon.match(/<image [^>]+>/)?.[0], worn.match(/<image [^>]+>/)?.[0], `${gear.id}: thumbnail and worn image are identical`);
   }
-  assert.equal(sources.size, 15);
+  assert.equal(sources.size, GEAR.length);
+  assert.equal(GEAR.filter(gear => CHARACTER_ART[gear.id].origin === 'tailored').length, 16);
+  assert.equal(GEAR.filter(gear => CHARACTER_ART[gear.id].origin === 'reused').length, 19);
   assert.equal(renderToStaticMarkup(createElement(GearArtwork, { gearId: 'unknown' })), '');
-  assert.equal(GEAR_ART['ronin-hand'].grip, true);
-  assert.equal(GEAR_ART['glacier-hand'].grip, true);
+  assert.equal(CHARACTER_ART['ronin-hand'].grip, true);
+  assert.equal(CHARACTER_ART['glacier-hand'].grip, true);
 });
 
 test('all 15 abilities apply real balanced rewards only to their intended exercise groups', () => {

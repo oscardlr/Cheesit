@@ -5,103 +5,32 @@
 @media(max-width:1100px){.character-summary-card{grid-template-columns:minmax(0,1fr) 210px}.character-summary-card>.character-avatar{width:210px}.character-summary-copy h2{font-size:30px}.wardrobe-stage{grid-template-columns:240px minmax(0,1fr);gap:12px;padding:18px}.wardrobe-slots{grid-template-columns:1fr}.wardrobe-slot{min-height:69px;padding:9px}.wardrobe-slot:last-child{grid-column:auto}.wardrobe-slot>.gear-sprite{width:42px}}
 @media(max-width:760px){.character-summary-card{grid-template-columns:minmax(0,1fr) 145px;padding:23px 15px 23px 19px;gap:0;margin:23px 0}.character-summary-card>.character-avatar{width:173px;margin-left:-14px}.character-summary-copy h2{font-size:25px;letter-spacing:-.7px}.character-summary-copy>.eyebrow{font-size:11px;letter-spacing:.6px;gap:4px}.character-summary-copy>.eyebrow>svg{width:10px}.character-summary-copy>p{font-size:11px;line-height:1.65;max-width:175px}.character-summary-copy>div{font-size:11px;gap:8px;margin:13px 0}.character-summary-copy button{font-size:11px;min-height:40px;gap:8px;padding:9px 10px}.character-summary-copy button>svg{width:13px}.character-level{font-size:11px;padding:5px 7px}.character-level>svg{width:9px}.wardrobe-stage{grid-template-columns:1fr;gap:13px;padding:18px}.wardrobe-stage>.character-avatar{width:235px;margin:0 auto}.wardrobe-slots{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.wardrobe-slot{padding:10px 8px;gap:7px;min-height:75px}.wardrobe-slot strong{font-size:11px}.wardrobe-slot small{font-size:11px}.wardrobe-slot>.gear-sprite{width:36px}.wardrobe-slot>svg{width:23px}.wardrobe-slot:last-child{grid-column:1/-1}.gear-card-preview{min-height:150px}.gear-item-name{font-size:24px}}
 @media(max-width:360px){.character-summary-card{grid-template-columns:minmax(0,1fr) 120px;padding:20px 12px}.character-summary-card>.character-avatar{width:150px}.character-summary-copy h2{font-size:23px}.character-summary-copy>p{font-size:11px}.character-summary-copy button{font-size:11px;gap:5px}.character-summary-copy>div{flex-direction:column;gap:5px}}
-/* One 5:6 body frame scales the base, fitted clothes and skin occlusion together. */
-.character-avatar .character-layers{inset:3% auto auto 50%;width:auto;height:89%;aspect-ratio:5/6;translate:-50% 0;transform-origin:50% 98%}
-.character-avatar .character-base{inset:0;background-size:100% 100%;filter:none}
-.character-avatar .character-equipped,.character-avatar .character-foreground{position:absolute;inset:0;left:0;top:0;width:100%;height:100%;aspect-ratio:auto;transform:none;clip-path:none;overflow:visible;pointer-events:none;image-rendering:pixelated;filter:none}
-.character-avatar .character-slot-back{z-index:0}
-.character-avatar .character-base{z-index:1}
-.character-avatar .character-foreground{z-index:8}
-@media(prefers-reduced-motion:reduce){.character-avatar.is-animated .character-layers{animation:none}}
 
-/* A shared skeletal rig keeps the original pixel art and each worn layer joined. */
-.gear-sprite.gear-forge{background:none;overflow:visible}
-.character-avatar .character-base{opacity:0}
-.character-avatar .character-body,.character-avatar .character-limb-foreground{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:1;pointer-events:none;image-rendering:pixelated}
-.character-avatar .character-limb-foreground{z-index:5}
-.character-avatar .character-joint{transform-box:view-box;transform:none}
-.character-avatar .joint-torso{transform-origin:570px 653px}
-.character-avatar .joint-head{transform-origin:572px 275px}
-.character-avatar .joint-left-upper-arm{transform-origin:418px 337px}
-.character-avatar .joint-right-upper-arm{transform-origin:727px 337px}
-.character-avatar .joint-left-forearm{transform-origin:337px 509px}
-.character-avatar .joint-right-forearm{transform-origin:808px 509px}
-.character-avatar .joint-left-thigh{transform-origin:486px 674px}
-.character-avatar .joint-right-thigh{transform-origin:659px 674px}
-.character-avatar .joint-left-shin{transform-origin:438px 914px}
-.character-avatar .joint-right-shin{transform-origin:707px 914px}
-.character-avatar .character-blink{opacity:0}
-.character-avatar .character-power-field{position:absolute;inset:12% 13% 11%;z-index:0;opacity:0;pointer-events:none;transform-origin:50% 100%;border-radius:50% 50% 20% 20%;background:radial-gradient(ellipse at 50% 70%,#c5ff5330,transparent 65%)}
-.character-power-field i{position:absolute;bottom:8%;width:3px;height:18%;background:linear-gradient(transparent,#d8ff3e);box-shadow:0 0 9px #d8ff3e88;border-radius:99px;opacity:0;rotate:12deg}
-.character-power-field i:nth-child(1){left:8%}.character-power-field i:nth-child(2){left:32%;height:12%}.character-power-field i:nth-child(3){right:25%;height:15%;rotate:-12deg}.character-power-field i:nth-child(4){right:5%;rotate:-12deg}
-
-.character-avatar[data-motion]{--motion-duration:3.2s;--torso-motion:avatar-idle-torso;--head-motion:avatar-idle-head;--left-arm-motion:avatar-idle-left-arm;--right-arm-motion:avatar-idle-right-arm;--left-forearm-motion:avatar-idle-left-forearm;--right-forearm-motion:avatar-idle-right-forearm;--left-thigh-motion:none;--right-thigh-motion:none;--left-shin-motion:none;--right-shin-motion:none}
-.character-avatar[data-motion="walk"]{--motion-duration:1.15s;--torso-motion:avatar-walk-torso;--head-motion:avatar-walk-head;--left-arm-motion:avatar-walk-left-arm;--right-arm-motion:avatar-walk-right-arm;--left-forearm-motion:avatar-walk-left-forearm;--right-forearm-motion:avatar-walk-right-forearm;--left-thigh-motion:avatar-walk-left-thigh;--right-thigh-motion:avatar-walk-right-thigh;--left-shin-motion:avatar-walk-left-shin;--right-shin-motion:avatar-walk-right-shin}
-.character-avatar[data-motion="train"]{--motion-duration:2s;--torso-motion:avatar-train-torso;--head-motion:avatar-train-head;--left-arm-motion:avatar-train-left-arm;--right-arm-motion:avatar-train-right-arm;--left-forearm-motion:avatar-train-left-forearm;--right-forearm-motion:avatar-train-right-forearm}
-.character-avatar[data-motion="victory"]{--motion-duration:2.4s;--torso-motion:avatar-victory-torso;--head-motion:avatar-victory-head;--left-arm-motion:avatar-victory-left-arm;--right-arm-motion:avatar-victory-right-arm;--left-forearm-motion:avatar-victory-left-forearm;--right-forearm-motion:avatar-victory-right-forearm}
-.character-avatar[data-motion="power"]{--motion-duration:1.8s;--torso-motion:avatar-power-torso;--head-motion:avatar-power-head;--left-arm-motion:avatar-power-left-arm;--right-arm-motion:avatar-power-right-arm;--left-forearm-motion:avatar-power-left-forearm;--right-forearm-motion:avatar-power-right-forearm;--left-thigh-motion:avatar-power-left-thigh;--right-thigh-motion:avatar-power-right-thigh}
-.character-avatar.is-animated[data-motion] .character-layers{animation:character-living-idle 3.2s ease-in-out infinite}
-.character-avatar.is-animated[data-motion] .character-joint{animation-duration:var(--motion-duration);animation-timing-function:ease-in-out;animation-iteration-count:infinite}
-.character-avatar.is-animated[data-motion] .joint-torso{animation-name:var(--torso-motion)}
-.character-avatar.is-animated[data-motion] .joint-head{animation-name:var(--head-motion)}
-.character-avatar.is-animated[data-motion] .joint-left-upper-arm{animation-name:var(--left-arm-motion)}
-.character-avatar.is-animated[data-motion] .joint-right-upper-arm{animation-name:var(--right-arm-motion)}
-.character-avatar.is-animated[data-motion] .joint-left-forearm{animation-name:var(--left-forearm-motion)}
-.character-avatar.is-animated[data-motion] .joint-right-forearm{animation-name:var(--right-forearm-motion)}
-.character-avatar.is-animated[data-motion] .joint-left-thigh{animation-name:var(--left-thigh-motion)}
-.character-avatar.is-animated[data-motion] .joint-right-thigh{animation-name:var(--right-thigh-motion)}
-.character-avatar.is-animated[data-motion] .joint-left-shin{animation-name:var(--left-shin-motion)}
-.character-avatar.is-animated[data-motion] .joint-right-shin{animation-name:var(--right-shin-motion)}
-.character-avatar.is-animated[data-motion] .character-blink{animation:avatar-blink 5.3s steps(1,end) infinite}
-.character-avatar.is-animated[data-motion="power"] .character-power-field{animation:avatar-power-glow 1.8s ease-in-out infinite}
-.character-avatar.is-animated[data-motion="power"] .character-power-field i{animation:avatar-power-spark 1.2s linear infinite}
-.character-avatar.is-animated[data-motion="power"] .character-power-field i:nth-child(2){animation-delay:-.3s}.character-avatar.is-animated[data-motion="power"] .character-power-field i:nth-child(3){animation-delay:-.6s}.character-avatar.is-animated[data-motion="power"] .character-power-field i:nth-child(4){animation-delay:-.9s}
-
-@keyframes character-living-idle{0%,100%{transform:rotate(-.12deg)}50%{transform:rotate(.12deg)}}
-@keyframes avatar-blink{0%,43%,46%,88%,91%,100%{opacity:0}44%,45%,89%,90%{opacity:1}}
-@keyframes avatar-idle-torso{0%,100%{transform:scale(1)}50%{transform:scale(1.012,1.009)}}
-@keyframes avatar-idle-head{0%,100%{transform:rotate(-.6deg)}50%{transform:rotate(.6deg)}}
-@keyframes avatar-idle-left-arm{0%,100%{transform:rotate(0)}50%{transform:rotate(1.6deg)}}
-@keyframes avatar-idle-right-arm{0%,100%{transform:rotate(0)}50%{transform:rotate(-1.6deg)}}
-@keyframes avatar-idle-left-forearm{0%,100%{transform:rotate(-1deg)}50%{transform:rotate(1deg)}}
-@keyframes avatar-idle-right-forearm{0%,100%{transform:rotate(1deg)}50%{transform:rotate(-1deg)}}
-
-@keyframes avatar-walk-torso{0%,100%{transform:rotate(-1deg)}50%{transform:rotate(1deg)}}
-@keyframes avatar-walk-head{0%,100%{transform:rotate(1deg)}50%{transform:rotate(-1deg)}}
-@keyframes avatar-walk-left-arm{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(12deg)}}
-@keyframes avatar-walk-right-arm{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(10deg)}}
-@keyframes avatar-walk-left-forearm{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(4deg)}}
-@keyframes avatar-walk-right-forearm{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(14deg)}}
-@keyframes avatar-walk-left-thigh{0%,100%{transform:rotate(5deg)}50%{transform:translateY(-16px) rotate(-6deg)}}
-@keyframes avatar-walk-right-thigh{0%,100%{transform:translateY(-16px) rotate(6deg)}50%{transform:rotate(-5deg)}}
-@keyframes avatar-walk-left-shin{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(9deg)}}
-@keyframes avatar-walk-right-shin{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(4deg)}}
-
-@keyframes avatar-train-torso{0%,100%{transform:scaleX(1)}45%,55%{transform:scaleX(1.025)}}
-@keyframes avatar-train-head{0%,100%{transform:rotate(0)}45%,55%{transform:rotate(2deg)}}
-@keyframes avatar-train-left-arm{0%,100%{transform:rotate(0)}45%,55%{transform:rotate(-6deg)}}
-@keyframes avatar-train-right-arm{0%,100%{transform:rotate(0)}45%,55%{transform:rotate(6deg)}}
-@keyframes avatar-train-left-forearm{0%,100%{transform:rotate(-6deg)}45%,55%{transform:rotate(-116deg)}}
-@keyframes avatar-train-right-forearm{0%,100%{transform:rotate(6deg)}45%,55%{transform:rotate(116deg)}}
-
-@keyframes avatar-victory-torso{0%,100%{transform:scale(1.01)}50%{transform:scale(1.025,1.014)}}
-@keyframes avatar-victory-head{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
-@keyframes avatar-victory-left-arm{0%,100%{transform:rotate(98deg)}50%{transform:rotate(108deg)}}
-@keyframes avatar-victory-right-arm{0%,100%{transform:rotate(-98deg)}50%{transform:rotate(-108deg)}}
-@keyframes avatar-victory-left-forearm{0%,100%{transform:rotate(11deg)}50%{transform:rotate(0)}}
-@keyframes avatar-victory-right-forearm{0%,100%{transform:rotate(-11deg)}50%{transform:rotate(0)}}
-
-@keyframes avatar-power-torso{0%,100%{transform:scale(1.02,1)}50%{transform:scale(1.045,1.016)}}
-@keyframes avatar-power-head{0%,100%{transform:rotate(-1deg)}50%{transform:rotate(1deg)}}
-@keyframes avatar-power-left-arm{0%,100%{transform:rotate(19deg)}50%{transform:rotate(26deg)}}
-@keyframes avatar-power-right-arm{0%,100%{transform:rotate(-19deg)}50%{transform:rotate(-26deg)}}
-@keyframes avatar-power-left-forearm{0%,100%{transform:rotate(-87deg)}50%{transform:rotate(-99deg)}}
-@keyframes avatar-power-right-forearm{0%,100%{transform:rotate(87deg)}50%{transform:rotate(99deg)}}
-@keyframes avatar-power-left-thigh{0%,100%{transform:rotate(2deg)}50%{transform:rotate(3deg)}}
-@keyframes avatar-power-right-thigh{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(-3deg)}}
-@keyframes avatar-power-glow{0%,100%{opacity:.35;transform:scaleX(.9)}50%{opacity:1;transform:scaleX(1.12)}}
-@keyframes avatar-power-spark{0%{opacity:0;transform:translateY(0) scaleY(.4)}20%{opacity:.85}100%{opacity:0;transform:translateY(-100px) scaleY(1.2)}}
-
-/* One preference controls the whole rig, including equipment and energy trails. */
+/* Registered base-v1 pose. Every layer uses the same padded viewport and rigid timeline. */
+.gear-sprite[data-gear-id]{clip-path:none;background:none;overflow:hidden}
+.character-avatar{overflow:visible;min-width:0}
+.character-avatar .character-layers{inset:3% auto auto 50%;width:auto;height:89%;aspect-ratio:1265/1494;translate:-50% 0;transform-origin:50% 96%}
+.character-avatar .character-base{inset:0;opacity:0;pointer-events:none}
+.character-avatar .character-body,.character-avatar .character-equipped,.character-avatar .character-foreground,.character-avatar .character-clasp{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;transform:none;clip-path:none;overflow:visible;pointer-events:none;image-rendering:pixelated;filter:none;animation:none!important}
+.character-avatar .character-body{z-index:1}.character-avatar .character-foreground{z-index:8}
+.character-avatar .character-power-field{position:absolute;inset:12% 13% 11%;z-index:0;opacity:0;pointer-events:none;border-radius:50%;background:radial-gradient(ellipse at 50% 70%,#c5ff5330,transparent 65%)}
+.character-avatar .character-power-field i{display:none}
+.character-avatar.is-animated[data-motion] .character-layers{animation:character-idle 3.2s ease-in-out infinite}
+.character-avatar.is-animated[data-motion=walk] .character-layers{animation:character-sway 1.8s ease-in-out infinite}
+.character-avatar.is-animated[data-motion=train] .character-layers{animation:character-ready 2.4s ease-in-out infinite}
+.character-avatar.is-animated[data-motion=victory] .character-layers{animation:character-celebrate 2.2s ease-in-out infinite}
+.character-avatar.is-animated[data-motion=power] .character-layers{animation:character-idle 1.8s ease-in-out infinite}
+.character-avatar.is-animated[data-motion=power] .character-power-field{animation:character-energy 1.8s ease-in-out infinite}
+@keyframes character-idle{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}
+@keyframes character-sway{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-2px) rotate(-.45deg)}75%{transform:translateX(2px) rotate(.45deg)}}
+@keyframes character-ready{0%,100%{transform:translateY(0)}45%,55%{transform:translateY(3px)}}
+@keyframes character-celebrate{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-4px) rotate(-.6deg)}65%{transform:translateY(-2px) rotate(.6deg)}}
+@keyframes character-energy{0%,100%{opacity:.25}50%{opacity:.8}}
+.character-party{max-width:100%;overflow:visible}
+.character-party.has-companion>.character-avatar{width:90%;transform:none}
+.character-companion{right:0;width:35%}
+.character-companion>.companion-sprite{object-fit:contain}
+.companion-sprite[data-companion-id]{background:none;overflow:hidden}
 .character-avatar:not(.is-animated)[data-motion] *,.character-avatar:not(.is-animated)[data-motion] *::after{animation:none!important}
-@media(prefers-reduced-motion:reduce){.character-avatar[data-motion] *,.character-avatar[data-motion] *::after{animation:none!important}}
+.effects-disabled .gear-sprite,.effects-disabled .companion-sprite{animation:none!important}
+@media(prefers-reduced-motion:reduce){.character-avatar[data-motion] *,.character-avatar[data-motion] *::after,.companion-sprite{animation:none!important}}
