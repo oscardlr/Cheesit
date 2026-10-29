@@ -36,7 +36,7 @@ async function freshAccount(page:Page){
 }
 
 async function objectives(page:Page){
-  await nav(page).getByRole('button',{name:'Universo RPG',exact:true}).click();
+  await nav(page).getByRole('button',{name:'Arcade',exact:true}).click();
   await expect(page.getByRole('tab',{name:'Objetivos',exact:true})).toHaveAttribute('aria-selected','true');
 }
 

@@ -21,7 +21,7 @@ async function winningPosition(page: Page) {
   });
 }
 async function openArcade(page: Page) {
-  if(new URLSearchParams(new URL(page.url()).hash.slice(1)).get('view')!=='game')await navigation(page).getByRole('button', { name: 'Universo RPG', exact: true }).click();
+  if(new URLSearchParams(new URL(page.url()).hash.slice(1)).get('view')!=='game')await navigation(page).getByRole('button', { name: 'Arcade', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Zona arcade' })).toBeVisible();
 }
 async function savedData(page: Page): Promise<AppData | null> {
