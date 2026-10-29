@@ -153,7 +153,7 @@ export default function Celebration({ event, onDismiss, effectsEnabled, soundEna
           <div className="celebration-level-copy"><Gift size={18}/><span>NUEVO NIVEL DESBLOQUEADO</span><strong>{event.levelAfter}</strong></div>
           <div className="celebration-stairs" aria-hidden="true"><i/><i/><i/><i/><PixelAthlete pose="climb" animated={effectsEnabled}/><Gift className="celebration-chest" size={30}/></div>
           <p>Nivel {event.levelBefore} <ArrowUpRight size={14}/> Nivel {event.levelAfter}.</p>
-          <p>Tu cofre de nivel te espera en Universo RPG → Cofres.</p>
+          <p>Tu cofre de nivel te espera en Arcade → Cofres.</p>
         </div>}
         {isWorkout && <>
           {event.abilityUsed&&<div className="celebration-milestones"><strong><Sparkles size={12}/>Habilidad usada · 1 carga{event.abilityCredits?` · +${event.abilityCredits} créditos extra`:''}</strong></div>}

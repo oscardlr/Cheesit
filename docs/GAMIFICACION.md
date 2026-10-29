@@ -72,7 +72,7 @@ Conservar entrenos, rutinas, ejercicios y copias actuales. Añadir estado de jue
 
 ## Registro de implementación
 
-Implementado en la app local. Acceso desde «Universo RPG», el saldo de créditos o la insignia de nivel. Recursos y prompts exactos: [RECURSOS-ARCADE.md](RECURSOS-ARCADE.md).
+Implementado en la app local. Acceso desde «Arcade», el saldo de créditos o la insignia de nivel. Recursos y prompts exactos: [RECURSOS-ARCADE.md](RECURSOS-ARCADE.md).
 
 ### Dominio y reglas definitivas
 
