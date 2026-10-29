@@ -15,22 +15,34 @@
 .character-avatar .character-body{z-index:1}.character-avatar .character-foreground{z-index:8}
 .character-avatar .character-power-field{position:absolute;inset:12% 13% 11%;z-index:0;opacity:0;pointer-events:none;border-radius:50%;background:radial-gradient(ellipse at 50% 70%,#c5ff5330,transparent 65%)}
 .character-avatar .character-power-field i{display:none}
+/* Only the complete assembly moves. Percentages keep the same readable gesture
+   at every preview size; no garment or body part has an independent timeline. */
 .character-avatar.is-animated[data-motion] .character-layers{animation:character-idle 3.2s ease-in-out infinite}
-.character-avatar.is-animated[data-motion=walk] .character-layers{animation:character-sway 1.8s ease-in-out infinite}
-.character-avatar.is-animated[data-motion=train] .character-layers{animation:character-ready 2.4s ease-in-out infinite}
-.character-avatar.is-animated[data-motion=victory] .character-layers{animation:character-celebrate 2.2s ease-in-out infinite}
-.character-avatar.is-animated[data-motion=power] .character-layers{animation:character-idle 1.8s ease-in-out infinite}
+.character-avatar.is-animated[data-motion=walk] .character-layers{animation:character-sway 2.2s ease-in-out infinite}
+.character-avatar.is-animated[data-motion=train] .character-layers{animation:character-ready 2.1s ease-in-out infinite}
+.character-avatar.is-animated[data-motion=victory] .character-layers{animation:character-celebrate 2.4s ease-in-out infinite}
+.character-avatar.is-animated[data-motion=power] .character-layers{animation:character-charge 1.8s ease-in-out infinite}
 .character-avatar.is-animated[data-motion=power] .character-power-field{animation:character-energy 1.8s ease-in-out infinite}
-@keyframes character-idle{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}
-@keyframes character-sway{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-2px) rotate(-.45deg)}75%{transform:translateX(2px) rotate(.45deg)}}
-@keyframes character-ready{0%,100%{transform:translateY(0)}45%,55%{transform:translateY(3px)}}
-@keyframes character-celebrate{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-4px) rotate(-.6deg)}65%{transform:translateY(-2px) rotate(.6deg)}}
-@keyframes character-energy{0%,100%{opacity:.25}50%{opacity:.8}}
+.character-avatar.is-animated[data-motion=power] .character-power-field::before,.character-avatar.is-animated[data-motion=power] .character-power-field::after{content:'';position:absolute;inset:0 8%;border:2px solid #d8ff3e80;border-radius:50%;animation:character-energy-ring 1.8s ease-out infinite}
+.character-avatar.is-animated[data-motion=power] .character-power-field::after{animation-delay:-.9s;border-color:#b8a0ff80}
+.character-avatar.is-animated[data-motion=power] .character-power-field i{display:block;position:absolute;width:3px;height:10px;bottom:5%;left:15%;border-radius:2px;background:#d8ff3e;box-shadow:0 0 8px #d8ff3e80;animation:character-energy-spark 1.8s ease-out infinite}
+.character-avatar.is-animated[data-motion=power] .character-power-field i:nth-child(2){left:30%;animation-delay:-.45s}
+.character-avatar.is-animated[data-motion=power] .character-power-field i:nth-child(3){left:70%;animation-delay:-.9s}
+.character-avatar.is-animated[data-motion=power] .character-power-field i:nth-child(4){left:85%;animation-delay:-1.35s}
+@keyframes character-idle{0%,100%{transform:translateY(0)}50%{transform:translateY(-.9%)}}
+@keyframes character-sway{0%,50%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-2.5%) rotate(-1.8deg)}75%{transform:translateX(2.5%) rotate(1.8deg)}}
+@keyframes character-ready{0%,12%,100%{transform:translate(0,0) rotate(0)}38%,48%{transform:translate(.8%,2.5%) rotate(-1.8deg)}65%{transform:translate(-.4%,-1.3%) rotate(.7deg)}80%{transform:translate(0,0) rotate(0)}}
+@keyframes character-celebrate{0%,12%,38%,62%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-4.5%) rotate(-1.4deg)}50%{transform:translateY(-3.2%) rotate(1.4deg)}}
+@keyframes character-charge{0%,100%{transform:translateY(0)}50%{transform:translateY(-2%)}}
+@keyframes character-energy{0%,100%{opacity:.35}50%{opacity:.9}}
+@keyframes character-energy-ring{0%{transform:scale(.78);opacity:.8}100%{transform:scale(1.12);opacity:0}}
+@keyframes character-energy-spark{0%{translate:0 0;opacity:0}20%{opacity:1}100%{translate:0 -110px;opacity:0}}
 .character-party{max-width:100%;overflow:visible}
 .character-party.has-companion>.character-avatar{width:90%;transform:none}
 .character-companion{right:0;width:35%}
 .character-companion>.companion-sprite{object-fit:contain}
 .companion-sprite[data-companion-id]{background:none;overflow:hidden}
 .character-avatar:not(.is-animated)[data-motion] *,.character-avatar:not(.is-animated)[data-motion] *::after{animation:none!important}
-.effects-disabled .gear-sprite,.effects-disabled .companion-sprite{animation:none!important}
-@media(prefers-reduced-motion:reduce){.character-avatar[data-motion] *,.character-avatar[data-motion] *::after,.companion-sprite{animation:none!important}}
+.effects-disabled .character-avatar *,.effects-disabled .character-avatar *::before,.effects-disabled .character-avatar *::after,.effects-disabled .gear-sprite,.effects-disabled .companion-sprite{animation:none!important}
+.motion-feedback-reduced{display:none}
+@media(prefers-reduced-motion:reduce){.character-avatar[data-motion] *,.character-avatar[data-motion] *::before,.character-avatar[data-motion] *::after,.companion-sprite{animation:none!important}.character-avatar .character-power-field{opacity:0!important}.motion-feedback-active{display:none}.motion-feedback-reduced{display:inline}}

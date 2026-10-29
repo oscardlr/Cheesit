@@ -6,6 +6,7 @@ const probes = new Map<string, Promise<boolean>>();
 /** SVG load errors can precede hydration. One shared probe also catches that case. */
 export function useImageFailure(src: string) {
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   useEffect(() => {
     let active = true;
     let probe = probes.get(src);
@@ -18,8 +19,8 @@ export function useImageFailure(src: string) {
       });
       probes.set(src, probe);
     }
-    void probe.then(loaded => { if (active) setFailed(!loaded); });
+    void probe.then(isLoaded => { if (active) { setFailed(!isLoaded); setLoaded(isLoaded); } });
     return () => { active = false; };
   }, [src]);
-  return [failed, () => setFailed(true)] as const;
+  return [failed, () => { setFailed(true); setLoaded(false); }, loaded] as const;
 }

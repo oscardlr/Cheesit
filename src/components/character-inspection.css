@@ -34,8 +34,12 @@
 .inspection-risk-grid { margin-top: 16px; }
 @media (max-width: 760px) {
   .character-inspection { padding: 20px 14px; }
-  .inspection-workbench { grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 16px; }
-  .inspection-live > .character-party { max-width: 290px; }
+  /* The preview stays in view while the six selectors and motion buttons scroll.
+     Block flow gives sticky the whole workbench as its containing block. */
+  .inspection-workbench { display: block; padding: 16px; --inspection-preview-size: min(290px, 34dvh); }
+  .inspection-live { position: sticky; top: 8px; z-index: 6; padding-block: 8px; margin-bottom: 18px; border-bottom: 1px solid #82609855; border-radius: 10px; background: #2a1e37; }
+  .inspection-live > .character-party { width: var(--inspection-preview-size); max-width: 100%; }
+  .inspection-controls :is(select, input, button) { scroll-margin-top: calc(var(--inspection-preview-size) + 40px); scroll-margin-bottom: 20px; }
   .inspection-selects { grid-template-columns: minmax(0, 1fr); }
   .inspection-catalog, .inspection-risk-grid { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
   .inspection-motions > button { flex: 1 1 80px; }

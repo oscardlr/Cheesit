@@ -10,8 +10,8 @@ const slots = ['head', 'top', 'bottom', 'hand', 'back'] as const;
 const newGearIds = collections.flatMap(collection => slots.map(slot => `${collection}-${slot}`));
 const motions = [
   { label: 'Reposo', id: 'idle' },
-  { label: 'Caminar', id: 'walk' },
-  { label: 'Entrenar', id: 'train' },
+  { label: 'Balanceo', id: 'walk' },
+  { label: 'Prepararse', id: 'train' },
   { label: 'Victoria', id: 'victory' },
   { label: 'Poder', id: 'power' },
 ] as const;
@@ -114,7 +114,7 @@ test('five accessible modes move the assembled character without deformation', a
 
 test('held equipment and clothing remain registered inside the moving assembly', async ({ page }) => {
   await seed(page);
-  await motionControls(page).getByRole('button', { name: 'Entrenar', exact: true }).click();
+  await motionControls(page).getByRole('button', { name: 'Prepararse', exact: true }).click();
   const character = avatar(page);
   await expect(character.locator('.character-equipped')).toHaveCount(5);
   const attachments = await character.evaluate(element => {

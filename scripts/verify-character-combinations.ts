@@ -15,7 +15,7 @@ import { CHARACTER_GEAR_SLOTS, CHARACTER_EQUIPMENT_COMBINATIONS, enumerateCharac
 
 type Rect = readonly [number, number, number, number];
 type Pixels = { rgba: Uint8Array; words: Uint32Array; visible: Uint32Array };
-type RenderSet = { width: number; height: number; master: Pixels; hand: Pixels; gear: Map<string, Pixels>; fronts: Map<string, Pixels> };
+type RenderSet = { width: number; height: number; master: Pixels; masterWithoutHand: Pixels; gear: Map<string, Pixels>; fronts: Map<string, Pixels> };
 const root = process.cwd(), output = path.join(root, 'docs/block-two');
 await mkdir(output, { recursive: true });
 const atlas = await readFile(path.join(root, 'public', CHARACTER_ATLAS.src));
@@ -59,8 +59,9 @@ function composite(target: Uint8Array, layer: Pixels) {
 }
 async function renderSet(width: number): Promise<RenderSet> {
   const height = Math.round(width * frame[3] / frame[2]);
-  async function image(buffer: Buffer, target: readonly number[], mask?: string) {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="${CHARACTER_VIEWBOX}">${mask ? `<defs><clipPath id="mask"><path d="${maskPath(mask)}"/></clipPath></defs>` : ''}<image x="${target[0]}" y="${target[1]}" width="${target[2]}" height="${target[3]}" href="data:image/png;base64,${buffer.toString('base64')}" preserveAspectRatio="xMidYMid meet"${mask ? ' clip-path="url(#mask)"' : ''}/></svg>`;
+  async function image(buffer: Buffer, target: readonly number[], mask?: string, eraseHand = false) {
+    const definitions = `${mask ? `<clipPath id="clip"><path d="${maskPath(mask)}"/></clipPath>` : ''}${eraseHand ? `<mask id="erase-hand" maskUnits="userSpaceOnUse" x="${frame[0]}" y="${frame[1]}" width="${frame[2]}" height="${frame[3]}"><rect x="${frame[0]}" y="${frame[1]}" width="${frame[2]}" height="${frame[3]}" fill="white"/><path d="${CHARACTER_MASKS.handReplacement}" fill="black"/></mask>` : ''}`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="${CHARACTER_VIEWBOX}"><defs>${definitions}</defs><image x="${target[0]}" y="${target[1]}" width="${target[2]}" height="${target[3]}" href="data:image/png;base64,${buffer.toString('base64')}" preserveAspectRatio="xMidYMid meet"${mask ? ' clip-path="url(#clip)"' : ''}${eraseHand ? ' mask="url(#erase-hand)"' : ''}/></svg>`;
     const { data } = await sharp(Buffer.from(svg)).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
     return sparse(data);
   }
@@ -70,19 +71,18 @@ async function renderSet(width: number): Promise<RenderSet> {
     gear.set(definition.id, await image(cropped.get(definition.id)!, art.target));
     if (art.foregroundMask) fronts.set(definition.id, await image(cropped.get(definition.id)!, art.target, art.foregroundMask));
   }
-  return { width, height, master: await image(master, [0, 0, CHARACTER_MASTER.width, CHARACTER_MASTER.height]), hand: await image(master, [0, 0, CHARACTER_MASTER.width, CHARACTER_MASTER.height], CHARACTER_MASKS.rightHand), gear, fronts };
+  const masterRect = [0, 0, CHARACTER_MASTER.width, CHARACTER_MASTER.height];
+  return { width, height, master: await image(master, masterRect), masterWithoutHand: await image(master, masterRect, undefined, true), gear, fronts };
 }
 function render(equipment: CharacterEquipment, set: RenderSet) {
   const result = new Uint8Array(set.width * set.height * 4);
-  const layers: { order: number; pixels: Pixels }[] = [{ order: 1, pixels: set.master }];
+  const layers: { order: number; pixels: Pixels }[] = [{ order: 1, pixels: equipment.hand && CHARACTER_ART[equipment.hand].replacesHand ? set.masterWithoutHand : set.master }];
   for (const slot of slots) {
     const id = equipment[slot];
     if (!id) continue;
     layers.push({ order: CHARACTER_SLOT_ORDER[slot], pixels: set.gear.get(id)! });
-    // Match WornGear's clasp plane and MasterImage's hand plane in the renderer.
     if (set.fronts.has(id)) layers.push({ order: 4, pixels: set.fronts.get(id)! });
   }
-  if (equipment.hand && CHARACTER_ART[equipment.hand].grip) layers.push({ order: 8, pixels: set.hand });
   for (const layer of layers.sort((left, right) => left.order - right.order)) composite(result, layer.pixels);
   return result;
 }
@@ -157,9 +157,15 @@ async function contact(entries: { label: string; equipment: CharacterEquipment }
 }
 await contact(individual, 'catalog-after', 'CHEESIT · Cada cosmético sobre el personaje maestro');
 await contact(pairwise.map(entry => ({ label: `Combinación ${entry.index}`, equipment: entry.equipment })), 'slot-interactions', 'CHEESIT · Todas las interacciones entre pares de ranuras');
+const heads = [undefined, ...GEAR.filter(gear => gear.slot === 'head').map(gear => gear.id)];
+const hands = [undefined, ...GEAR.filter(gear => gear.slot === 'hand').map(gear => gear.id)];
+const headHandPairs = heads.flatMap(head => hands.map(hand => ({ label: `${head ?? 'Sin cabeza'} / ${hand ?? 'Sin mano'}`, equipment: { ...(head ? { head } : {}), ...(hand ? { hand } : {}) } as CharacterEquipment })));
+await contact(headHandPairs, 'head-hand-interactions', 'CHEESIT · Los 64 cruces de cabeza y mano, incluidos ambos vacíos');
 const companionSources: Record<string, readonly number[]> = {};
 const companionCards: OverlayOptions[] = [];
-for (const companion of COMPANIONS) {
+// Only independent companion crops present in the wardrobe atlas are inspected here.
+const atlasCompanions = COMPANIONS.filter(companion => COMPANION_ART[companion.id]);
+for (const companion of atlasCompanions) {
   const art = COMPANION_ART[companion.id];
   const source = Array.isArray(art) ? art : art.source;
   companionSources[companion.id] = source;
@@ -168,7 +174,7 @@ for (const companion of COMPANIONS) {
   const card = `<svg width="288" height="520"><defs><pattern id="checks" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M0 0H16V16H0Z" fill="#292430"/><path d="M0 0H8V8H0ZM8 8H16V16H8Z" fill="#38313f"/></pattern></defs><rect width="100%" height="100%" fill="#211a2b"/><text x="14" y="24" font-family="Arial" font-size="16" fill="#f1e9fa">${escape(companion.id)}</text><rect x="8" y="36" width="272" height="440" fill="url(#checks)"/><image x="16" y="42" width="256" height="428" href="data:image/png;base64,${png.toString('base64')}" preserveAspectRatio="xMidYMid meet"/><text x="14" y="501" font-family="Arial" font-size="11" fill="#bba8c9">${escape(companion.name)}</text></svg>`;
   companionCards.push({ input: Buffer.from(card), left: companionCards.length * 288, top: 0 });
 }
-await sharp({ create: { width: COMPANIONS.length * 288, height: 520, channels: 4, background: '#15111c' } }).composite(companionCards).png().toFile(path.join(output, 'companions-after.png'));
+await sharp({ create: { width: atlasCompanions.length * 288, height: 520, channels: 4, background: '#15111c' } }).composite(companionCards).png().toFile(path.join(output, 'companions-after.png'));
 contactFiles.push('companions-after.png');
 const report = {
   atlas: CHARACTER_ATLAS, master: CHARACTER_MASTER, viewBox: CHARACTER_VIEWBOX,
@@ -179,8 +185,11 @@ const report = {
   slotPairCombinations: pairCount, coveredSlotPairCombinations: pairCount - remaining.size,
   pairwiseOutfits: pairwise.map(entry => ({ index: entry.index, equipment: entry.equipment })),
   newIllustrations: Object.values(CHARACTER_ART).filter(art => art.origin === 'tailored').length,
+  newHeadAndHandIllustrations: GEAR.filter(gear => (gear.slot === 'head' || gear.slot === 'hand') && CHARACTER_ART[gear.id].origin === 'tailored').length,
   reusedGearIllustrations: Object.values(CHARACTER_ART).filter(art => art.origin === 'reused').length,
-  reusedCompanionIllustrations: COMPANIONS.length, jointVariants: 0, companionSources, contactFiles,
+  authoredHandReplacements: Object.values(CHARACTER_ART).filter(art => art.replacesHand).length,
+  headHandCombinations: headHandPairs.length,
+  reusedCompanionIllustrations: atlasCompanions.length, jointVariants: 0, companionSources, contactFiles,
   failures, scope: 'Mechanical transparent-layer rasterization of the shared manifest; browser animation and responsive verification are separate checks.',
 };
 await writeFile(path.join(output, 'composition-verification.json'), JSON.stringify(report, null, 2) + '\n');
