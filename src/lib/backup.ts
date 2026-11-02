@@ -1,3 +1,4 @@
+import { isPersonalProfile } from './personal-profile';
 import { CATALOG, GROUPS } from './catalog';
 import { isAthleteProfile } from './strength';
 import { GEAR, type GearSlot } from './gear';
@@ -98,6 +99,7 @@ export function validateData(value: unknown): AppData {
   }
   if (value.preferences !== undefined && (!record(value.preferences) || typeof value.preferences.effects !== 'boolean' || typeof value.preferences.sound !== 'boolean')) return fail('preferencias de efectos o sonido');
   if (value.profile !== undefined && !isAthleteProfile(value.profile)) return fail('perfil de entrenamiento');
+  if (value.personalProfile !== undefined && !isPersonalProfile(value.personalProfile)) return fail('perfil personal');
   return { ...value, ...(value.game !== undefined ? { game: normalizeGame(value.game) } : {}) } as AppData;
 }
 
@@ -142,7 +144,7 @@ function mergeGame(current: GameState | undefined, incoming: GameState | undefin
 }
 type Counts = { routines: number; workouts: number; customExercises: number };
 export type BackupResolution = 'local' | 'incoming' | 'duplicate';
-export type BackupConflict = { key: string; kind: keyof Counts | 'game' | 'routineDraft'; id: string; name: string; local: unknown; incoming: unknown; choices: BackupResolution[] };
+export type BackupConflict = { key: string; kind: keyof Counts | 'game' | 'routineDraft' | 'personalProfile'; id: string; name: string; local: unknown; incoming: unknown; choices: BackupResolution[] };
 export type BackupPreview = { newCounts: Counts; duplicateCounts: Counts; conflicts: string[]; conflictDetails: BackupConflict[]; multipleDates: string[]; merged: AppData };
 
 export function previewBackup(raw: unknown, current: AppData, resolutions: Record<string, BackupResolution> = {}): BackupPreview {
@@ -238,6 +240,10 @@ export function previewBackup(raw: unknown, current: AppData, resolutions: Recor
   if (preferences) merged.preferences = { ...preferences };
   const profile=current.profile??incoming.profile;
   if(profile)merged.profile={...profile};
+  if (current.personalProfile && incoming.personalProfile && canonical(current.personalProfile) !== canonical(incoming.personalProfile)) {
+    const choice = conflict({ key: 'personalProfile:identity', kind: 'personalProfile', id: 'identity', name: 'Foto, nombre y biografía', local: current.personalProfile, incoming: incoming.personalProfile, choices: ['local', 'incoming'] });
+    merged.personalProfile = { ...(choice === 'incoming' ? incoming.personalProfile : current.personalProfile) };
+  } else if (current.personalProfile ?? incoming.personalProfile) merged.personalProfile = { ...(current.personalProfile ?? incoming.personalProfile)! };
   // Detect UUID collisions in nested entities across the two sources too.
   // A top-level match with differing content is reported as a conflict above.
   if (!conflicts.length) validateData(merged);

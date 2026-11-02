@@ -48,6 +48,8 @@ export function mergeDocuments(base: AccountDocument, local: AccountDocument, se
   }
   data.routineDraft = choose('routineDraft', 'Borrador de rutina', base.data.routineDraft, local.data.routineDraft, server.data.routineDraft);
   data.preferences = choose('preferences', 'Preferencias', base.data.preferences, local.data.preferences, server.data.preferences);
+  const personalProfile = choose('personalProfile', 'Foto, nombre y biografía', base.data.personalProfile, local.data.personalProfile, server.data.personalProfile);
+  if (personalProfile) data.personalProfile = personalProfile;
   const tombstones = union(base.tombstones, local.tombstones, server.tombstones);
   // Tombstones win even over a stale explicit whole-branch choice.
   data.routines = data.routines.filter(x => !tombstones.includes(`routines:${x.id}`));

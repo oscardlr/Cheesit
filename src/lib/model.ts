@@ -2,6 +2,7 @@ import { CATALOG } from './catalog';
 import { todayMadrid } from './dates';
 import type { GameState } from './game';
 import type { AthleteProfile } from './strength';
+import type { PersonalProfile } from './personal-profile';
 import type { AbilityUse } from './abilities';
 import type { MuscleId } from './muscles';
 import { snapshotWorkoutPassive, type CompanionPassiveAward, type CompanionPassiveSnapshot } from './cheesit-passives';
@@ -24,7 +25,7 @@ export const isRoutineIcon = (value: unknown): value is RoutineIconId => typeof 
 export const resolvedRoutineIcon = (value: unknown): RoutineIconId => isRoutineIcon(value) ? value : DEFAULT_ROUTINE_ICON;
 export type Routine = { id: string; name: string; color: string; icon?: RoutineIconId; archived: boolean; exercises: RoutineExercise[]; notes?: string };
 export type RoutineDraft = Omit<Routine, 'exercises'> & { exercises: (Omit<RoutineExercise, 'sets'> & { sets: number | null })[] };
-export type AppData = { routines: Routine[]; workouts: Workout[]; customExercises: Exercise[]; routineDraft?: RoutineDraft; game?: GameState; profile?: AthleteProfile; preferences?: { effects: boolean; sound: boolean } };
+export type AppData = { routines: Routine[]; workouts: Workout[]; customExercises: Exercise[]; routineDraft?: RoutineDraft; game?: GameState; profile?: AthleteProfile; personalProfile?: PersonalProfile; preferences?: { effects: boolean; sound: boolean } };
 
 export const ROUTINE_COLOR_OPTIONS = [
   { value: '#d8ff3e', label: 'lima' }, { value: '#61C9A8', label: 'jade' },
