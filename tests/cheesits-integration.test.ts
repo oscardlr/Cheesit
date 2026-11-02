@@ -1,11 +1,11 @@
 import 'fake-indexeddb/auto';
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
+import { mock, test } from 'node:test';
 import { readFileSync } from 'node:fs';
 import { createBackup, previewBackup } from '../src/lib/backup';
 import { COMPANION_PASSIVES, applyWorkoutPassive, snapshotWorkoutPassive } from '../src/lib/cheesit-passives';
 import { COMPANIONS } from '../src/lib/companions';
-import { COMPANION_DROP_CHANCE, CRATES, equipCompanion, gameBalance, GEAR_DROP_CHANCE, isGameState, normalizeGame, QUOTE_DROP_CHANCE, rarityForRoll, rewardForRoll, unlockedCompanions, type GameState, type InventoryItem, type Rarity } from '../src/lib/game';
+import { COMPANION_DROP_CHANCE, CRATES, equipCompanion, gameBalance, GEAR_DROP_CHANCE, isGameState, normalizeGame, openCrate, QUOTE_DROP_CHANCE, rarityForRoll, revealReservedOpening, rewardForRoll, unlockedCompanions, type GameState, type InventoryItem, type Rarity } from '../src/lib/game';
 import { newWorkout, type AppData, type Workout } from '../src/lib/model';
 import { workoutReward } from '../src/lib/rewards';
 import { mergeRemote, prepareOperation, queueChange, readOwner, recordReceipt, resolveRevision } from '../src/lib/remote/queue';
@@ -55,20 +55,33 @@ test('all eight cheesits use existing rarity and reward odds; both entries of ea
   assert.equal(rarityForRoll(CRATES[0], .7), 'rare');
 });
 
-test('duplicate prevention draws the other cheesit before using the existing gear fallback', () => {
-  for (const rarity of ['common', 'rare', 'epic', 'legendary'] as Rarity[]) {
+test('crate purchases can repeat every cheesit even with a complete collection', () => {
+  for (const [rarity, rarityRoll] of [['common', .1], ['rare', .8], ['epic', .95], ['legendary', .999]] as const) {
     const pool = COMPANIONS.filter(value => value.rarity === rarity);
-    const first = owned([pool[0].id]).inventory;
-    assert.equal(rewardForRoll(rarity, .9, 0, false, first).id, pool[0].id, 'default duplicate behavior remains unchanged');
-    for (const roll of [0, .5, .99999]) {
-      const next = rewardForRoll(rarity, .9, roll, false, first, { avoidCompanionDuplicates: true });
-      assert.equal(next.id, pool[1].id);
-      assert.equal(next.kind, 'companion');
-      assert.equal(next.rarity, rarity);
+    for (const [index, itemRoll] of [0, .99999].entries()) {
+      const original = owned(COMPANIONS.map(value => value.id));
+      const workout = completed(original);
+      workout.exercises[0].sets = Array.from({ length: 200 }, () => ({ ...workout.exercises[0].sets[0], id: crypto.randomUUID() }));
+      const rolls = [rarityRoll, .9, itemRoll];
+      const random = mock.method(crypto, 'getRandomValues', (array: Uint32Array) => {
+        assert.ok(rolls.length);
+        array[0] = Math.floor(rolls.shift()! * 4294967296);
+        return array;
+      });
+      try {
+        const purchase = openCrate(original, [workout], 'starter')!;
+        assert.ok(purchase);
+        assert.equal(purchase.item.kind, 'companion');
+        assert.equal(purchase.item.companionId, pool[index].id);
+        assert.equal(purchase.item.rarity, rarity);
+        const revealed = normalizeGame(revealReservedOpening(purchase.game));
+        assert.equal(revealed.inventory.filter(item => item.companionId === pool[index].id).length, 2);
+        assert.equal(original.inventory.length, COMPANIONS.length);
+        assert.equal(revealed.transactions.length, original.transactions.length + 1);
+        assert.equal(gameBalance(revealed, [workout]), gameBalance(original, [workout]) - 100);
+        assert.ok(isGameState(revealed));
+      } finally { random.mock.restore(); }
     }
-    const exhausted = rewardForRoll(rarity, .9, 0, false, owned(pool.map(value => value.id)).inventory, { avoidCompanionDuplicates: true });
-    assert.equal(exhausted.kind, 'gear');
-    assert.equal(exhausted.rarity, rarity);
   }
 });
 

@@ -3,7 +3,7 @@ import { mock, test } from 'node:test';
 import { createBackup, previewBackup } from '../src/lib/backup';
 import { COMPANIONS } from '../src/lib/companions';
 import { GEAR } from '../src/lib/gear';
-import { completeOpening, gameBalance, gameCreditStatus, isGameState, normalizeGame, openCrate, openLevelCrate, QUOTES, RARITIES, REVEAL_DURATION_MS, rewardForRoll, rewardPools, setOpeningStage, SPIN_DURATION_MS, GEAR_DROP_CHANCE, COMPANION_DROP_CHANCE, QUOTE_DROP_CHANCE, REWARD_CATEGORY_LABEL, CRATES, type GameState, type InventoryItem, type Quote, type Rarity, type RewardChoice } from '../src/lib/game';
+import { completeOpening, gameBalance, gameCreditStatus, isGameState, normalizeGame, openCrate, openLevelCrate, QUOTES, RARITIES, REVEAL_DURATION_MS, rewardForRoll, rewardPools, setOpeningStage, SPIN_DURATION_MS, GEAR_DROP_CHANCE, COMPANION_DROP_CHANCE, QUOTE_DROP_CHANCE, REWARD_CATEGORY_LABEL, CRATES, type GameState, type InventoryItem, type Quote, type Rarity } from '../src/lib/game';
 import { acknowledgeQuoteConversions, mergeQuoteConversions, QUOTE_COMPENSATION, quoteConversionAmount, quoteConversionNotice } from '../src/lib/quote-conversion';
 import type { AppData, Workout } from '../src/lib/model';
 import { legacySaleSnapshot } from './fixtures/legacy-sale';
@@ -40,32 +40,26 @@ test('exact renormalized weights and rarity boundaries agree with UI and all cat
   }
 });
 
-test('level draws ignore a legacy slot choice and give each eligible equipment ID one ticket', () => {
+test('level draws give each eligible equipment ID one ticket', () => {
   for (const rarity of rarities) {
     const expected = GEAR.filter(item => item.rarity === rarity);
-    const legacyChoice = { gearSlot: 'top' } as unknown as RewardChoice;
-    const results = expected.map((_, i) => rewardForRoll(rarity, .9999, (i + .5) / expected.length, true, [], legacyChoice));
+    const results = expected.map((_, i) => rewardForRoll(rarity, .9999, (i + .5) / expected.length, true));
     assert.deepEqual(results.map(item => item.id), expected.map(item => item.id));
     assert.ok(results.every(item => item.kind === 'gear'));
   }
   const random = fixedRolls([.1, .99, .4]);
   try {
-    const opened = openLevelCrate(normalizeGame(), history, 2, undefined, { gearSlot: 'top' } as unknown as RewardChoice)!;
+    const opened = openLevelCrate(normalizeGame(), history, 2)!;
     assert.equal(opened.item.kind, 'gear'); assert.equal(opened.game.transactions[0].amount, 0);
     assert.ok(isGameState(opened.game));
     assert.equal(openLevelCrate(opened.game, history, 2), null);
   } finally { random.mock.restore(); }
 });
 
-test('both cheesits per rarity remain reachable and optional duplicate prevention falls back to same-rarity gear', () => {
+test('both cheesits per rarity remain reachable', () => {
   for (const rarity of rarities) {
     const companions = COMPANIONS.filter(item => item.rarity === rarity);
     assert.deepEqual([0,.99999].map(roll => rewardForRoll(rarity,.9,roll).id), companions.map(item => item.id));
-    const inventory = companions.map(companion => ({ ...copy(QUOTES[0]), kind: 'companion' as const, quoteId: undefined, companionId: companion.id, rarity }));
-    assert.equal(rewardForRoll(rarity,.9,0,false,inventory).id, companions[0].id);
-    assert.equal(rewardForRoll(rarity,.9,0,false,inventory.slice(0,1),{avoidCompanionDuplicates:true}).id, companions[1].id);
-    const fallback = rewardForRoll(rarity,.9,0,false,inventory,{avoidCompanionDuplicates:true});
-    assert.equal(fallback.kind,'gear'); assert.equal(fallback.rarity,rarity);
   }
 });
 

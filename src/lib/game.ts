@@ -54,7 +54,6 @@ export const GEAR_DROP_CHANCE = REWARD_CATEGORY_WEIGHTS.gear / rewardWeightTotal
 export const QUOTE_DROP_CHANCE = 0;
 export const COMPANION_DROP_CHANCE = REWARD_CATEGORY_WEIGHTS.companion / rewardWeightTotal;
 export const REWARD_CATEGORY_LABEL = `${(GEAR_DROP_CHANCE * 100).toFixed(2).replace('.', ',')}% equipo · ${(COMPANION_DROP_CHANCE * 100).toFixed(2).replace('.', ',')}% cheesits`;
-export type RewardChoice = { avoidCompanionDuplicates?: boolean };
 export type PendingOpening = { itemId: string; startedAt: string; stage: 'spinning' | 'rarity' | 'revealing'; revealStartedAt?: string };
 export type SeasonCrateProgress = { season: string; baseline: number; reached: number; legacyLevels?: number[] };
 export type GameState = {
@@ -385,23 +384,23 @@ export function rarityForRoll(crate: Pick<Crate, 'odds'>, roll: number): Rarity 
 }
 
 /** Canonical pools feed both the draw and previews; an ID has exactly one ticket. */
-export function rewardPools(rarity: Rarity, inventory: readonly InventoryItem[] = [], choice: RewardChoice = {}) {
+export function rewardPools(rarity: Rarity) {
   const unique = <T extends { id: string }>(entries: T[]) => [...new Map(entries.map(entry => [entry.id, entry])).values()];
   const gear = unique(GEAR.filter(candidate => candidate.rarity === rarity)).map(candidate => ({ ...candidate, kind: 'gear' as const }));
-  const companions = unique(COMPANIONS.filter(candidate => candidate.rarity === rarity && (!choice.avoidCompanionDuplicates || !inventory.some(item => item.companionId === candidate.id))))
+  const companions = unique(COMPANIONS.filter(candidate => candidate.rarity === rarity))
     .map(candidate => ({ ...candidate, kind: 'companion' as const }));
   return { gear, companions };
 }
-export function rewardForRoll(rarity: Rarity, kindRoll: number, itemRoll: number, forceGear = false, inventory: readonly InventoryItem[] = [], choice: RewardChoice = {}): ItemDefinition {
-  const { gear, companions } = rewardPools(rarity, inventory, choice);
-  // Missing/exhausted cheesits explicitly transfer their share to gear of SAME rarity.
+export function rewardForRoll(rarity: Rarity, kindRoll: number, itemRoll: number, forceGear = false): ItemDefinition {
+  const { gear, companions } = rewardPools(rarity);
+  // A rarity without cheesits transfers their share to gear of the same rarity.
   const pool = forceGear || kindRoll < GEAR_DROP_CHANCE || !companions.length ? gear : companions;
   if (!pool.length) throw new Error(`No hay equipo elegible de rareza ${rarity}.`);
   return pool[Math.min(pool.length - 1, Math.max(0, Math.floor(itemRoll * pool.length)))];
 }
 
-function openReward(game: GameState, crateId: string, rarity: Rarity, transaction: { kind: 'crate'; amount: number } | { kind: 'level-crate'; amount: 0; sourceLevel: number; sourceSeason: string }, choice: RewardChoice = {}) {
-  const definition = rewardForRoll(rarity, randomUnit(), randomUnit(), transaction.kind === 'level-crate', game.inventory, choice);
+function openReward(game: GameState, crateId: string, rarity: Rarity, transaction: { kind: 'crate'; amount: number } | { kind: 'level-crate'; amount: 0; sourceLevel: number; sourceSeason: string }) {
+  const definition = rewardForRoll(rarity, randomUnit(), randomUnit(), transaction.kind === 'level-crate');
   const now = new Date(Date.now()).toISOString();
   const item: InventoryItem = { id: crypto.randomUUID(), kind: definition.kind,
     ...(definition.kind === 'gear' ? { gearId: definition.id } : definition.kind === 'companion' ? { companionId: definition.id } : { quoteId: definition.id }),
@@ -412,19 +411,19 @@ function openReward(game: GameState, crateId: string, rarity: Rarity, transactio
 }
 
 /** Cost, hidden prize and recovery state commit together, before the roulette starts. */
-export function openCrate(game: GameState, history: Workout[], crateId: string, profile?: AthleteProfile, choice: RewardChoice = {}): { game: GameState; item: InventoryItem } | null {
+export function openCrate(game: GameState, history: Workout[], crateId: string, profile?: AthleteProfile): { game: GameState; item: InventoryItem } | null {
   const crate = CRATES.find(candidate => candidate.id === crateId);
   if (!crate || !isGameState(game) || game.pendingOpening || gameBalance(game, history, profile) < crate.cost) return null;
   const rarity = rarityForRoll(crate, randomUnit());
-  return openReward(game, crate.id, rarity, { kind: 'crate', amount: -crate.cost }, choice);
+  return openReward(game, crate.id, rarity, { kind: 'crate', amount: -crate.cost });
 }
 
-export function openLevelCrate(game: GameState, history: Workout[], level: number, profile?: AthleteProfile, choice: RewardChoice = {}, season = currentSeasons().year): { game: GameState; item: InventoryItem } | null {
+export function openLevelCrate(game: GameState, history: Workout[], level: number, profile?: AthleteProfile, season = currentSeasons().year): { game: GameState; item: InventoryItem } | null {
   if (!isGameState(game) || game.pendingOpening || !Number.isInteger(level) || level < 2 || level > MAX_CHARACTER_LEVEL || !isYearSeason(season)) return null;
   const migrated = reconcileSeasonProgression(game, history, profile);
   const available = getLevelCrates(migrated, history, profile, season).find(crate => crate.level === level && !crate.claimed);
   if (!available) return null;
-  return openReward(migrated, available.id, rarityForRoll(available, randomUnit()), { kind: 'level-crate', amount: 0, sourceLevel: level, sourceSeason: season }, choice);
+  return openReward(migrated, available.id, rarityForRoll(available, randomUnit()), { kind: 'level-crate', amount: 0, sourceLevel: level, sourceSeason: season });
 }
 
 /** The prize stays hidden until both stages have finished, including after a reload. */
