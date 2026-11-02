@@ -37,7 +37,7 @@ function remoteRow(owner: string, workout: Workout, revision: number, deleted = 
 }
 
 test('all eight cheesits use existing rarity and reward odds; both entries of each rarity are reachable', () => {
-  assert.deepEqual([GEAR_DROP_CHANCE, QUOTE_DROP_CHANCE, COMPANION_DROP_CHANCE], [.55, .25, .2]);
+  assert.deepEqual([GEAR_DROP_CHANCE, QUOTE_DROP_CHANCE, COMPANION_DROP_CHANCE], [.55/.75, 0, .2/.75]);
   assert.deepEqual(CRATES.map(crate => crate.odds), [
     { common: 70, rare: 23, epic: 6, legendary: 1 },
     { common: 35, rare: 43, epic: 18, legendary: 4 },
@@ -48,8 +48,8 @@ test('all eight cheesits use existing rarity and reward odds; both entries of ea
     assert.equal(pool.length, 2);
     assert.deepEqual(new Set([rewardForRoll(rarity, .8, 0).id, rewardForRoll(rarity, .9999, .9999).id]), new Set(pool.map(value => value.id)));
     assert.equal(rewardForRoll(rarity, .54999, 0).kind, 'gear');
-    assert.equal(rewardForRoll(rarity, .55, 0).kind, 'quote');
-    assert.equal(rewardForRoll(rarity, .79999, 0).kind, 'quote');
+    assert.equal(rewardForRoll(rarity, .55, 0).kind, 'gear');
+    assert.equal(rewardForRoll(rarity, .79999, 0).kind, 'companion');
   }
   assert.equal(rarityForRoll(CRATES[0], .69999), 'common');
   assert.equal(rarityForRoll(CRATES[0], .7), 'rare');

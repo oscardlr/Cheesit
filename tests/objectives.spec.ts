@@ -55,7 +55,7 @@ test.beforeEach(async({page})=>{
 test('52 objectives show their XP and automatically award one completed workout exactly once through reload',async({page},info)=>{
   test.setTimeout(60000);
   await freshAccount(page);
-  await expect(page.locator('.xp-label > strong')).toHaveText(/0\s*\/\s*1\.?000 XP/);
+  await expect(page.locator('.xp-label > strong')).toHaveText(/0\s*\/\s*800 XP/);
   await objectives(page);
   const missions=page.locator('[data-mission-id]');
   await expect(missions).toHaveCount(52);
@@ -86,7 +86,7 @@ test('52 objectives show their XP and automatically award one completed workout 
   await expect.poll(async()=>(await stored(page)).game?.missionRewards?.length??0).toBe(2);
   await page.getByRole('button',{name:'Continuar',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Resumen'})).toBeVisible();
-  await expect(page.locator('.xp-label > strong')).toHaveText(/410\s*\/\s*1\.?000 XP/);
+  await expect(page.locator('.xp-label > strong')).toHaveText(/410\s*\/\s*800 XP/);
 
   const saved=await stored(page),rewards=saved.game!.missionRewards!;
   expect(saved.workouts).toHaveLength(1);
@@ -116,7 +116,7 @@ test('52 objectives show their XP and automatically award one completed workout 
   await nav(page).getByRole('button',{name:'Resumen',exact:true}).click();
   await page.reload();
   await expect(page.getByRole('heading',{name:'Resumen'})).toBeVisible();
-  await expect(page.locator('.xp-label > strong')).toHaveText(/410\s*\/\s*1\.?000 XP/);
+  await expect(page.locator('.xp-label > strong')).toHaveText(/410\s*\/\s*800 XP/);
   const reloaded=await stored(page);
   expect(reloaded.game?.missionRewards).toEqual(rewards);
   expect(reloaded.workouts).toEqual(saved.workouts);

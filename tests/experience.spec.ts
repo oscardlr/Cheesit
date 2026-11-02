@@ -37,7 +37,7 @@ test('series celebrate once and XP survives edits, completion and reload', async
   await test.step('return to summary without losing the confirmed draft', async () => {
     await page.getByRole('navigation').getByRole('button', { name: 'Resumen', exact: true }).click();
   });
-  await expect(page.locator('.xp-label > strong')).toHaveText(/64 \/ 1\.?000 XP/);
+  await expect(page.locator('.xp-label > strong')).toHaveText(/64 \/ 800 XP/);
 
   await page.getByRole('button', { name: /Continuar entrenamiento/ }).click();
   await page.getByRole('button', { name: 'Finalizar entrenamiento' }).click();
@@ -46,10 +46,10 @@ test('series celebrate once and XP survives edits, completion and reload', async
   await expect(victory.locator('.celebration-reward')).toContainText('+350');
   await page.screenshot({ path: testInfo.outputPath('workout-victory.png'), animations: 'disabled' });
   await page.getByRole('button', { name: 'Continuar' }).click();
-  await expect(page.locator('.xp-label > strong')).toHaveText(/414 \/ 1\.?000 XP/);
+  await expect(page.locator('.xp-label > strong')).toHaveText(/414 \/ 800 XP/);
   await expect(page.getByRole('status')).toContainText('Guardado en este dispositivo');
   await page.reload();
-  await expect(page.locator('.xp-label > strong')).toHaveText(/414 \/ 1\.?000 XP/);
+  await expect(page.locator('.xp-label > strong')).toHaveText(/414 \/ 800 XP/);
   await expect(page.locator('.stat-card').filter({ hasText: 'Series' }).locator('strong')).toHaveText('1');
   await expect(page.locator('.stat-card').filter({ hasText: 'Repeticiones' }).locator('strong')).toHaveText('10');
   expect(browserErrors).toEqual([]);

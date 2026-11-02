@@ -116,7 +116,7 @@ test('missions use finished activity and count distinct days while the body map 
   assert.equal(muscles.find(muscle => muscle.id === 'triceps')!.secondarySets, 2);
   assert.equal(muscles.find(muscle => muscle.id === 'triceps')!.weightedSets, 1);
   assert.equal(muscles.find(muscle => muscle.id === 'biceps')!.sets, 1);
-  assert.equal(muscles.find(muscle => muscle.id === 'quads')!.weightedSets, 0);
+  assert.equal(muscles.find(muscle => muscle.id === 'quads')!.weightedSets, 1);
   const custom = muscleActivity([workout([exercise('custom', 'Pierna y glúteo')])], '2026-10-27', 7);
   assert.equal(custom.find(muscle => muscle.id === 'quads')!.approximate, true);
   const invalid = workout([exercise('press-banca-barra')]);
@@ -175,7 +175,7 @@ test('backups restore sound and effects preferences and accept old copies withou
   assert.throws(() => previewBackup({ ...invalid, data: { ...invalid.data, preferences: null } }, data()));
 });
 
-test('every rarity can drop gear, a phrase or a companion with stable atlas sprite IDs', () => {
+test('every rarity drops only gear or a companion with stable atlas sprite IDs', () => {
   assert.equal(GEAR.filter(gear => gear.artwork !== 'forge').length, 20);
   assert.equal(GEAR.filter(gear => gear.artwork === 'forge').length, 15);
   assert.deepEqual(GEAR.filter(gear => gear.artwork !== 'forge' && (!gear.atlas || gear.atlas === 'core')).map(gear => gear.sprite).sort((left, right) => left - right), Array.from({ length: 12 }, (_, index) => index));
@@ -183,8 +183,8 @@ test('every rarity can drop gear, a phrase or a companion with stable atlas spri
   for (const rarity of Object.keys(RARITIES) as (keyof typeof RARITIES)[]) {
     assert.equal(rewardForRoll(rarity, 0, 0).kind, 'gear');
     assert.equal(rewardForRoll(rarity, .54999, .99999).kind, 'gear');
-    assert.equal(rewardForRoll(rarity, .55, 0).kind, 'quote');
-    assert.equal(rewardForRoll(rarity, .7999, .9999).kind, 'quote');
+    assert.equal(rewardForRoll(rarity, .55, 0).kind, 'gear');
+    assert.equal(rewardForRoll(rarity, .7999, .9999).kind, 'companion');
     assert.equal(rewardForRoll(rarity, .8, .9999).kind, 'companion');
     assert.equal(rewardForRoll(rarity, .9999, .9999).kind, 'companion');
     assert.equal(rewardForRoll(rarity, .9999, .9999, true).kind, 'gear');
@@ -239,7 +239,7 @@ test('pending openings enforce five seconds, automatically reveal and cannot awa
   } finally { clock.mock.restore(); }
 });
 
-test('legacy phrase inventories migrate without resetting credit movements or equipped quotes', () => {
+test('legacy phrase inventories migrate without resetting credit movements and retires equipped quotes', () => {
   const now = new Date().toISOString(), itemId = crypto.randomUUID();
   const legacy = { inventory: [{ id: itemId, quoteId: 'show-up', rarity: 'common', acquiredAt: now, crateId: 'starter', sold: false }],
     transactions: [{ id: crypto.randomUUID(), kind: 'crate', itemId, amount: -100, createdAt: now }],
@@ -248,7 +248,7 @@ test('legacy phrase inventories migrate without resetting credit movements or eq
   const migrated = normalizeGame(JSON.parse(JSON.stringify(legacy)));
   assert.equal(migrated.inventory.length, 1);
   assert.equal(migrated.transactions[0].id, legacy.transactions[0].id);
-  assert.equal(migrated.equippedQuoteId, 'show-up');
+  assert.equal(migrated.equippedQuoteId, null);
   assert.deepEqual(migrated.equippedGear, {});
   assert.equal(migrated.pendingOpening, null);
   assert.equal(itemLabel(migrated.inventory[0]), QUOTES[0].text);
@@ -294,7 +294,7 @@ test('every reached level has a tailored free gear crate and can be claimed only
   const result = openLevelCrate(initial, history, 2)!;
   assert.ok(result);
   assert.equal(result.item.kind, 'gear');
-  assert.equal(result.item.crateId, 'level:2');
+  assert.equal(result.item.crateId, 'level:2026:2');
   assert.equal(result.game.transactions[0].kind, 'level-crate');
   assert.equal(result.game.transactions[0].amount, 0);
   assert.equal(result.game.transactions[0].sourceLevel, 2);
@@ -338,7 +338,7 @@ test('merging preserves a permanently obtained sold motto without exposing its h
   assert.ok(isGameState(incoming));
   const merged = previewBackup(createBackup(data(incoming)), data(current));
   assert.equal(merged.conflicts.length, 0);
-  assert.equal(merged.merged.game!.equippedQuoteId, oldItem.quoteId);
+  assert.equal(merged.merged.game!.equippedQuoteId, null);
   assert.equal(merged.merged.game!.pendingOpening?.itemId, hiddenDuplicate.id);
   assert.strictEqual(equipItem(merged.merged.game!, hiddenDuplicate.id), merged.merged.game);
   const hiddenOnly:GameState={...normalizeGame(),inventory:[hiddenDuplicate],transactions:[incoming.transactions.at(-1)!],pendingOpening:incoming.pendingOpening};

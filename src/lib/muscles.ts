@@ -1,4 +1,4 @@
-import { addDays } from './dates';
+import { currentSeasons, inSeason, isMonthSeason } from './seasons';
 import { validSet, type Workout } from './model';
 import { rewardSetIndex } from './rewards';
 import type { AthleteProfile } from './strength';
@@ -82,10 +82,10 @@ export function muscleLevelFromXp(xp: number) {
     rank: level >= 20 ? 'Titán' : level >= 10 ? 'Potencia' : level >= 5 ? 'En forma' : 'En construcción' };
 }
 
-/** Activity window and lifetime RPG experience are separate; primary 1, secondary 0.5. */
-export function muscleActivity(history: Workout[], today: string, days: number, profile?: AthleteProfile): MuscleActivity[] {
-  const window = Number.isFinite(days) ? Math.max(1, Math.min(3650, Math.floor(days))) : 7;
-  const start = addDays(today, 1 - window);
+/** All visible activity and RPG XP belong to one civil month; lifetime sets are separate. */
+export function muscleActivity(history: Workout[], today: string, days: number | string = currentSeasons().month, profile?: AthleteProfile): MuscleActivity[] {
+  // Numeric legacy window arguments now select the current month.
+  const month = typeof days === 'string' && isMonthSeason(days) ? days : today.slice(0, 7);
   const result: MuscleActivity[] = MUSCLES.map(muscle => ({ ...muscle, sets: 0, secondarySets: 0, weightedSets: 0, reps: 0, lastDate: null, approximate: false, lifetimeSets: 0, ...muscleLevelFromXp(0) }));
   const byId = new Map(result.map(muscle => [muscle.id, muscle]));
   const earned = rewardSetIndex(history, profile), visited = new Set<string>();
@@ -105,15 +105,15 @@ export function muscleActivity(history: Workout[], today: string, days: number, 
           if (!muscle) continue;
           const factor = primary ? 1 : 0.5;
           muscle.lifetimeSets += sets.length * factor;
-          muscle.xp += sets.reduce((sum, set) => sum + (earned.get(set.id)?.xp ?? 0) * factor, 0);
-          if (workout.date >= start) {
+          if (inSeason(workout.date, month)) {
+            muscle.xp += sets.reduce((sum, set) => sum + (earned.get(set.id)?.xp ?? 0) * factor, 0);
             if (primary) muscle.sets += sets.length;
             else muscle.secondarySets += sets.length;
             muscle.weightedSets += sets.length * factor;
             muscle.reps += sets.reduce((sum, set) => sum + set.reps!, 0);
             muscle.lastDate = !muscle.lastDate || workout.date > muscle.lastDate ? workout.date : muscle.lastDate;
           }
-          muscle.approximate ||= !known;
+          if (inSeason(workout.date, month)) muscle.approximate ||= !known;
         }
       }
     }

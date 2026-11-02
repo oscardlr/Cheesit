@@ -78,3 +78,47 @@ test('a successful put request followed by transaction abort never reports a sav
   await client.flushData();
   assert.deepEqual(revisions, [1]);
 });
+
+test('quote migration commits once atomically across concurrent loads and purchase retry keeps one reserved prize', async () => {
+  resetDatabase();
+  const { normalizeGame, openCrate, gameBalance } = await import('../src/lib/game');
+  const initial = createStorageClient(); await initial.loadData();
+  const itemId = crypto.randomUUID(), now = '2026-10-27T12:00:00Z';
+  const legacy = { ...emptyData(), game: { ...normalizeGame(), inventory: [{ id: itemId, quoteId: 'show-up', rarity: 'common' as const, acquiredAt: now, crateId: 'starter', sold: false }], transactions: [{ id: crypto.randomUUID(), kind: 'crate' as const, itemId, amount: -100, createdAt: now }] } };
+  delete legacy.game.quoteConversionVersion; delete legacy.game.quoteConversions;
+  // Seed a real old snapshot, bypassing the new save normalizer.
+  const db = await new Promise<IDBDatabase>((resolve,reject) => { const request=indexedDB.open('entrenos-local',1); request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error); });
+  await new Promise<void>((resolve,reject) => { const tx=db.transaction('state','readwrite');tx.objectStore('state').put(legacy,'local');tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error); }); db.close();
+  const a=createStorageClient(), b=createStorageClient();
+  const [first,second]=await Promise.all([a.loadData(),b.loadData()]);
+  assert.deepEqual(first,second);assert.equal(a.getRevision(),1);assert.equal(b.getRevision(),1);
+  assert.equal(first.game!.quoteConversions!.length,1);assert.equal(gameBalance(first.game!,[],undefined,0),15);
+  const reloaded=createStorageClient();assert.deepEqual(await reloaded.loadData(),first);assert.equal(reloaded.getRevision(),1);
+  const purchase=openCrate(normalizeGame(),[],'starter')!;
+  const next={...emptyData(),game:purchase.game};
+  const open=indexedDB.open.bind(indexedDB);
+  indexedDB.open=()=>{throw new DOMException('Quota exhausted','QuotaExceededError')};
+  await assert.rejects(a.saveData(next),{name:'QuotaExceededError'});
+  assert.equal(a.getPendingData()!.game!.pendingOpening!.itemId,purchase.item.id);
+  assert.equal(openCrate(a.getPendingData()!.game!,[],'starter'),null);
+  indexedDB.open=open;
+  await Promise.all([a.flushData(),a.saveData(next)]);
+  const saved=(await createStorageClient().loadData()).game!;
+  assert.deepEqual(saved.inventory,purchase.game.inventory);assert.deepEqual(saved.transactions,purchase.game.transactions);
+  assert.equal(saved.pendingOpening!.itemId,purchase.item.id);
+});
+
+test('synchronous IndexedDB put errors abort cleanly and retain the exact staged prize for retry', async () => {
+  resetDatabase();
+  const { normalizeGame, openCrate } = await import('../src/lib/game');
+  const client=createStorageClient();await client.loadData();
+  const prize=openCrate(normalizeGame(),[],'starter')!;
+  const next={...emptyData(),game:prize.game};
+  const put=IDBObjectStore.prototype.put;
+  IDBObjectStore.prototype.put=function(value,key){if(key==='local')throw new DOMException('Quota exhausted','QuotaExceededError');return put.call(this,value,key)};
+  try {await assert.rejects(client.saveData(next),{name:'QuotaExceededError'});assert.equal(client.getPendingData(),next);assert.equal(client.getRevision(),0);}
+  finally {IDBObjectStore.prototype.put=put;}
+  await client.flushData();
+  const saved=(await createStorageClient().loadData()).game!;
+  assert.deepEqual(saved.inventory,prize.game.inventory);assert.deepEqual(saved.transactions,prize.game.transactions);
+});

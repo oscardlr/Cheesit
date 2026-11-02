@@ -55,7 +55,7 @@ function thresholdWorkout(): Workout {
   const date=todayMadrid();
   return {id:crypto.randomUUID(),date,name:'Ascenso de prueba',color:'#0057C2',status:'draft',createdAt:date+'T12:00:00Z',updatedAt:date+'T12:00:00Z',
     exercises:[{id:crypto.randomUUID(),exerciseId:'press-banca-barra',name:'Press de banca con barra',group:'Pecho',mode:'external_load_reps',
-    sets:Array.from({length:17},(_,index)=>({id:crypto.randomUUID(),weight:index<16?50:null,reps:index<16?8:null,confirmed:index<16}))}]};
+    sets:Array.from({length:14},(_,index)=>({id:crypto.randomUUID(),weight:index<13?50:null,reps:index<13?8:null,confirmed:index<13}))}]};
 }
 test.beforeEach(async ({page})=>{await page.addInitScript(()=>sessionStorage.setItem('grind-intro-v1','1'))});
 
@@ -84,7 +84,7 @@ test('five RPG sections, profile and weekly day goal persist', async ({ page }) 
   await expect(page.locator('.athlete-profile-editor')).toContainText('no son percentiles');
 });
 
-test('training updates direct and secondary muscle XP for life independently of period', async ({page})=>{
+test('training updates direct and secondary muscle XP in the selected civil month', async ({page})=>{
   await page.goto('/');
   await openArcade(page);
   const initialBalance=Number((await page.locator('.arcade-wallet').getAttribute('aria-label'))!.replace(/\D/g,''));
@@ -108,7 +108,7 @@ test('training updates direct and secondary muscle XP for life independently of 
   await page.getByRole('button',{name:'Tríceps: 0 series directas, 1 secundarias',exact:true}).locator('path').first().click();
   await expect(page.locator('.body-detail-total strong')).toHaveText('0,5');
   await expect(page.locator('.muscle-level-xp')).toContainText('30 / 500 XP');
-  await page.getByRole('button',{name:'30 días',exact:true}).click();
+  await expect(page.getByLabel('Mes muscular',{exact:true})).toBeVisible();
   await expect(page.locator('.muscle-level-xp')).toContainText('30 / 500 XP');
 });
 
@@ -157,7 +157,7 @@ test('a real five second roulette moves, resumes after reload and automatically 
   await expect(page.locator('.opening-item-result')).toContainText(definition.kind === 'quote' ? 'Frase guardada' : definition.description);
   if(definition.kind === 'quote')await expect(opening).not.toContainText(definition.description);
   await expect.poll(async()=>(await savedData(page))?.game?.pendingOpening??null).toBeNull();
-  await page.getByRole('button',{name:item.gearId || item.companionId ? 'Usar aspecto' : 'Guardar en colección',exact:true}).click();
+  await page.getByRole('button',{name:item.companionId ? 'Equipar cheesit' : item.gearId ? 'Usar aspecto' : 'Aceptar créditos',exact:true}).click();
   await page.getByRole('tab',{name:'Colección',exact:true}).click();
   await expect(page.locator('.loot-item-card')).toHaveCount(1);
   if(definition.kind !== 'quote')await expect(page.locator('.loot-item-card .quote-equip').first()).toHaveAttribute('aria-pressed','true');
@@ -344,11 +344,11 @@ test('crossing a level unlocks one free tailored gear crate and cannot claim it 
   await page.goto('/'); await expect(page.getByRole('heading',{name:'Resumen'})).toBeVisible();
   const workout=thresholdWorkout();
   await seedData(page,{routines:[],workouts:[workout],customExercises:[]});
-  await expect(page.locator('.xp-label>strong')).toHaveText(/960 \/ 1\.?000 XP/);
+  await expect(page.locator('.xp-label>strong')).toHaveText(/780 \/ 800 XP/);
   await page.getByRole('button',{name:/Continuar entrenamiento/}).click();
-  await page.getByLabel('Carga en kg, serie 17 de Press de banca con barra').fill('50');
-  await page.getByLabel('Repeticiones, serie 17 de Press de banca con barra').fill('8');
-  await page.getByRole('button',{name:'Confirmar serie 17',exact:true}).click();
+  await page.getByLabel('Carga en kg, serie 14 de Press de banca con barra').fill('50');
+  await page.getByLabel('Repeticiones, serie 14 de Press de banca con barra').fill('8');
+  await page.getByRole('button',{name:'Confirmar serie 14',exact:true}).click();
   await expect(page.locator('.celebration-level-copy>strong')).toHaveText('2');
   await page.getByRole('button',{name:'Cerrar celebración'}).click();
   await openArcade(page); await page.getByRole('tab',{name:'Ascenso',exact:true}).click();
@@ -392,11 +392,16 @@ for (const reward of [
     await page.clock.fastForward(SPIN_DURATION_MS + 100);
     await expect(page.locator('.opening-reveal-animation')).toBeVisible();
     await page.clock.fastForward(REVEAL_DURATION_MS + 100);
-    await expect(page.locator('.opening-new-badge')).toHaveText('¡Nuevo!');
-    await expect(page.locator('.opening-new-badge')).toHaveCSS('background-color', 'rgb(216, 255, 62)');
+    if (reward.kind === 'quote') {
+      await expect(page.locator('.opening-new-badge')).toHaveCount(0);
+      await expect(page.locator('.opening-item-result')).toContainText('+15 créditos');
+    } else {
+      await expect(page.locator('.opening-new-badge')).toHaveText('¡Nuevo!');
+      await expect(page.locator('.opening-new-badge')).toHaveCSS('background-color', 'rgb(216, 255, 62)');
+    }
     await expect.poll(async () => (await savedData(page))?.game?.pendingOpening ?? null).toBeNull();
     if (reward.kind === 'gear') await page.screenshot({ path: testInfo.outputPath('new-reward-mobile.png') });
-    await page.getByRole('button', { name: 'Guardar en colección' }).click();
+    await page.getByRole('button', { name: reward.kind === 'quote' ? 'Aceptar créditos' : 'Guardar en colección' }).click();
     const duplicate = (await savedData(page))!;
     const now = new Date(await page.evaluate(() => Date.now())).toISOString();
     const item = { ...duplicate.game!.inventory[0], id: crypto.randomUUID(), acquiredAt: now };

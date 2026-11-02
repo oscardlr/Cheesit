@@ -64,20 +64,19 @@ test('inventory hides legacy motivational text and equip actions while keeping r
   const inventory=[item('gear','lime-shorts',date),item('gear','lime-shorts',date),item('gear','lime-shorts',date),item('gear','purple-tank',date),item('quote','show-up',date),item('quote','show-up',date),item('quote','one-rep',date),item('companion','athlete',date),item('companion','athlete',date)];
   delete inventory[4].kind; // Original quote saves have no kind field.
   const initial=owned(inventory);
-  initial.equippedQuoteId='show-up'; // Previously equipped mottos remain in stored data without displaying them.
+  initial.equippedQuoteId='show-up'; // Previously equipped mottos are cleared by conversion.
   await seed(page,initial);await collection(page);
   const gear=card(page,'gear','lime-shorts'),quote=card(page,'quote','show-up'),companion=card(page,'companion','athlete');
-  await expect(page.locator('.quote-collection .loot-item-card')).toHaveCount(5);
+  await expect(page.locator('.quote-collection .loot-item-card')).toHaveCount(3);
   await expect(gear).toHaveCount(1);await expect(gear.locator('.inventory-quantity')).toHaveText('3x');
   await expect(gear).toContainText('1 carga por copia revelada.');
-  await expect(quote).toHaveCount(1);await expect(quote.locator('.inventory-quantity')).toHaveCount(0);
-  await expect(quote).toContainText('Frase guardada');
+  await expect(quote).toHaveCount(0);await expect(quote.locator('.inventory-quantity')).toHaveCount(0);
   await expect(quote.getByRole('button')).toHaveCount(0);
   await expect(page.locator('.arcade-daily, blockquote')).toHaveCount(0);
   for(const definition of QUOTES)await expect(page.getByRole('main')).not.toContainText(definition.text);
   await expect(page.locator('.loot-item-card[data-item-kind="quote"] .inventory-quantity')).toHaveCount(0);
   await expect(companion).toHaveCount(1);await expect(companion.locator('.inventory-quantity')).toHaveText('2x');
-  await expect(card(page,'quote','one-rep')).toHaveCount(1);
+  await expect(card(page,'quote','one-rep')).toHaveCount(0);
   await expect(card(page,'gear','purple-tank').locator('.inventory-quantity')).toHaveCount(0);
   await expect(page.getByRole('button',{name:/Vender/})).toHaveCount(0);
 
@@ -93,8 +92,7 @@ test('inventory hides legacy motivational text and equip actions while keeping r
   await expect(page.locator('.quote-collection .loot-item-card')).toHaveCount(1);
   await expect(card(page,'gear','purple-tank')).toBeVisible();
   await page.locator('.collection-filters').getByRole('button',{name:'Todas las rarezas',exact:true}).click();
-  await page.locator('.collection-type-filters').getByRole('button',{name:'Frases',exact:true}).click();
-  await expect(page.locator('.quote-collection .loot-item-card')).toHaveCount(2);
+  await expect(page.locator('.collection-type-filters').getByRole('button',{name:'Frases',exact:true})).toHaveCount(0);
   await expect(quote.getByRole('button')).toHaveCount(0);
   await expect(page.getByRole('button',{name:/lema/i})).toHaveCount(0);
   await page.locator('.collection-type-filters').getByRole('button',{name:'Cheesits',exact:true}).click();
@@ -105,12 +103,12 @@ test('inventory hides legacy motivational text and equip actions while keeping r
   await expect.poll(async()=>(await stored(page)).game?.cosmeticGear?.bottom).toBe('lime-shorts');
   const saved=(await stored(page)).game!;
   expect(saved.inventory).toEqual(initial.inventory);expect(saved.transactions).toEqual(initial.transactions);
-  expect(saved.equippedQuoteId).toBe('show-up');expect(saved.equippedCompanionId).toBe('athlete');
+  expect(saved.equippedQuoteId).toBeNull();expect(saved.equippedCompanionId).toBe('athlete');
   expect(getAbilityCharges(saved,'lime-shorts')).toBe(3);
   await page.reload();await collection(page);
-  await expect(page.locator('.quote-collection .loot-item-card')).toHaveCount(5);
+  await expect(page.locator('.quote-collection .loot-item-card')).toHaveCount(3);
   await expect(gear.locator('.inventory-quantity')).toHaveText('3x');
-  await expect(quote).toHaveCount(1);await expect(quote.locator('.inventory-quantity')).toHaveCount(0);
+  await expect(quote).toHaveCount(0);await expect(quote.locator('.inventory-quantity')).toHaveCount(0);
   await expect(page.locator('.loot-item-card[data-item-kind="quote"] .inventory-quantity')).toHaveCount(0);
   await expect(companion.locator('.inventory-quantity')).toHaveText('2x');
   await expect(gear.getByRole('button',{name:'Quitar aspecto',exact:true})).toHaveAttribute('aria-pressed','true');
@@ -119,7 +117,7 @@ test('inventory hides legacy motivational text and equip actions while keeping r
   await expect(page.getByRole('button',{name:/Vender/})).toHaveCount(0);
   expect((await stored(page)).game?.inventory).toEqual(initial.inventory);
   expect((await stored(page)).game?.transactions).toEqual(initial.transactions);
-  expect((await stored(page)).game?.equippedQuoteId).toBe('show-up');
+  expect((await stored(page)).game?.equippedQuoteId).toBeNull();
   await page.getByRole('navigation',{name:'Navegación principal'}).getByRole('button',{name:'Resumen',exact:true}).click();
   await expect(page.locator('.arcade-daily, blockquote')).toHaveCount(0);
   for(const definition of QUOTES)await expect(page.getByRole('main')).not.toContainText(definition.text);
@@ -133,10 +131,10 @@ test('a reserved phrase reward reveals without motivational content and preserve
   const opening=page.getByRole('dialog');
   await expect(opening).toBeVisible();
   await page.getByRole('button',{name:'Revelar ahora · sin animación',exact:true}).click();
-  await expect(page.locator('.opening-item-result')).toContainText('Frase guardada');
+  await expect(page.locator('.opening-item-result')).toContainText('+15 créditos');
   for(const definition of QUOTES)await expect(opening).not.toContainText(definition.text);
   await expect(opening.getByRole('button',{name:/lema|aspecto/i})).toHaveCount(0);
-  await opening.getByRole('button',{name:'Guardar en colección',exact:true}).click();
+  await opening.getByRole('button',{name:'Aceptar créditos',exact:true}).click();
   await expect(card(page,'quote','show-up').getByRole('button')).toHaveCount(0);
   const saved=(await stored(page)).game!;
   expect(saved.pendingOpening).toBeNull();
@@ -144,7 +142,7 @@ test('a reserved phrase reward reveals without motivational content and preserve
   expect(saved.transactions).toEqual(game.transactions);
   await page.reload();await collection(page);
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(card(page,'quote','show-up')).toContainText('Frase guardada');
+  await expect(card(page,'quote','show-up')).toHaveCount(0);
   expect((await stored(page)).game?.inventory).toEqual(game.inventory);
   expect((await stored(page)).game?.transactions).toEqual(game.transactions);
 });
@@ -188,7 +186,7 @@ test('inventory quantities exclude historical sales and a duplicate awaiting its
   expect(getAbilityCharges(saved,'lime-shorts')).toBe(3); // Historical revealed drops still own their earned charges.
 });
 
-test('inventory orders each rarity by companion, equipment and phrases while looks and abilities remain rarest first',async({page})=>{
+test('inventory orders each rarity by companion and equipment, hiding retired phrases while looks and abilities remain rarest first',async({page})=>{
   const date=new Date().toISOString();
   // Intentionally acquired from least to most rare, mixing all reward kinds.
   const inventory=[
@@ -202,24 +200,24 @@ test('inventory orders each rarity by companion, equipment and phrases while loo
   const rarestFirst=['legendary','epic','rare','common'];
   const rarities=(selector:string)=>page.locator(selector).evaluateAll(elements=>elements.map(element=>element.getAttribute('data-rarity')));
   const kinds=()=>page.locator('.loot-item-card').evaluateAll(elements=>elements.map(element=>element.getAttribute('data-item-kind')));
-  await expect.poll(()=>rarities('.loot-item-card')).toEqual(rarestFirst.flatMap(rarity=>[rarity,rarity,rarity]));
-  await expect.poll(kinds).toEqual(rarestFirst.flatMap(()=>['companion','gear','quote']));
+  await expect.poll(()=>rarities('.loot-item-card')).toEqual(rarestFirst.flatMap(rarity=>[rarity,rarity]));
+  await expect.poll(kinds).toEqual(rarestFirst.flatMap(()=>['companion','gear']));
   await page.locator('.collection-type-filters').getByRole('button',{name:'Cheesits',exact:true}).click();
   await expect.poll(()=>rarities('.loot-item-card')).toEqual(rarestFirst);
   await page.locator('.collection-type-filters').getByRole('button',{name:'Todo',exact:true}).click();
   await page.locator('.collection-filters').getByRole('button',{name:'Rara',exact:true}).click();
-  await expect.poll(()=>rarities('.loot-item-card')).toEqual(['rare','rare','rare']);
-  await expect.poll(kinds).toEqual(['companion','gear','quote']);
+  await expect.poll(()=>rarities('.loot-item-card')).toEqual(['rare','rare']);
+  await expect.poll(kinds).toEqual(['companion','gear']);
   await page.locator('.collection-filters').getByRole('button',{name:'Todas las rarezas',exact:true}).click();
-  await expect.poll(()=>rarities('.loot-item-card')).toEqual(rarestFirst.flatMap(rarity=>[rarity,rarity,rarity]));
+  await expect.poll(()=>rarities('.loot-item-card')).toEqual(rarestFirst.flatMap(rarity=>[rarity,rarity]));
   for(const [name,selector] of [['Aspectos','.cosmetic-card'],['Habilidades','.ability-card']]){
     await page.locator('.collection-subtabs').getByRole('button',{name,exact:true}).click();
     await expect.poll(()=>rarities(selector)).toEqual(name==='Aspectos'?rarestFirst.flatMap(rarity=>[rarity,rarity]):rarestFirst);
     if(name==='Aspectos')await expect.poll(()=>page.locator('.cosmetic-card').evaluateAll(elements=>elements.map(element=>element.hasAttribute('data-companion-id')?'companion':'gear'))).toEqual(rarestFirst.flatMap(()=>['companion','gear']));
   }
   await page.reload();await collection(page);
-  await expect.poll(()=>rarities('.loot-item-card')).toEqual(rarestFirst.flatMap(rarity=>[rarity,rarity,rarity]));
-  await expect.poll(kinds).toEqual(rarestFirst.flatMap(()=>['companion','gear','quote']));
+  await expect.poll(()=>rarities('.loot-item-card')).toEqual(rarestFirst.flatMap(rarity=>[rarity,rarity]));
+  await expect.poll(kinds).toEqual(rarestFirst.flatMap(()=>['companion','gear']));
   expect((await stored(page)).game?.inventory).toEqual(game.inventory);
   expect((await stored(page)).game?.transactions).toEqual(game.transactions);
 });

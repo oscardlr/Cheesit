@@ -142,12 +142,12 @@ test('bulk XP and single series previews agree independent of history order, and
   assert.deepEqual(rewardProgress([sessions[0], sessions[0]]), rewardProgress([sessions[0]]));
 });
 
-test('muscle levels use lifetime adaptive series XP while recent heatmap activity stays period based', () => {
+test('muscle levels and heatmap activity use the same month with separate historical sets', () => {
   const older = workout([exercise(Array.from({ length: 9 }, () => series(50, 8)))], '2026-10-01');
   const seven = muscleActivity([older], '2026-10-27', 7);
   const thirty = muscleActivity([older], '2026-10-27', 30);
   const chest = seven.find(muscle => muscle.id === 'chest')!, triceps = seven.find(muscle => muscle.id === 'triceps')!;
-  assert.equal(chest.sets, 0);
+  assert.equal(chest.sets, 9);
   assert.equal(chest.lifetimeSets, 9);
   assert.equal(chest.xp, 540);
   assert.equal(chest.level, 2);

@@ -3,9 +3,10 @@ import { isAthleteProfile } from './strength';
 import { GEAR, type GearSlot } from './gear';
 import { isCivilDate, todayMadrid } from './dates';
 import { WORKOUT_COLOR, copiedName, isRoutineColor, isRoutineIcon, newId, resolvedRoutineIcon, snapshotLoadConventions, validName, validPlannedSets, validSet, type AppData, type Exercise, type Routine, type Workout, type WorkoutSet } from './model';
-import { getAbilityCharges, isGameState, normalizeGame, unlockedCompanions, unlockedGear, type GameState } from './game';
+import { getAbilityCharges, isGameState, normalizeGame, preserveSeasonMetadata, reconcileSeasonProgression, unlockedCompanions, unlockedGear, type GameState } from './game';
 import { getAbilityDefinition, isAbilityUse } from './abilities';
 import { MUSCLES } from './muscles';
+import { mergeQuoteConversions } from './quote-conversion';
 import { isCompanionPassiveAward, isCompanionPassiveSnapshot, preserveWorkoutPassiveEvent } from './cheesit-passives';
 
 const record = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -32,7 +33,7 @@ function prescription(value: Record<string, unknown>) {
 
 export function createBackup(data: AppData) {
   return { format: 'entrenos-local', schema_version: 1, export_id: newId(), exported_at: new Date().toISOString(),
-    origin: 'browser', units: 'kg', scope: 'local-device-only', data };
+    origin: 'browser', units: 'kg', scope: 'local-device-only', data: { ...data, ...(data.game && isGameState(data.game) ? { game: normalizeGame(data.game) } : {}) } };
 }
 
 function validateData(value: unknown): AppData {
@@ -126,7 +127,6 @@ function mergeGame(current: GameState | undefined, incoming: GameState | undefin
     conflicts.push('economía: las copias contienen compras, ventas o usos de habilidades independientes; se conserva el estado actual');
     return current;
   }
-  const equipped = current.equippedQuoteId;
   const normalized=normalizeGame(current);
   const appearances=new Set(unlockedGear(merged).map(gear=>gear.id));
   const cosmeticGear=Object.fromEntries(Object.entries(normalized.cosmeticGear??{}).filter(([,gearId])=>appearances.has(gearId)));
@@ -138,7 +138,7 @@ function mergeGame(current: GameState | undefined, incoming: GameState | undefin
   const missionRewards = new Map((current.missionRewards ?? []).map(reward => [reward.id, reward]));
   for (const reward of incoming.missionRewards ?? []) if (!missionRewards.has(reward.id)) missionRewards.set(reward.id, reward);
   return { ...merged, missionRewards: [...missionRewards.values()], weeklyWorkoutGoal: current.weeklyWorkoutGoal, weeklySetGoal: current.weeklySetGoal,
-    equippedGear, cosmeticGear, equippedCompanionId, activeAbilityId, equippedQuoteId: merged.inventory.some(item => item.id!==merged.pendingOpening?.itemId && item.quoteId === equipped) ? equipped : null };
+    equippedGear, cosmeticGear, equippedCompanionId, activeAbilityId, equippedQuoteId: null };
 }
 type Counts = { routines: number; workouts: number; customExercises: number };
 export type BackupResolution = 'local' | 'incoming' | 'duplicate';
@@ -208,13 +208,32 @@ export function previewBackup(raw: unknown, current: AppData, resolutions: Recor
     merged.routineDraft = choice === 'incoming' ? incoming.routineDraft : current.routineDraft;
   } else if (current.routineDraft ?? incoming.routineDraft) merged.routineDraft = current.routineDraft ?? incoming.routineDraft;
   const gameConflicts: string[] = [];
-  let game = mergeGame(current.game, incoming.game, gameConflicts);
+  // Before mixing a legacy backup into a seasonal account, baseline its original
+  // history under the new curve. Importing old XP cannot mint new annual crates.
+  const seasonal = current.game?.seasonProgressionVersion === 1 || incoming.game?.seasonProgressionVersion === 1;
+  const currentGame = seasonal ? reconcileSeasonProgression(normalizeGame(current.game), current.workouts, current.profile) : current.game;
+  const incomingGame = seasonal ? reconcileSeasonProgression(normalizeGame(incoming.game), incoming.workouts, incoming.profile) : incoming.game;
+  let game = mergeGame(currentGame, incomingGame, gameConflicts);
   if (gameConflicts.length) {
     const choice = conflict({ key: 'game:ledger', kind: 'game', id: 'ledger', name: 'Economía, colección y usos de habilidades completos', local: current.game, incoming: incoming.game, choices: ['local', 'incoming'] });
     // Choose one complete ledger. Never combine independent purchases or consumption.
-    if (choice === 'incoming') game = incoming.game ? normalizeGame(incoming.game) : undefined;
+    if (choice === 'incoming') game = incomingGame ? normalizeGame(incomingGame) : undefined;
   }
-  if (game) merged.game = game;
+  if (game) {
+    // Preserve identity tombstones even when the user selects one conflicting ledger.
+    // Entries absent from that ledger are audit-only and grant no spendable credits.
+    const conversionGame = { ...game,
+      quoteConversions: mergeQuoteConversions(normalizeGame(current.game).quoteConversions ?? [], normalizeGame(incoming.game).quoteConversions ?? [], game.quoteConversions ?? []).filter(entry => {
+        const copy = game!.inventory.find(item => item.id === entry.itemId);
+        return !copy || (copy.quoteId === entry.quoteId && copy.rarity === entry.rarity);
+      }),
+      ...((current.game?.quoteConversionSeenIds?.length || incoming.game?.quoteConversionSeenIds?.length) ? {
+        quoteConversionSeenIds: [...new Set([...(current.game?.quoteConversionSeenIds ?? []), ...(incoming.game?.quoteConversionSeenIds ?? [])])].sort(),
+      } : {}),
+    };
+    if (!isGameState(conversionGame)) return fail('registro de conversión de recompensas incompatible');
+    merged.game = preserveSeasonMetadata(normalizeGame(conversionGame), currentGame, incomingGame);
+  }
   const preferences = current.preferences ?? incoming.preferences;
   if (preferences) merged.preferences = { ...preferences };
   const profile=current.profile??incoming.profile;
