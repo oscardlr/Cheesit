@@ -1,3 +1,5 @@
+> Documento histórico del protocolo v1 preparado. El protocolo activo de la app es v2: [Cuentas y sincronización](CUENTAS-Y-SINCRONIZACION.md). Las limitaciones de integración descritas aquí corresponden al cliente anterior.
+
 # Persistencia remota de Entrenos: contrato inicial
 
 La migración `supabase/migrations/202610270001_entrenos.sql` prepara un almacén de instantáneas por usuario y un RPC transaccional para cambios. No proporciona una cuenta de Supabase ni conecta automáticamente la aplicación. Aún no se ha ejecutado ni probado con PostgreSQL real; **no constituye una garantía de sincronización ni de aislamiento lista para producción**.

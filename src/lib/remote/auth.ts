@@ -1,4 +1,5 @@
-import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
+import { createClient, isAuthRetryableFetchError, type SupabaseClient, type User } from '@supabase/supabase-js';
+import { RemoteConnectionError } from './errors';
 
 let client: SupabaseClient | undefined;
 
@@ -7,6 +8,11 @@ export function remoteClient(): SupabaseClient | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) return null;
+  if (key.startsWith('sb_secret_')) throw new Error('Configura únicamente la clave publicable de Supabase.');
+  if (key.split('.').length === 3) {
+    try { if (JSON.parse(atob(key.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).role === 'service_role') throw new Error('No se permite una clave administrativa en el navegador.'); }
+    catch (error) { if (error instanceof Error && error.message.includes('administrativa')) throw error; }
+  }
   client ??= createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
   return client;
 }
@@ -16,6 +22,10 @@ export async function verifiedUser(): Promise<User> {
   if (!supabase) throw new Error('La cuenta no está configurada.');
   // getUser contacts Auth and verifies the token, unlike trusting the local session.
   const { data, error } = await supabase.auth.getUser();
+  if (isAuthRetryableFetchError(error)) {
+    if (!error.status) throw new RemoteConnectionError();
+    throw new Error('El servicio de acceso no responde. Tus cambios se conservan; vuelve a intentar sincronizar.');
+  }
   if (error || !data.user) throw new Error('Vuelve a iniciar sesión para sincronizar.');
   return data.user;
 }
@@ -24,7 +34,7 @@ export async function signIn(email: string, password: string): Promise<User> {
   const supabase = remoteClient();
   if (!supabase) throw new Error('La cuenta no está configurada.');
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw new Error('No se ha podido iniciar sesión. Revisa los datos o inténtalo de nuevo.');
+  if (error) throw new Error(error.code === 'email_not_confirmed' ? 'Confirma tu correo antes de iniciar sesión. Puedes solicitar otro enlace.' : 'No se ha podido iniciar sesión. Revisa los datos o inténtalo de nuevo.');
   return verifiedUser();
 }
 
@@ -40,6 +50,7 @@ export async function requestPasswordReset(email: string, redirectTo: string): P
   if (!supabase) throw new Error('La cuenta no está configurada.');
   // Present the same message regardless of account existence.
   const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+  if (error?.status === 429) throw new Error('Demasiados intentos. Espera unos minutos antes de solicitar otro correo.');
   if (error && (!error.status || error.status >= 500)) throw new Error('No se ha podido contactar con el servicio. Inténtalo de nuevo.');
 }
 
@@ -53,6 +64,12 @@ export async function updatePassword(password: string): Promise<void> {
 export async function signOut(): Promise<void> {
   const supabase = remoteClient();
   if (!supabase) return;
-  const { error } = await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut({ scope: 'local' });
   if (error) throw new Error('No se ha podido cerrar la sesión.');
+}
+
+export async function resendConfirmation(email: string, redirectTo: string): Promise<void> {
+  const client = remoteClient(); if (!client) throw new Error('La cuenta no está configurada.');
+  const { error } = await client.auth.resend({ type: 'signup', email, options: { emailRedirectTo: redirectTo } });
+  if (error) throw new Error('No se pudo enviar el enlace. Espera un momento y vuelve a intentarlo.');
 }

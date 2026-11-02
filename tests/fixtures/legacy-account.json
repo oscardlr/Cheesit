@@ -1,0 +1,4859 @@
+{
+  "format": "entrenos-local",
+  "schema_version": 1,
+  "export_id": "7bb7ee08-4b93-45c7-9719-6ccd0d5dce36",
+  "exported_at": "2026-11-02T19:20:00.790Z",
+  "origin": "browser",
+  "units": "kg",
+  "scope": "local-device-only",
+  "data": {
+    "routines": [
+      {
+        "id": "26ab84d3-52e0-427f-8c73-f75fee047763",
+        "name": "Empuje DEMO",
+        "icon": "flame",
+        "color": "#d8ff3e",
+        "archived": false,
+        "notes": "Datos ficticios de octubre de 2026 para probar Cheesit. No es una recomendación de entrenamiento.",
+        "exercises": [
+          {
+            "id": "b8c5da94-9d08-4787-9ac3-15a74ceaa3d1",
+            "exerciseId": "press-banca-barra",
+            "sets": 3,
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 50,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "0252fdab-7f3a-46d8-8bb7-def9572124df",
+            "exerciseId": "press-inclinado-mancuernas",
+            "sets": 3,
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 18,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "59f2533d-4c98-4938-8f25-fe97920c58c4",
+            "exerciseId": "press-militar",
+            "sets": 3,
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 25,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "b98af4c2-b9fd-4c3d-b4e6-f5eff464d85a",
+            "exerciseId": "elevaciones-laterales",
+            "sets": 3,
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 6,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "976c3403-a876-4e78-8cc1-fb73ad3a27b5",
+            "exerciseId": "extension-triceps-polea",
+            "sets": 3,
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 20,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          }
+        ]
+      },
+      {
+        "id": "6c872374-ab66-4893-bc24-b890748076e2",
+        "name": "Tirón DEMO",
+        "icon": "biceps-flexed",
+        "color": "#7BB7F0",
+        "archived": false,
+        "notes": "Datos ficticios de octubre de 2026 para probar Cheesit. No es una recomendación de entrenamiento.",
+        "exercises": [
+          {
+            "id": "9122f8c7-e93f-4801-a36e-0839d67a1079",
+            "exerciseId": "jalon-pecho",
+            "sets": 3,
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 40,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "40334568-9d60-4ae8-b6be-a20e69904202",
+            "exerciseId": "remo-barra",
+            "sets": 3,
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 35,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "7d005825-4eb4-4712-82bd-187237a5798f",
+            "exerciseId": "e2e54ae3-f118-44b9-a077-b86b781631b8",
+            "sets": 3,
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 30,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "57bf0dc9-9471-4b16-95a3-12d8e52da97e",
+            "exerciseId": "curl-barra",
+            "sets": 3,
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 20,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "51e954b2-c28a-4620-a921-c40292e8cb27",
+            "exerciseId": "curl-martillo",
+            "sets": 3,
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 10,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          }
+        ]
+      },
+      {
+        "id": "63761bad-0513-4e47-9dd1-c8c55cedc1d7",
+        "name": "Pierna y core DEMO",
+        "icon": "mountain",
+        "color": "#B8A0FF",
+        "archived": false,
+        "notes": "Datos ficticios de octubre de 2026 para probar Cheesit. No es una recomendación de entrenamiento.",
+        "exercises": [
+          {
+            "id": "12b7ac63-25cf-443e-b202-6ee138c48a06",
+            "exerciseId": "sentadilla-barra",
+            "sets": 3,
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 60,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "99c17196-cc71-4c2f-9cfe-a1d6986700ad",
+            "exerciseId": "peso-muerto-rumano",
+            "sets": 3,
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 50,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "22cae721-c949-4e23-abd2-e4af80363fd0",
+            "exerciseId": "prensa-piernas",
+            "sets": 3,
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 100,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "9c69062f-df2a-46ce-980d-dfd79ff8b9ca",
+            "exerciseId": "elevacion-gemelos",
+            "sets": 3,
+            "repsMin": 15,
+            "repsMax": 17,
+            "targetWeight": 40,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "0098338f-0754-41b2-bfe0-21e422538ae4",
+            "exerciseId": "crunch-abdominal",
+            "sets": 3,
+            "repsMin": 20,
+            "repsMax": 22,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          }
+        ]
+      },
+      {
+        "id": "e3dad23f-1264-49e6-933d-8877d8e6a27b",
+        "name": "Cuerpo completo DEMO",
+        "icon": "activity",
+        "color": "#61C9A8",
+        "archived": false,
+        "notes": "Datos ficticios de octubre de 2026 para probar Cheesit. No es una recomendación de entrenamiento.",
+        "exercises": [
+          {
+            "id": "33ea2631-d793-49bb-a27e-21105cc5f4c6",
+            "exerciseId": "flexiones",
+            "sets": 3,
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "a738e5b1-8be0-446c-8e89-2a535aa93a01",
+            "exerciseId": "dominadas",
+            "sets": 3,
+            "repsMin": 6,
+            "repsMax": 8,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "11d56e69-c5c7-431e-9d10-59ae378dd9fd",
+            "exerciseId": "zancadas-mancuernas",
+            "sets": 3,
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 12,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "fda653d4-e413-4212-a2ef-ce7ccb39bed4",
+            "exerciseId": "press-hombros-mancuernas",
+            "sets": 3,
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 14,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "b9e2b168-c46c-4404-b9b6-c14fc7a1d5e8",
+            "exerciseId": "elevacion-piernas",
+            "sets": 3,
+            "repsMin": 15,
+            "repsMax": 17,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          }
+        ]
+      },
+      {
+        "id": "a6397bca-3392-4ab7-aa53-b2d4c97a8b61",
+        "name": "Rutina anterior DEMO (archivada)",
+        "icon": "flame",
+        "color": "#EC8997",
+        "archived": true,
+        "notes": "Datos ficticios de octubre de 2026 para probar Cheesit. No es una recomendación de entrenamiento.",
+        "exercises": [
+          {
+            "id": "ade22abb-1248-4111-8842-6dd57973679a",
+            "exerciseId": "press-banca-barra",
+            "sets": 3,
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 50,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "a0184ce1-4bfa-44ce-aede-06112c5b900c",
+            "exerciseId": "press-inclinado-mancuernas",
+            "sets": 3,
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 18,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "115cd819-2678-442e-991c-fe09ca35efd3",
+            "exerciseId": "press-militar",
+            "sets": 3,
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 25,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "2ce13982-3294-42fb-964a-a6273627d48f",
+            "exerciseId": "elevaciones-laterales",
+            "sets": 3,
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 6,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          },
+          {
+            "id": "41580585-f530-4095-9791-376559a79db1",
+            "exerciseId": "extension-triceps-polea",
+            "sets": 3,
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 20,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano."
+          }
+        ]
+      }
+    ],
+    "workouts": [
+      {
+        "id": "4f20c1db-a2a4-4462-b7b9-23012ff4354b",
+        "date": "2026-10-01",
+        "name": "Empuje DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-01T16:00:00.000Z",
+        "updatedAt": "2026-10-01T16:45:00.000Z",
+        "startedAt": "2026-10-01T16:00:00.000Z",
+        "finishedAt": "2026-10-01T16:45:00.000Z",
+        "exercises": [
+          {
+            "id": "9e95a0e3-515c-4f2b-94b1-7790043cd6fc",
+            "exerciseId": "press-banca-barra",
+            "sets": [
+              {
+                "id": "f3343b7b-88b8-494b-90cb-7d527fc3a798",
+                "weight": 50,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "8873d62a-8af4-4324-a0eb-0b6793738623",
+                "weight": 50,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "ffd1d8e0-786b-4277-95fa-fd033ed578ee",
+                "weight": 50,
+                "reps": 7,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 50,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press de banca con barra",
+            "group": "Pecho",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "f324b3e9-6c34-475e-9c61-d1cb1d0cc7a4",
+            "exerciseId": "press-inclinado-mancuernas",
+            "sets": [
+              {
+                "id": "df30a47d-c2ce-4ef7-97a4-3bfcc799a30a",
+                "weight": 18,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "d3b8b764-4b79-4f1c-9986-e6b1ed170a9a",
+                "weight": 18,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "9b1bd538-c0ae-4d68-be9b-0f40bb6822fd",
+                "weight": 18,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 18,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press inclinado con mancuernas",
+            "group": "Pecho",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "fd8f8121-aec3-4b2a-bc77-7ef384df2193",
+            "exerciseId": "press-militar",
+            "sets": [
+              {
+                "id": "e49626ec-f267-4f96-a8ef-43469e884096",
+                "weight": 25,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "8f07f319-db28-421b-8805-f5409485392e",
+                "weight": 25,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "7615ff3a-f9ae-4202-b6d2-88da6022675d",
+                "weight": 25,
+                "reps": 7,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 25,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press militar",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "15dfd402-de2e-477e-9e51-e229ee81a100",
+            "exerciseId": "elevaciones-laterales",
+            "sets": [
+              {
+                "id": "8b7ab792-97fb-4a7c-8cc7-a51a180f37fc",
+                "weight": 6,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "fc56cbef-356b-48aa-ab6b-12c0adfd2c84",
+                "weight": 6,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "644ea0e8-fc68-453c-9b16-5398648624e2",
+                "weight": 6,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 6,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Elevaciones laterales",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "141c82e3-2544-4ff4-8948-f21ad89c0214",
+            "exerciseId": "extension-triceps-polea",
+            "sets": [
+              {
+                "id": "1bb0e7e1-f060-451a-ae1b-03921272084c",
+                "weight": 20,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "7174b64e-6e64-4d67-a343-83e11997ceb8",
+                "weight": 20,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "011d7a2f-0a7c-4a13-ae30-bafb64aff07b",
+                "weight": 20,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 20,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Extensión de tríceps en polea",
+            "group": "Tríceps",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: aumento de carga respecto a la semana anterior."
+      },
+      {
+        "id": "723ae259-1d47-4db3-ad28-c817a4776f28",
+        "date": "2026-10-02",
+        "name": "Tirón DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-02T16:00:00.000Z",
+        "updatedAt": "2026-10-02T16:46:00.000Z",
+        "startedAt": "2026-10-02T16:00:00.000Z",
+        "finishedAt": "2026-10-02T16:46:00.000Z",
+        "exercises": [
+          {
+            "id": "6ed40563-7a14-4b59-9953-623d440fd787",
+            "exerciseId": "jalon-pecho",
+            "sets": [
+              {
+                "id": "1819ca90-d857-47cf-9444-40ac6ae6881c",
+                "weight": 40,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "c33250fc-e4b5-4916-aede-991a78f58100",
+                "weight": 40,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "d5eba4dd-a253-48b4-853e-ecb82af37ecd",
+                "weight": 40,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 40,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Jalón al pecho",
+            "group": "Espalda",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "1821bd0d-2a35-4b7e-bea2-2481053c29fe",
+            "exerciseId": "remo-barra",
+            "sets": [
+              {
+                "id": "e4a25c92-2bb2-4948-aef0-83ceb4d70f9a",
+                "weight": 35,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "57344cde-9cbd-4728-8dc7-1dfcda9863ae",
+                "weight": 35,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "9a347da9-93e5-4e64-b856-c1b9f19d5220",
+                "weight": 35,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 35,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Remo con barra",
+            "group": "Espalda",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "73dd135a-847b-431c-bb03-7d9f2b792b48",
+            "exerciseId": "e2e54ae3-f118-44b9-a077-b86b781631b8",
+            "sets": [
+              {
+                "id": "89f5137d-3c7b-43ab-b061-a6124b309dc5",
+                "weight": 30,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "4a540103-ec10-4500-9056-3d2ccd6e456c",
+                "weight": 30,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "d50f2977-a50d-4d3f-9b9b-6f1521322f71",
+                "weight": 30,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 30,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Remo en máquina DEMO",
+            "group": "Espalda",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "b4050f8a-fc2b-4385-b9de-097fccf29f8a",
+            "exerciseId": "curl-barra",
+            "sets": [
+              {
+                "id": "58f24432-563f-4251-8fdc-cc65572b96cd",
+                "weight": 20,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "564669cf-836e-4540-89dd-74044604d61e",
+                "weight": 20,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "145d6048-7277-4ed7-a9e0-0aef161697f2",
+                "weight": 20,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 20,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Curl con barra",
+            "group": "Bíceps",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "b602f20a-1a7a-4fc4-bff7-e58750abc032",
+            "exerciseId": "curl-martillo",
+            "sets": [
+              {
+                "id": "36789fa4-1312-43f7-b714-83bb12e02499",
+                "weight": 10,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "cc4da1e1-5fec-41a7-bcfc-58afbe199f5a",
+                "weight": 10,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "54c1fd9f-9b3c-496d-aeab-12dffcac71f3",
+                "weight": 10,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 10,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Curl martillo",
+            "group": "Bíceps",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: técnica y repeticiones controladas."
+      },
+      {
+        "id": "e84dd13d-5b62-4e49-bc77-0239bb590040",
+        "date": "2026-10-04",
+        "name": "Pierna y core DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-04T16:00:00.000Z",
+        "updatedAt": "2026-10-04T16:47:00.000Z",
+        "startedAt": "2026-10-04T16:00:00.000Z",
+        "finishedAt": "2026-10-04T16:47:00.000Z",
+        "exercises": [
+          {
+            "id": "9fc0947d-7179-4ba3-8c33-f209905ff91a",
+            "exerciseId": "sentadilla-barra",
+            "sets": [
+              {
+                "id": "189b8372-4560-4127-adb9-d84f11857197",
+                "weight": 60,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "ad0fb2e2-5617-452b-96b0-0ca0c7041725",
+                "weight": 60,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "066fa092-a85b-4442-9661-3a93669452a3",
+                "weight": 60,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 60,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Sentadilla con barra",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "e3c3e00e-a650-4ca5-a043-d5e2b2f85703",
+            "exerciseId": "peso-muerto-rumano",
+            "sets": [
+              {
+                "id": "a93b33c0-f50e-4ad2-9c67-d071d04f00ee",
+                "weight": 50,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "9d64a516-f44b-413b-8688-cd67cd919fce",
+                "weight": 50,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "c0bded05-b155-4905-97f4-cab16338b0c0",
+                "weight": 50,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 50,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Peso muerto rumano",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "878e2531-3228-46df-ad58-321ebca09b6c",
+            "exerciseId": "prensa-piernas",
+            "sets": [
+              {
+                "id": "2f495555-47df-4283-b9c5-97353aeb0d05",
+                "weight": 100,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "c0749922-9701-4952-a407-0745637280dd",
+                "weight": 100,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "c62c9376-9b41-4ec0-9e06-0a8a66c165db",
+                "weight": 100,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 100,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Prensa de piernas",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "857bc935-0f05-4b4d-97fe-c6b00f0c7e8d",
+            "exerciseId": "elevacion-gemelos",
+            "sets": [
+              {
+                "id": "a7585ed9-ee7d-49e6-913b-112d61e0f177",
+                "weight": 40,
+                "reps": 15,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "fe2cf398-5d8d-4d94-8157-2381f2e1508c",
+                "weight": 40,
+                "reps": 15,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "9cf19208-9c62-4a6d-be0f-3265c3fe724c",
+                "weight": 40,
+                "reps": 15,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 15,
+            "repsMax": 17,
+            "targetWeight": 40,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Elevación de gemelos",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "3c141bb9-34d9-4b1a-964f-33507a4fa63c",
+            "exerciseId": "crunch-abdominal",
+            "sets": [
+              {
+                "id": "bd00584f-57db-4710-b054-1872182c8e48",
+                "weight": 0,
+                "reps": 20,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "78337fc9-5945-401a-a593-f0959528c8c2",
+                "weight": 0,
+                "reps": 20,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "3bae5181-ff90-4bae-a51b-4d8b24432ea3",
+                "weight": 0,
+                "reps": 20,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 20,
+            "repsMax": 22,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Crunch abdominal",
+            "group": "Abdominales",
+            "mode": "bodyweight_reps",
+            "loadConvention": "total"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: técnica y repeticiones controladas."
+      },
+      {
+        "id": "6880d658-0cc6-4272-8904-1deedb95de86",
+        "date": "2026-10-06",
+        "name": "Cuerpo completo DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-06T16:00:00.000Z",
+        "updatedAt": "2026-10-06T16:48:00.000Z",
+        "startedAt": "2026-10-06T16:00:00.000Z",
+        "finishedAt": "2026-10-06T16:48:00.000Z",
+        "exercises": [
+          {
+            "id": "d447c2aa-867c-4e8a-af85-135c9b34dc56",
+            "exerciseId": "flexiones",
+            "sets": [
+              {
+                "id": "f76a0017-fbf9-4d1f-a433-dcb48e40b4dd",
+                "weight": 0,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "a2c8dc69-a59b-46a7-9779-16c75239c626",
+                "weight": 0,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "8248cfa8-1337-4a5b-95f7-4b95084ac479",
+                "weight": 0,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Flexiones",
+            "group": "Pecho",
+            "mode": "bodyweight_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "91dd5c8a-94eb-418f-8b49-d0d174fcc013",
+            "exerciseId": "dominadas",
+            "sets": [
+              {
+                "id": "4eb50ff9-fda7-4787-a3e8-f0bef4e5e605",
+                "weight": 0,
+                "reps": 6,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "32cccceb-7a7a-4866-9753-efdbbb388f5c",
+                "weight": 0,
+                "reps": 6,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "5d3eff07-2370-41ef-a4bb-6fa22734ac54",
+                "weight": 0,
+                "reps": 5,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 6,
+            "repsMax": 8,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Dominadas",
+            "group": "Espalda",
+            "mode": "bodyweight_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "3bdce00d-ad39-4b1e-8b3a-65536b210491",
+            "exerciseId": "zancadas-mancuernas",
+            "sets": [
+              {
+                "id": "789b0561-b84d-4e19-8f6c-6ac80af58081",
+                "weight": 12,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "64bc5413-56be-4a6f-afb9-adc2e477eb99",
+                "weight": 12,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "2d295f76-6f94-4d38-b357-e7e4a37e01b2",
+                "weight": 12,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 12,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Zancadas con mancuernas",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "7df01630-725c-416d-83da-79c7e2f3c988",
+            "exerciseId": "press-hombros-mancuernas",
+            "sets": [
+              {
+                "id": "68916d3a-0850-432d-8c1c-f06af6954af4",
+                "weight": 14,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "53f31e1d-c0c9-4b31-87a8-d6e7738b1f2c",
+                "weight": 14,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "cc00f3bb-ae65-448f-85b3-665cbec25e41",
+                "weight": 14,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 14,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press de hombros con mancuernas",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "99f47159-35e9-42d0-b6b0-0bcd7973a15d",
+            "exerciseId": "elevacion-piernas",
+            "sets": [
+              {
+                "id": "8f02aed3-5ca8-4c1c-9129-5f1bbd38ce5f",
+                "weight": 0,
+                "reps": 15,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "e1817b8d-6483-4675-98ab-a91d75ee7130",
+                "weight": 0,
+                "reps": 15,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "c2af213c-71fe-4d0f-97b7-9a4629800f66",
+                "weight": 0,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 15,
+            "repsMax": 17,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Elevación de piernas",
+            "group": "Abdominales",
+            "mode": "bodyweight_reps",
+            "loadConvention": "total"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: técnica y repeticiones controladas."
+      },
+      {
+        "id": "99080114-dc95-4a11-8b11-5dcae362eb1d",
+        "date": "2026-10-08",
+        "name": "Empuje DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-08T16:00:00.000Z",
+        "updatedAt": "2026-10-08T16:49:00.000Z",
+        "startedAt": "2026-10-08T16:00:00.000Z",
+        "finishedAt": "2026-10-08T16:49:00.000Z",
+        "exercises": [
+          {
+            "id": "fe50b4fe-2856-42cd-8388-7c5149741345",
+            "exerciseId": "press-banca-barra",
+            "sets": [
+              {
+                "id": "25aa5050-d2e5-4ed2-afb0-ffa80748492a",
+                "weight": 52.5,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "ef3fb029-c6d0-469b-b1c6-be2f27efe7e9",
+                "weight": 52.5,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "8ddde7cb-d980-4cf5-9cb1-b9e9eef25383",
+                "weight": 52.5,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 50,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press de banca con barra",
+            "group": "Pecho",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "c0b9804b-de08-4832-bf4a-472722b6c255",
+            "exerciseId": "press-inclinado-mancuernas",
+            "sets": [
+              {
+                "id": "071348ce-5d34-4e11-8baa-b042014a78cb",
+                "weight": 19,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "175873ff-756a-4960-b535-181dfa28c60b",
+                "weight": 19,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "6f1b08e3-854e-40a2-a4b0-b587bae86807",
+                "weight": 19,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 18,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press inclinado con mancuernas",
+            "group": "Pecho",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "cdc5ecaf-6a2c-48b1-adfa-bf5334a0f6eb",
+            "exerciseId": "press-militar",
+            "sets": [
+              {
+                "id": "3722a2a6-aa12-4cf6-92a5-1c1b11c54a88",
+                "weight": 27.5,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "f5e9c58f-33a9-4a46-8d26-db6875ef4c5a",
+                "weight": 27.5,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "58c224dd-3505-4453-ae3b-827e70893cfc",
+                "weight": 27.5,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 25,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press militar",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "0cc8ae2e-55ef-4444-944c-de69af69cd6e",
+            "exerciseId": "elevaciones-laterales",
+            "sets": [
+              {
+                "id": "a9ea328a-bf5a-4930-9fc7-b11881b539bf",
+                "weight": 7,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "2157b2c7-50dc-4b40-a195-34e91238349c",
+                "weight": 7,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "a1bc76c2-d94f-4e52-9a89-3d154a1d6f0a",
+                "weight": 7,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 6,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Elevaciones laterales",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "f4fcab3a-7ed9-4841-b6b3-250a0cd6b7a5",
+            "exerciseId": "extension-triceps-polea",
+            "sets": [
+              {
+                "id": "1e7f4f5e-79c0-4cc2-a54a-51e584517834",
+                "weight": 22.5,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "3cc15add-4d0b-40ca-a310-3d26e07cc7e9",
+                "weight": 22.5,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "2b017734-04d1-4a29-9204-5d17480f666a",
+                "weight": 22.5,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 20,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Extensión de tríceps en polea",
+            "group": "Tríceps",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: aumento de carga respecto a la semana anterior."
+      },
+      {
+        "id": "5889a222-7f6c-4da0-b5b6-d8dd7904d619",
+        "date": "2026-10-09",
+        "name": "Tirón DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-09T16:00:00.000Z",
+        "updatedAt": "2026-10-09T16:50:00.000Z",
+        "startedAt": "2026-10-09T16:00:00.000Z",
+        "finishedAt": "2026-10-09T16:50:00.000Z",
+        "exercises": [
+          {
+            "id": "f14ea1a0-6846-4e66-9b8c-5d26206cbcaf",
+            "exerciseId": "jalon-pecho",
+            "sets": [
+              {
+                "id": "3b396c18-156b-4ed2-ba77-caf313af796a",
+                "weight": 42.5,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "bb9a70cd-3ff0-44c8-804e-3338ef051897",
+                "weight": 42.5,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "ffeb99f9-7874-4174-b848-3a9d93d00838",
+                "weight": 42.5,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 40,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Jalón al pecho",
+            "group": "Espalda",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "4f1da860-3fde-4d9f-a756-c73b5a66dc57",
+            "exerciseId": "remo-barra",
+            "sets": [
+              {
+                "id": "22debb93-92f5-44bd-9e48-2603e09c9822",
+                "weight": 37.5,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "bd1e2b27-2184-4543-b7c0-63261f64e5b8",
+                "weight": 37.5,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "7047cfd1-f416-4d51-9a54-60a47f4ebe94",
+                "weight": 37.5,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 35,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Remo con barra",
+            "group": "Espalda",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "0d2892ed-53f0-476c-9b38-4e93369bee0b",
+            "exerciseId": "e2e54ae3-f118-44b9-a077-b86b781631b8",
+            "sets": [
+              {
+                "id": "0e9dd279-4755-41f5-beed-10e61f2e25c9",
+                "weight": 32.5,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "5b6c9e31-2cf7-4c1e-8166-6681cff746ed",
+                "weight": 32.5,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "aadeb49a-a9d5-49c2-a9d3-c812eff3d418",
+                "weight": 32.5,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 30,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Remo en máquina DEMO",
+            "group": "Espalda",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "b0f7586f-916a-4285-bb07-86ebb7c777db",
+            "exerciseId": "curl-barra",
+            "sets": [
+              {
+                "id": "9795e093-8efd-4f3e-92c1-b1be6809b26f",
+                "weight": 22.5,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "42c637bd-80e9-4ffb-9be7-2c673adaaa00",
+                "weight": 22.5,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "8a020a9e-696c-4870-88bd-89a4c98439c6",
+                "weight": 22.5,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 20,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Curl con barra",
+            "group": "Bíceps",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "b22d373a-f921-47ef-8a6c-08de541d68f5",
+            "exerciseId": "curl-martillo",
+            "sets": [
+              {
+                "id": "2cf29d26-f0af-42a8-9626-4a3d9f875afb",
+                "weight": 11,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "dadb4426-3c70-47c0-a799-dd8e04768400",
+                "weight": 11,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "42f5756d-0425-42f4-b15b-91e856e0dde8",
+                "weight": 11,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 10,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Curl martillo",
+            "group": "Bíceps",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: técnica y repeticiones controladas."
+      },
+      {
+        "id": "3b5c4c31-0790-4d67-b1dd-033a71c5734c",
+        "date": "2026-10-11",
+        "name": "Pierna y core DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-11T16:00:00.000Z",
+        "updatedAt": "2026-10-11T16:51:00.000Z",
+        "startedAt": "2026-10-11T16:00:00.000Z",
+        "finishedAt": "2026-10-11T16:51:00.000Z",
+        "exercises": [
+          {
+            "id": "f42f6687-4739-47d9-93d5-245db7d9734f",
+            "exerciseId": "sentadilla-barra",
+            "sets": [
+              {
+                "id": "a9f2d4f2-95f7-4bd2-a37a-875b20947a5f",
+                "weight": 62.5,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "460211d6-343d-4fe3-abc9-1b6bbe40b18b",
+                "weight": 62.5,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "8324139a-2853-4a3d-af79-8cd2859ea4e1",
+                "weight": 62.5,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 60,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Sentadilla con barra",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "452fe307-f570-4aff-a4fc-b2e70b6fe1fe",
+            "exerciseId": "peso-muerto-rumano",
+            "sets": [
+              {
+                "id": "65ea3f6d-4ef2-4476-9dfd-5605e0c543dc",
+                "weight": 52.5,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "4a28bc25-10f8-4527-83fc-e8146a8b8d24",
+                "weight": 52.5,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "c954f2cd-db73-423f-8bb7-0bb1d576d291",
+                "weight": 52.5,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 50,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Peso muerto rumano",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "bcd92be1-d3c4-4826-b16d-2fee80c4bdc5",
+            "exerciseId": "prensa-piernas",
+            "sets": [
+              {
+                "id": "72a52553-d7a9-48f6-ae76-edc2106eaf55",
+                "weight": 102.5,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "8c1fe547-9457-42ec-b664-65aaff2290ef",
+                "weight": 102.5,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "7cb5d99f-240e-4b1c-8e9b-af94504fd2af",
+                "weight": 102.5,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 100,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Prensa de piernas",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "a7ce7f60-e8f3-4517-8d3b-5e9514dc3afd",
+            "exerciseId": "elevacion-gemelos",
+            "sets": [
+              {
+                "id": "3f4516c6-fc3c-4ec3-a744-2a973180a97c",
+                "weight": 42.5,
+                "reps": 16,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "9fc4b395-b8b2-4ac9-9710-4791c03e3663",
+                "weight": 42.5,
+                "reps": 16,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "a1b49b93-e0eb-4053-a93d-b4b02597586c",
+                "weight": 42.5,
+                "reps": 15,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 15,
+            "repsMax": 17,
+            "targetWeight": 40,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Elevación de gemelos",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "7563a240-466c-4e58-8da2-ec97f86d7b3d",
+            "exerciseId": "crunch-abdominal",
+            "sets": [
+              {
+                "id": "ff18a7cc-6a12-4579-8378-74cc11a99b0c",
+                "weight": 0,
+                "reps": 21,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "ac6bc322-6415-424f-8a05-112e2bdc4b2f",
+                "weight": 0,
+                "reps": 21,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "2fdec6fb-959a-4cf8-88b5-82ade9b06589",
+                "weight": 0,
+                "reps": 20,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 20,
+            "repsMax": 22,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Crunch abdominal",
+            "group": "Abdominales",
+            "mode": "bodyweight_reps",
+            "loadConvention": "total"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: técnica y repeticiones controladas."
+      },
+      {
+        "id": "a3ddb390-99d2-4c89-a516-b592106dbb63",
+        "date": "2026-10-13",
+        "name": "Cuerpo completo DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-13T16:00:00.000Z",
+        "updatedAt": "2026-10-13T16:52:00.000Z",
+        "startedAt": "2026-10-13T16:00:00.000Z",
+        "finishedAt": "2026-10-13T16:52:00.000Z",
+        "exercises": [
+          {
+            "id": "d7baac6f-c5fa-4c5d-af10-bacd72fda6be",
+            "exerciseId": "flexiones",
+            "sets": [
+              {
+                "id": "7cdab50f-9d68-4f49-b7af-deb7a487c9a1",
+                "weight": 0,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "fc36eefa-daaa-4d4b-9af3-7efb40bb4ba4",
+                "weight": 0,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "4e14568a-ae9c-4c97-ae48-5925ca0be545",
+                "weight": 0,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Flexiones",
+            "group": "Pecho",
+            "mode": "bodyweight_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "e56bd82a-4789-4013-ac8c-2eeead334346",
+            "exerciseId": "dominadas",
+            "sets": [
+              {
+                "id": "c9e5d273-51f5-456d-88db-2b80fb5defa7",
+                "weight": 0,
+                "reps": 7,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "aa60dad1-7a1d-4b10-9e39-40b916b6936d",
+                "weight": 0,
+                "reps": 7,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "dda3629a-2b8b-4d80-a549-34e8010177eb",
+                "weight": 0,
+                "reps": 7,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 6,
+            "repsMax": 8,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Dominadas",
+            "group": "Espalda",
+            "mode": "bodyweight_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "d96ae9a5-274e-4a43-87eb-79893d076d82",
+            "exerciseId": "zancadas-mancuernas",
+            "sets": [
+              {
+                "id": "11589f1d-85af-4b78-923f-5560815af590",
+                "weight": 13,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "ce422146-f075-4bbc-b603-487febcc5a20",
+                "weight": 13,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "4bce42a6-235c-43b0-bfbd-f37afc07c47a",
+                "weight": 13,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 12,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Zancadas con mancuernas",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "27edfbbc-c425-479d-af0b-0ad48b9e8439",
+            "exerciseId": "press-hombros-mancuernas",
+            "sets": [
+              {
+                "id": "957a2ad1-3d07-49dc-9a98-e138ea5f8484",
+                "weight": 15,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "a7d79a24-14a5-4909-8dea-d24599887d68",
+                "weight": 15,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "15bc87cc-a696-4522-9e81-d59aa7a3e245",
+                "weight": 15,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 14,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press de hombros con mancuernas",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "d02429ce-bd56-433c-885a-2d63264d4e2f",
+            "exerciseId": "elevacion-piernas",
+            "sets": [
+              {
+                "id": "fc4b9389-dfcf-4b63-9918-378c53c8331d",
+                "weight": 0,
+                "reps": 16,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "695dc731-32b2-4367-a90b-5d17fa514293",
+                "weight": 0,
+                "reps": 16,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "36ee171c-fa45-4249-b649-bf53aa462dd0",
+                "weight": 0,
+                "reps": 16,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 15,
+            "repsMax": 17,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Elevación de piernas",
+            "group": "Abdominales",
+            "mode": "bodyweight_reps",
+            "loadConvention": "total"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: técnica y repeticiones controladas."
+      },
+      {
+        "id": "b849e94f-8661-466c-87e3-2e431097102d",
+        "date": "2026-10-15",
+        "name": "Empuje DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-15T16:00:00.000Z",
+        "updatedAt": "2026-10-15T16:53:00.000Z",
+        "startedAt": "2026-10-15T16:00:00.000Z",
+        "finishedAt": "2026-10-15T16:53:00.000Z",
+        "exercises": [
+          {
+            "id": "c10c2eaa-f725-4382-8529-7813991c7b9a",
+            "exerciseId": "press-banca-barra",
+            "sets": [
+              {
+                "id": "9bb59bb9-113b-418b-9966-55a47a4b3fd5",
+                "weight": 55,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "15d17182-dd44-4ae9-a7c2-305983ca826e",
+                "weight": 55,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "b95d8623-7b08-4611-99b9-c5c6e7afce41",
+                "weight": 55,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 50,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press de banca con barra",
+            "group": "Pecho",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "a7f11838-6496-4e64-a2a9-c6a94c3a196f",
+            "exerciseId": "press-inclinado-mancuernas",
+            "sets": [
+              {
+                "id": "a39c10a8-98f0-4923-ab80-bea8ea0edfc9",
+                "weight": 20,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "5ddc4a95-cef6-4a23-abc6-47cb0d6588f6",
+                "weight": 20,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "b4b433a4-e1d7-4132-86d2-a82b04273f29",
+                "weight": 20,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 18,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press inclinado con mancuernas",
+            "group": "Pecho",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "51cbb90c-9657-4b26-a5f1-ac9629db0611",
+            "exerciseId": "press-militar",
+            "sets": [
+              {
+                "id": "f84a486e-c154-414b-9605-938fed7d7ea5",
+                "weight": 30,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "144288a0-810d-44e2-97d1-fc7173647d37",
+                "weight": 30,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "08ecf353-11de-4b03-a53b-e5f74a2e46d6",
+                "weight": 30,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 25,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press militar",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "a65bcd2b-8024-41c0-86eb-61af0deebe42",
+            "exerciseId": "elevaciones-laterales",
+            "sets": [
+              {
+                "id": "5dde0ff2-5477-450b-adcc-40fb3e3d0add",
+                "weight": 8,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "6894e5db-0152-481d-af09-029e90363305",
+                "weight": 8,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "795a2b45-8c04-4ec7-b195-fcb1c9084a6c",
+                "weight": 8,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 6,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Elevaciones laterales",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "180e2f44-c326-4998-97b9-4f11af810345",
+            "exerciseId": "extension-triceps-polea",
+            "sets": [
+              {
+                "id": "5f49c40f-0208-405f-b63e-8bc1bc18b4e7",
+                "weight": 25,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "61473435-6f76-4019-bea0-797e6413f52a",
+                "weight": 25,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "8985c4cc-8741-47c4-b843-fd261dff4d39",
+                "weight": 25,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 20,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Extensión de tríceps en polea",
+            "group": "Tríceps",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: aumento de carga respecto a la semana anterior."
+      },
+      {
+        "id": "7dc625f8-cdf5-470f-b4fa-b988a373b12e",
+        "date": "2026-10-16",
+        "name": "Tirón DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-16T16:00:00.000Z",
+        "updatedAt": "2026-10-16T16:54:00.000Z",
+        "startedAt": "2026-10-16T16:00:00.000Z",
+        "finishedAt": "2026-10-16T16:54:00.000Z",
+        "exercises": [
+          {
+            "id": "106b4634-072f-4998-9384-6da0997cea83",
+            "exerciseId": "jalon-pecho",
+            "sets": [
+              {
+                "id": "131b27a1-2495-480e-8064-df02d46ae9ce",
+                "weight": 45,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "bd091965-7e37-4e5c-a6b3-6102de8627fc",
+                "weight": 45,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "65395f2a-2d89-4ccd-bd94-b8f3781fdb77",
+                "weight": 45,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 40,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Jalón al pecho",
+            "group": "Espalda",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "89d6f560-939d-4258-b18a-d0ffb0f9fc10",
+            "exerciseId": "remo-barra",
+            "sets": [
+              {
+                "id": "d6b93462-d1eb-4902-9554-92a1bf6b2ecf",
+                "weight": 40,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "9bf1ea51-4e62-4f8d-b260-d65904fad746",
+                "weight": 40,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "4e57781b-0dce-4e94-b3a0-6dd61cd85b17",
+                "weight": 40,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 35,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Remo con barra",
+            "group": "Espalda",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "960cee60-7777-410c-a3c4-99ccfe95765b",
+            "exerciseId": "e2e54ae3-f118-44b9-a077-b86b781631b8",
+            "sets": [
+              {
+                "id": "eafabc2d-a07e-4623-951a-e79fc7585b0e",
+                "weight": 35,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "9d5d23fa-5c29-45a9-8f5f-9e00cb65a816",
+                "weight": 35,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "72bded7e-2313-45ba-86b4-0e1b0b9994ab",
+                "weight": 35,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 30,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Remo en máquina DEMO",
+            "group": "Espalda",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "d0088cae-7f92-4e4c-a0a8-afc94ccd7438",
+            "exerciseId": "curl-barra",
+            "sets": [
+              {
+                "id": "514798f0-e236-4190-9792-55015104ece3",
+                "weight": 25,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "3b058ceb-887d-4450-876e-bcbb582da6f8",
+                "weight": 25,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "500ef654-ae35-4b86-a7c4-f7fdcb82db31",
+                "weight": 25,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 20,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Curl con barra",
+            "group": "Bíceps",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "5556eeab-f967-402b-9af0-12101ec78727",
+            "exerciseId": "curl-martillo",
+            "sets": [
+              {
+                "id": "016dbf34-af8a-481d-a614-a7b7f007a798",
+                "weight": 12,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "3cc7e22d-58f7-446a-9863-43de1c14410b",
+                "weight": 12,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "5f34337d-6d67-4d58-9475-cdb1d9a0022d",
+                "weight": 12,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 10,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Curl martillo",
+            "group": "Bíceps",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: técnica y repeticiones controladas."
+      },
+      {
+        "id": "35484e3e-e4d7-4c45-a734-663c208e8cd3",
+        "date": "2026-10-18",
+        "name": "Pierna y core DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-18T16:00:00.000Z",
+        "updatedAt": "2026-10-18T16:55:00.000Z",
+        "startedAt": "2026-10-18T16:00:00.000Z",
+        "finishedAt": "2026-10-18T16:55:00.000Z",
+        "exercises": [
+          {
+            "id": "e93a1cdd-5088-47b5-b586-7cfc2600bac6",
+            "exerciseId": "sentadilla-barra",
+            "sets": [
+              {
+                "id": "f0b7cdd2-a4b6-431f-89e9-7da969e93ff3",
+                "weight": 65,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "1b16a171-0711-4cbf-a72b-c94428445aed",
+                "weight": 65,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "51caf8f5-60f1-419c-b8a5-ac66d808b28f",
+                "weight": 65,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 60,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Sentadilla con barra",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "cbda999b-773a-46cc-b4bd-ecadb1465b33",
+            "exerciseId": "peso-muerto-rumano",
+            "sets": [
+              {
+                "id": "4dce5296-60ff-47cb-816b-c7ebdd52da10",
+                "weight": 55,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "1ab91db3-0d8c-427d-85e7-71156235cf94",
+                "weight": 55,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "c3324f3f-e650-4fff-a5dc-f85f436a457a",
+                "weight": 55,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 50,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Peso muerto rumano",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "bb3962a6-f88c-4361-971e-6f6115320e8a",
+            "exerciseId": "prensa-piernas",
+            "sets": [
+              {
+                "id": "f54338f3-14b1-4641-8b74-320672824bea",
+                "weight": 105,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "b345b918-f271-4dae-a0e7-cd73d0184eee",
+                "weight": 105,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "b593612e-7dfa-41b4-a6f7-4f87486a4976",
+                "weight": 105,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 100,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Prensa de piernas",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "31b8a7e9-ac2f-40e6-be72-3ff810fd11ed",
+            "exerciseId": "elevacion-gemelos",
+            "sets": [
+              {
+                "id": "b4a57a35-34f8-4d7c-8531-d866a295d2cb",
+                "weight": 45,
+                "reps": 17,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "a49e1bb1-83b8-4a62-bf83-5e9a86c080b4",
+                "weight": 45,
+                "reps": 17,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "dea6c1cf-8d49-4e36-b30a-381259965280",
+                "weight": 45,
+                "reps": 17,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 15,
+            "repsMax": 17,
+            "targetWeight": 40,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Elevación de gemelos",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "9aebfbf2-1f9c-4790-a525-3d9158c086a0",
+            "exerciseId": "crunch-abdominal",
+            "sets": [
+              {
+                "id": "6976579a-8ee5-4332-af30-9df250761081",
+                "weight": 0,
+                "reps": 22,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "6fa5157b-ab72-4267-88ca-613264f16aec",
+                "weight": 0,
+                "reps": 22,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "82865bfe-50b4-4f31-acb9-cfb0d61ebde7",
+                "weight": 0,
+                "reps": 22,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 20,
+            "repsMax": 22,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Crunch abdominal",
+            "group": "Abdominales",
+            "mode": "bodyweight_reps",
+            "loadConvention": "total"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: técnica y repeticiones controladas."
+      },
+      {
+        "id": "66cb2d7c-2bc6-4626-8382-da78785dd898",
+        "date": "2026-10-20",
+        "name": "Cuerpo completo DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-20T16:00:00.000Z",
+        "updatedAt": "2026-10-20T16:56:00.000Z",
+        "startedAt": "2026-10-20T16:00:00.000Z",
+        "finishedAt": "2026-10-20T16:56:00.000Z",
+        "exercises": [
+          {
+            "id": "9bd24faf-40b8-4776-b88b-27c1839989b3",
+            "exerciseId": "flexiones",
+            "sets": [
+              {
+                "id": "c23f448b-3abf-4e8d-b1d3-448e750a0e77",
+                "weight": 0,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "405877fb-6f36-4dc8-9e6c-5a6a80903e4d",
+                "weight": 0,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "9f061b26-741a-4665-80c3-e9ca676d2b5a",
+                "weight": 0,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Flexiones",
+            "group": "Pecho",
+            "mode": "bodyweight_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "e4f25661-f72c-42d6-8785-53d7e97242dc",
+            "exerciseId": "dominadas",
+            "sets": [
+              {
+                "id": "d3a6b631-3315-409f-9582-82ef2d5635ce",
+                "weight": 0,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "a012449e-18e7-42d2-8a8c-9ed5f6c902fb",
+                "weight": 0,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "ad2412ef-39ec-4a1e-85ae-bcdd928acebf",
+                "weight": 0,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 6,
+            "repsMax": 8,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Dominadas",
+            "group": "Espalda",
+            "mode": "bodyweight_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "bb6b070a-9a45-41e1-bfbd-b7f7163d7bef",
+            "exerciseId": "zancadas-mancuernas",
+            "sets": [
+              {
+                "id": "df99153b-5f8b-4a99-98b7-438dd8b8b8aa",
+                "weight": 14,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "ccde9f0e-e2a6-468d-9420-1144a59813c8",
+                "weight": 14,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "d7567099-4a29-4ea5-8d8e-59116d31f4c5",
+                "weight": 14,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 12,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Zancadas con mancuernas",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "086d1f4b-dcd4-43d7-9f9b-b11838ddc594",
+            "exerciseId": "press-hombros-mancuernas",
+            "sets": [
+              {
+                "id": "1bcd8988-27ee-4d80-822a-1aa93e2f7513",
+                "weight": 16,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "fca0f5b9-1993-4f38-a63b-ec70b9037d84",
+                "weight": 16,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "dc1acfaf-4626-4e88-92ea-16db92002abf",
+                "weight": 16,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 14,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press de hombros con mancuernas",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "30c2b1e9-ab01-4cd9-beec-1e5441ea5ba0",
+            "exerciseId": "elevacion-piernas",
+            "sets": [
+              {
+                "id": "fa49745b-c7cf-48c0-9635-9ebd5702b337",
+                "weight": 0,
+                "reps": 17,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "73988a8c-7a51-4e5a-ad49-59390927e13c",
+                "weight": 0,
+                "reps": 17,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "1aa7c26e-91ab-4792-b6a7-a5ab51240801",
+                "weight": 0,
+                "reps": 17,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 15,
+            "repsMax": 17,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Elevación de piernas",
+            "group": "Abdominales",
+            "mode": "bodyweight_reps",
+            "loadConvention": "total"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: técnica y repeticiones controladas."
+      },
+      {
+        "id": "fcc47503-81c3-45ae-b884-c426de3821de",
+        "date": "2026-10-22",
+        "name": "Empuje DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-22T16:00:00.000Z",
+        "updatedAt": "2026-10-22T16:45:00.000Z",
+        "startedAt": "2026-10-22T16:00:00.000Z",
+        "finishedAt": "2026-10-22T16:45:00.000Z",
+        "exercises": [
+          {
+            "id": "12d0c198-359b-4582-bb3c-28200c6e8800",
+            "exerciseId": "press-banca-barra",
+            "sets": [
+              {
+                "id": "4c6dc100-130f-4f60-b104-9f955f043c08",
+                "weight": 57.5,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "86c04326-524d-4df4-afdc-81cd20152b98",
+                "weight": 57.5,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "21100c00-b5e7-43f8-848a-fb0e8a39e661",
+                "weight": 57.5,
+                "reps": 7,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 50,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press de banca con barra",
+            "group": "Pecho",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "214c67ce-10de-45eb-8ad5-255c2cd6072a",
+            "exerciseId": "press-inclinado-mancuernas",
+            "sets": [
+              {
+                "id": "fea5233b-e081-4266-af1d-1046f49e789d",
+                "weight": 21,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "e477baee-d5dd-4aff-9569-018355f82725",
+                "weight": 21,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "2740e51a-4d83-47ea-97fb-6b1b30db0f53",
+                "weight": 21,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 18,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press inclinado con mancuernas",
+            "group": "Pecho",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "2dabba13-fad4-417c-93cc-f3fd3b28cde6",
+            "exerciseId": "press-militar",
+            "sets": [
+              {
+                "id": "6493d385-49bb-4882-8f80-b8e04bcb2318",
+                "weight": 32.5,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "543a6829-c3eb-4381-8369-81b8658125e6",
+                "weight": 32.5,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "333b2490-59cc-481b-a5c7-c853ddaa38cf",
+                "weight": 32.5,
+                "reps": 7,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 25,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press militar",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "140b18b6-fde7-4a65-9345-5fd4cafee936",
+            "exerciseId": "elevaciones-laterales",
+            "sets": [
+              {
+                "id": "90b1babe-2488-4020-9a50-38799b4b7430",
+                "weight": 9,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "701a4364-55d1-49ca-b2ec-607b5e26827f",
+                "weight": 9,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "8d18b744-759a-4e3c-ac47-61da1bf33d8d",
+                "weight": 9,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 6,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Elevaciones laterales",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "c6bb3f11-9227-485d-9bb3-00fab362602f",
+            "exerciseId": "extension-triceps-polea",
+            "sets": [
+              {
+                "id": "b312e061-4f3a-4e30-829e-6b2b343c4fad",
+                "weight": 27.5,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "0a388d94-70b1-437a-886e-2849237e334f",
+                "weight": 27.5,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "8594aca9-7ddd-46f3-b435-6ee1170e8b72",
+                "weight": 27.5,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 20,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Extensión de tríceps en polea",
+            "group": "Tríceps",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: aumento de carga respecto a la semana anterior."
+      },
+      {
+        "id": "9d09f825-ff92-43ad-9917-e8cfa59e002f",
+        "date": "2026-10-23",
+        "name": "Tirón DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-23T16:00:00.000Z",
+        "updatedAt": "2026-10-23T16:46:00.000Z",
+        "startedAt": "2026-10-23T16:00:00.000Z",
+        "finishedAt": "2026-10-23T16:46:00.000Z",
+        "exercises": [
+          {
+            "id": "15f79455-c161-45ee-b196-f4aaa5b6cf24",
+            "exerciseId": "jalon-pecho",
+            "sets": [
+              {
+                "id": "f8fc82b8-2912-48c1-9cb4-22ee02b1cee4",
+                "weight": 47.5,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "d2c414bf-db6a-439e-b540-b2e2bc7ae2af",
+                "weight": 47.5,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "79dba678-a842-4444-89fe-ab63f43554ac",
+                "weight": 47.5,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 40,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Jalón al pecho",
+            "group": "Espalda",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "7d993f3d-0891-40e8-803e-07ba7ea15e82",
+            "exerciseId": "remo-barra",
+            "sets": [
+              {
+                "id": "49d4c8e9-e681-4742-9371-c7e2eff50b65",
+                "weight": 42.5,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "8c77b336-7c3c-4213-8857-77d13f25e6e6",
+                "weight": 42.5,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "bcfff2b0-a079-4c3d-9356-efa23e049afa",
+                "weight": 42.5,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 35,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Remo con barra",
+            "group": "Espalda",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "763085f4-1f34-48ed-ad4b-07ae6eea05ce",
+            "exerciseId": "e2e54ae3-f118-44b9-a077-b86b781631b8",
+            "sets": [
+              {
+                "id": "3af71e4f-5a9f-4adc-b336-dbcc9baf7431",
+                "weight": 37.5,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "da265fd4-e847-492b-93a6-113f5261a15c",
+                "weight": 37.5,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "eda859eb-0cd5-460f-935c-859f9d3e7efc",
+                "weight": 37.5,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 30,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Remo en máquina DEMO",
+            "group": "Espalda",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "4ce3f644-72db-4b48-b775-9ce0a9d74a96",
+            "exerciseId": "curl-barra",
+            "sets": [
+              {
+                "id": "9ea753d2-2ea2-47ea-b45b-42f9f1cf7573",
+                "weight": 27.5,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "03ed0c2f-39a3-4729-bb5f-1bdf4de2b56f",
+                "weight": 27.5,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "cc6d2c57-c7a0-4709-90e0-05637a0b811d",
+                "weight": 27.5,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 20,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Curl con barra",
+            "group": "Bíceps",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "f490b5e9-3281-4af5-97e0-c4e122339a4e",
+            "exerciseId": "curl-martillo",
+            "sets": [
+              {
+                "id": "2a7682a9-3a6b-4f2b-a4fe-b2ed379d17f4",
+                "weight": 13,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "e0ab174b-2929-4175-83e5-d9c433656524",
+                "weight": 13,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "9238ec36-7453-4066-ba25-3b88a63d493a",
+                "weight": 13,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 10,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Curl martillo",
+            "group": "Bíceps",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: técnica y repeticiones controladas."
+      },
+      {
+        "id": "b349d7b1-b8a2-4b24-83a5-ca9c58b6e558",
+        "date": "2026-10-25",
+        "name": "Pierna y core DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-25T16:00:00.000Z",
+        "updatedAt": "2026-10-25T16:47:00.000Z",
+        "startedAt": "2026-10-25T16:00:00.000Z",
+        "finishedAt": "2026-10-25T16:47:00.000Z",
+        "exercises": [
+          {
+            "id": "be905dd0-163c-4ad9-94e7-5d16587315af",
+            "exerciseId": "sentadilla-barra",
+            "sets": [
+              {
+                "id": "54059be9-8530-4de6-b2df-4d18b068cd8c",
+                "weight": 67.5,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "a07990fe-8e0d-43f0-a026-28fa0bc4b509",
+                "weight": 67.5,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "7aab5e2d-a1a8-4c36-b9a2-cb23ee7ea0b9",
+                "weight": 67.5,
+                "reps": 8,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 60,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Sentadilla con barra",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "16402c9c-e6ff-4773-98e1-7a711c81b9d6",
+            "exerciseId": "peso-muerto-rumano",
+            "sets": [
+              {
+                "id": "3274e05d-cedf-4636-ae5c-07c3bd5973f5",
+                "weight": 57.5,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "0c317df6-12fd-4e7e-b64d-4c88978e4edd",
+                "weight": 57.5,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "f6dc91f8-84e2-4609-8065-8c4b9d764f6b",
+                "weight": 57.5,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 50,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Peso muerto rumano",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "a33c1ed9-c3fb-4aa0-a9b5-6f3adaa83ecf",
+            "exerciseId": "prensa-piernas",
+            "sets": [
+              {
+                "id": "ed95241b-b7ed-48aa-81ac-ad9df242c1cb",
+                "weight": 107.5,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "6e6d2b5a-b928-4ea0-bcea-f900509e6f46",
+                "weight": 107.5,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "e4a22401-5bbc-4963-80cf-3fa62bdfe12f",
+                "weight": 107.5,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 100,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Prensa de piernas",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "4c52292f-94ad-4b5a-a179-179b6fde7473",
+            "exerciseId": "elevacion-gemelos",
+            "sets": [
+              {
+                "id": "6bd76339-3f58-4891-8edb-8992eb1ffe26",
+                "weight": 47.5,
+                "reps": 15,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "a0a73d38-4841-4a98-8a44-fe2da411e495",
+                "weight": 47.5,
+                "reps": 15,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "3dbd55c6-cec0-4274-8d5b-3f7b93340527",
+                "weight": 47.5,
+                "reps": 15,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 15,
+            "repsMax": 17,
+            "targetWeight": 40,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Elevación de gemelos",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "d3ae0b93-5c79-4d9a-b7ca-99b24a6f0d57",
+            "exerciseId": "crunch-abdominal",
+            "sets": [
+              {
+                "id": "e57331b2-04d5-45ed-a645-d384e2c74bd5",
+                "weight": 0,
+                "reps": 20,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "bd022a7f-7142-4424-b8c1-bf3d36ba97c9",
+                "weight": 0,
+                "reps": 20,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "d42a6eed-d598-4e21-9185-b4d803cf1a3e",
+                "weight": 0,
+                "reps": 20,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 20,
+            "repsMax": 22,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Crunch abdominal",
+            "group": "Abdominales",
+            "mode": "bodyweight_reps",
+            "loadConvention": "total"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: técnica y repeticiones controladas."
+      },
+      {
+        "id": "79b1c31f-2900-4a1b-ac56-45a0454dbee9",
+        "date": "2026-10-27",
+        "name": "Cuerpo completo DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-27T16:00:00.000Z",
+        "updatedAt": "2026-10-27T16:48:00.000Z",
+        "startedAt": "2026-10-27T16:00:00.000Z",
+        "finishedAt": "2026-10-27T16:48:00.000Z",
+        "exercises": [
+          {
+            "id": "ddb1d1d1-5e94-4040-885d-09aadaef0f8e",
+            "exerciseId": "flexiones",
+            "sets": [
+              {
+                "id": "20c363ab-8e63-407e-b2d0-b67b149c1bfe",
+                "weight": 0,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "c086c311-cb51-49e0-b905-b13d602fb60f",
+                "weight": 0,
+                "reps": 12,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "5e339f5f-5baf-4d0c-b54d-502c32c26069",
+                "weight": 0,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Flexiones",
+            "group": "Pecho",
+            "mode": "bodyweight_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "f6055604-9d32-4e7e-bc7a-b0af2218897e",
+            "exerciseId": "dominadas",
+            "sets": [
+              {
+                "id": "3284f642-0403-4015-ae40-e7c0d8ee1003",
+                "weight": 0,
+                "reps": 6,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "d08ca48f-8b4e-498a-bead-bc564469d68e",
+                "weight": 0,
+                "reps": 6,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "b19cb64d-55f6-4dfb-9e2c-08989ea7ef87",
+                "weight": 0,
+                "reps": 5,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 6,
+            "repsMax": 8,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Dominadas",
+            "group": "Espalda",
+            "mode": "bodyweight_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "a923be83-d124-4e4c-bcc4-b6575f6f4fae",
+            "exerciseId": "zancadas-mancuernas",
+            "sets": [
+              {
+                "id": "98d48ea1-606c-4f2a-b7db-b660502475ff",
+                "weight": 15,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "f6e77ee2-5e77-4041-bf45-dc8778c37806",
+                "weight": 15,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "91dc1151-7510-4ff8-bc0f-01defea86994",
+                "weight": 15,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 12,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Zancadas con mancuernas",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "7020a66a-72f3-4972-a6bc-d740cbaafb8a",
+            "exerciseId": "press-hombros-mancuernas",
+            "sets": [
+              {
+                "id": "7858d158-f03d-422f-9bad-41746c32834f",
+                "weight": 17,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "b3a6ca4b-db75-412e-8e40-5bc0a459b27b",
+                "weight": 17,
+                "reps": 10,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "cc3a7e05-3ea9-4981-807e-5c1845addb5c",
+                "weight": 17,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 14,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press de hombros con mancuernas",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "d1786f6e-2f6e-48dd-9332-2d4cba1dc61b",
+            "exerciseId": "elevacion-piernas",
+            "sets": [
+              {
+                "id": "4f883898-0e4b-4faf-badb-576614f192df",
+                "weight": 0,
+                "reps": 15,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "2a26f9a7-2357-4b72-ad48-eb84d571c4e4",
+                "weight": 0,
+                "reps": 15,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "0165c01a-3699-4310-828e-70a9616f368c",
+                "weight": 0,
+                "reps": 14,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 15,
+            "repsMax": 17,
+            "targetWeight": 0,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Elevación de piernas",
+            "group": "Abdominales",
+            "mode": "bodyweight_reps",
+            "loadConvention": "total"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: técnica y repeticiones controladas."
+      },
+      {
+        "id": "412bf23b-c5f3-41f6-8dbf-cf276250d4fb",
+        "date": "2026-10-28",
+        "name": "Empuje DEMO",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-28T16:00:00.000Z",
+        "updatedAt": "2026-10-28T16:49:00.000Z",
+        "startedAt": "2026-10-28T16:00:00.000Z",
+        "finishedAt": "2026-10-28T16:49:00.000Z",
+        "exercises": [
+          {
+            "id": "934ee93c-c1c1-4d89-9a2c-054c1b7c5b4c",
+            "exerciseId": "press-banca-barra",
+            "sets": [
+              {
+                "id": "e0a658ac-ea01-44fe-b9af-9859cba4464b",
+                "weight": 60,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "5ab4a4d1-aa61-42cc-85ae-9b72676e6fa5",
+                "weight": 60,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "9b37245a-a2d3-4ef0-a74e-8642d0cd4635",
+                "weight": 60,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 50,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press de banca con barra",
+            "group": "Pecho",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "e7830815-d15c-4e3b-b5fe-0ab8073e71fb",
+            "exerciseId": "press-inclinado-mancuernas",
+            "sets": [
+              {
+                "id": "d8c46766-d877-4c81-8eb2-50dc2621b2dc",
+                "weight": 22,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "d6717578-1b77-4dc9-b8ee-fe63d79ce023",
+                "weight": 22,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "4a34ce84-2f8b-424b-92e4-db85d7d7aaf6",
+                "weight": 22,
+                "reps": 11,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 18,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press inclinado con mancuernas",
+            "group": "Pecho",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "4a0d6a2e-5351-40dd-be72-4b0ccf48a533",
+            "exerciseId": "press-militar",
+            "sets": [
+              {
+                "id": "a5fedf42-8f1b-40c1-a150-e5270e39b01d",
+                "weight": 35,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "0fa954d2-2d5c-4970-bd12-4ad21138f68c",
+                "weight": 35,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "65d2b6d6-28a7-432a-aa7a-e4a3c12dc371",
+                "weight": 35,
+                "reps": 9,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 25,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press militar",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "ebd0d6ab-a67b-4f74-b864-4ef6051301f4",
+            "exerciseId": "elevaciones-laterales",
+            "sets": [
+              {
+                "id": "0d668099-fcce-4849-bf90-a2b941c1496b",
+                "weight": 10,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "3753bc47-9a20-4365-82fb-02933fb4534f",
+                "weight": 10,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "b4aa115b-6f9d-453d-a010-f26558618147",
+                "weight": 10,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 6,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Elevaciones laterales",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "adab6186-917a-4ef3-95c2-fe69d586ae26",
+            "exerciseId": "extension-triceps-polea",
+            "sets": [
+              {
+                "id": "905eaefe-0a51-4fd5-9d8d-9d38d6ebbcc5",
+                "weight": 30,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 7,
+                "rir": 3
+              },
+              {
+                "id": "e23e1d40-df83-4c4f-a7d5-952654c67bd4",
+                "weight": 30,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 7.5,
+                "rir": 2
+              },
+              {
+                "id": "fc11a2c9-e8fc-455d-bdc2-1f62d98095dc",
+                "weight": 30,
+                "reps": 13,
+                "confirmed": true,
+                "rpe": 8,
+                "rir": 1
+              }
+            ],
+            "repsMin": 12,
+            "repsMax": 14,
+            "targetWeight": 20,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Extensión de tríceps en polea",
+            "group": "Tríceps",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          }
+        ],
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "notes": "Sesión ficticia: aumento de carga respecto a la semana anterior."
+      },
+      {
+        "id": "abce9c5a-8695-4458-b2cf-9e6defd9b006",
+        "date": "2026-10-29",
+        "name": "Sesión en curso DEMO",
+        "color": "#d8ff3e",
+        "status": "draft",
+        "createdAt": "2026-10-29T07:00:00.000Z",
+        "updatedAt": "2026-10-29T07:15:00.000Z",
+        "startedAt": "2026-10-29T07:00:00.000Z",
+        "notes": "Borrador ficticio para probar continuar sesión y completar series pendientes.",
+        "autoRest": true,
+        "defaultRestSeconds": 90,
+        "restTimer": {
+          "endsAt": null,
+          "remainingSeconds": 0,
+          "durationSeconds": 90
+        },
+        "exercises": [
+          {
+            "id": "9df3ac58-ca1f-465a-bfb5-eb65c1a4aab0",
+            "exerciseId": "press-banca-barra",
+            "sets": [
+              {
+                "id": "147015e8-0ba4-4200-905d-b51553009889",
+                "weight": 60,
+                "reps": 8,
+                "confirmed": true
+              },
+              {
+                "id": "6a2bc752-125f-49fb-9e4d-648560811744",
+                "weight": 60,
+                "reps": 8,
+                "confirmed": false
+              },
+              {
+                "id": "c1f963ad-ad54-418e-a63e-dba214125a17",
+                "weight": 60,
+                "reps": 8,
+                "confirmed": false
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 50,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press de banca con barra",
+            "group": "Pecho",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          },
+          {
+            "id": "13611076-2f5a-4d88-b859-adf262c5bed9",
+            "exerciseId": "press-inclinado-mancuernas",
+            "sets": [
+              {
+                "id": "3ce34a17-bab8-4cda-9a99-a53d96956cb0",
+                "weight": null,
+                "reps": null,
+                "confirmed": false
+              },
+              {
+                "id": "231631c2-d94d-4e78-8017-c37ca30b4ec1",
+                "weight": null,
+                "reps": null,
+                "confirmed": false
+              },
+              {
+                "id": "4264867d-069b-427f-9f8d-932b36c38946",
+                "weight": null,
+                "reps": null,
+                "confirmed": false
+              }
+            ],
+            "repsMin": 10,
+            "repsMax": 12,
+            "targetWeight": 18,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press inclinado con mancuernas",
+            "group": "Pecho",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral"
+          },
+          {
+            "id": "1ad24fa7-ab45-459b-9636-5b7c0e055c43",
+            "exerciseId": "press-militar",
+            "sets": [
+              {
+                "id": "1171ff91-c9fe-49c5-af9f-3cc0393c14db",
+                "weight": null,
+                "reps": null,
+                "confirmed": false
+              },
+              {
+                "id": "8369db96-62cc-49d7-a0a4-9916a1479a0a",
+                "weight": null,
+                "reps": null,
+                "confirmed": false
+              },
+              {
+                "id": "f73535bc-f877-4dec-bebe-09b25ffcbef2",
+                "weight": null,
+                "reps": null,
+                "confirmed": false
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 25,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press militar",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          }
+        ]
+      },
+      {
+        "id": "45e08dd7-47cf-40dd-9222-9f1bb24a7fae",
+        "date": "2026-10-28",
+        "name": "",
+        "color": "#d8ff3e",
+        "status": "draft",
+        "createdAt": "2026-10-28T12:00:00Z",
+        "updatedAt": "2026-10-28T12:00:00Z",
+        "exercises": [
+          {
+            "id": "54ba6a98-d83c-45d5-ae68-d8b0a344bc42",
+            "exerciseId": "press-banca-barra",
+            "sets": [
+              {
+                "id": "6cf29733-0bf3-4870-98f3-2e9947033492",
+                "weight": null,
+                "reps": null,
+                "weightText": "42,",
+                "repsText": "",
+                "confirmed": false
+              }
+            ],
+            "repsMin": 8,
+            "repsMax": 10,
+            "targetWeight": 50,
+            "restSeconds": 90,
+            "notes": "Carga de ejemplo; mancuernas por mano.",
+            "name": "Press de banca con barra",
+            "group": "Pecho",
+            "mode": "external_load_reps",
+            "loadConvention": "total"
+          }
+        ],
+        "notes": "Borrador incompleto que debe sobrevivir a la migración."
+      }
+    ],
+    "customExercises": [
+      {
+        "id": "e2e54ae3-f118-44b9-a077-b86b781631b8",
+        "name": "Remo en máquina DEMO",
+        "group": "Espalda",
+        "mode": "external_load_reps",
+        "loadConvention": "total",
+        "archived": false,
+        "description": "Ejercicio ficticio para probar la edición del catálogo."
+      },
+      {
+        "id": "284d3ec4-1d8a-4e2e-a7ec-890bfa65730f",
+        "name": "Flexiones pausadas DEMO",
+        "group": "Pecho",
+        "mode": "bodyweight_reps",
+        "loadConvention": "total",
+        "archived": true,
+        "description": "Ejercicio ficticio archivado para probar filtros."
+      }
+    ],
+    "game": {
+      "transactions": [
+        {
+          "id": "475a68be-6da2-4447-9f5b-95c5bc1660eb",
+          "kind": "crate",
+          "itemId": "9b9e8afb-70a0-4cd7-9c2f-ff1cc93d464a",
+          "amount": -100,
+          "createdAt": "2026-10-20T18:00:00.000Z"
+        },
+        {
+          "id": "99890ac9-ec70-4d4f-a064-2bdffd506f79",
+          "kind": "crate",
+          "itemId": "966e2770-f40d-4fb0-832b-1ae18cc40944",
+          "amount": -100,
+          "createdAt": "2026-10-21T18:00:00.000Z"
+        },
+        {
+          "id": "1229d66f-0114-4321-995e-f8b4b72d6a53",
+          "kind": "crate",
+          "itemId": "fccea0e3-3035-4c60-9683-6c15902ab9b8",
+          "amount": -100,
+          "createdAt": "2026-10-22T18:00:00.000Z"
+        }
+      ],
+      "inventory": [
+        {
+          "id": "9b9e8afb-70a0-4cd7-9c2f-ff1cc93d464a",
+          "kind": "gear",
+          "gearId": "purple-tank",
+          "rarity": "rare",
+          "acquiredAt": "2026-10-20T18:00:00.000Z",
+          "crateId": "starter",
+          "sold": false
+        },
+        {
+          "id": "966e2770-f40d-4fb0-832b-1ae18cc40944",
+          "kind": "companion",
+          "companionId": "athlete",
+          "rarity": "common",
+          "acquiredAt": "2026-10-21T18:00:00.000Z",
+          "crateId": "starter",
+          "sold": false
+        },
+        {
+          "id": "fccea0e3-3035-4c60-9683-6c15902ab9b8",
+          "kind": "quote",
+          "quoteId": "show-up",
+          "rarity": "common",
+          "acquiredAt": "2026-10-22T18:00:00.000Z",
+          "crateId": "starter",
+          "sold": false
+        }
+      ],
+      "quoteConversionVersion": 1,
+      "quoteConversions": [
+        {
+          "itemId": "fccea0e3-3035-4c60-9683-6c15902ab9b8",
+          "quoteId": "show-up",
+          "rarity": "common",
+          "amount": 15,
+          "disposition": "converted"
+        }
+      ],
+      "weeklyWorkoutGoal": 3,
+      "weeklySetGoal": 30,
+      "equippedQuoteId": null,
+      "equippedGear": {},
+      "pendingOpening": null,
+      "cosmeticGear": {},
+      "equippedCompanionId": null,
+      "activeAbilityId": null,
+      "abilityUses": [],
+      "abilityChargeVersion": 1,
+      "missionRewards": [
+        {
+          "id": "week-sets-10:2026-09-28",
+          "xp": 60,
+          "target": 10,
+          "awardedAt": "2026-10-29T08:23:55.388Z"
+        },
+        {
+          "id": "week-reps-100:2026-09-28",
+          "xp": 80,
+          "target": 100,
+          "awardedAt": "2026-10-29T08:23:55.388Z"
+        },
+        {
+          "id": "week-exercises-5:2026-09-28",
+          "xp": 120,
+          "target": 5,
+          "awardedAt": "2026-10-29T08:23:55.388Z"
+        },
+        {
+          "id": "week-group-0:2026-09-28",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.388Z"
+        },
+        {
+          "id": "week-group-3:2026-09-28",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.388Z"
+        },
+        {
+          "id": "week-group-5:2026-09-28",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.388Z"
+        },
+        {
+          "id": "career-sessions-1",
+          "xp": 100,
+          "target": 1,
+          "awardedAt": "2026-10-29T08:23:55.388Z"
+        },
+        {
+          "id": "career-sets-10",
+          "xp": 80,
+          "target": 10,
+          "awardedAt": "2026-10-29T08:23:55.388Z"
+        },
+        {
+          "id": "career-reps-100",
+          "xp": 80,
+          "target": 100,
+          "awardedAt": "2026-10-29T08:23:55.388Z"
+        },
+        {
+          "id": "career-groups-1",
+          "xp": 50,
+          "target": 1,
+          "awardedAt": "2026-10-29T08:23:55.388Z"
+        },
+        {
+          "id": "career-groups-3",
+          "xp": 150,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.388Z"
+        },
+        {
+          "id": "career-exercises-5",
+          "xp": 150,
+          "target": 5,
+          "awardedAt": "2026-10-29T08:23:55.388Z"
+        },
+        {
+          "id": "sets:2026-09-28",
+          "xp": 150,
+          "target": 30,
+          "awardedAt": "2026-10-29T08:23:55.391Z"
+        },
+        {
+          "id": "variety:2026-09-28",
+          "xp": 150,
+          "target": 4,
+          "awardedAt": "2026-10-29T08:23:55.391Z"
+        },
+        {
+          "id": "week-reps-300:2026-09-28",
+          "xp": 160,
+          "target": 300,
+          "awardedAt": "2026-10-29T08:23:55.391Z"
+        },
+        {
+          "id": "week-days-2:2026-09-28",
+          "xp": 100,
+          "target": 2,
+          "awardedAt": "2026-10-29T08:23:55.391Z"
+        },
+        {
+          "id": "week-group-1:2026-09-28",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.391Z"
+        },
+        {
+          "id": "week-group-4:2026-09-28",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.391Z"
+        },
+        {
+          "id": "career-exercises-10",
+          "xp": 250,
+          "target": 10,
+          "awardedAt": "2026-10-29T08:23:55.391Z"
+        },
+        {
+          "id": "sessions:2026-09-28",
+          "xp": 200,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.392Z"
+        },
+        {
+          "id": "week-group-2:2026-09-28",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.392Z"
+        },
+        {
+          "id": "week-group-6:2026-09-28",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.392Z"
+        },
+        {
+          "id": "career-reps-500",
+          "xp": 180,
+          "target": 500,
+          "awardedAt": "2026-10-29T08:23:55.392Z"
+        },
+        {
+          "id": "career-groups-7",
+          "xp": 350,
+          "target": 7,
+          "awardedAt": "2026-10-29T08:23:55.392Z"
+        },
+        {
+          "id": "career-group-2-10",
+          "xp": 120,
+          "target": 10,
+          "awardedAt": "2026-10-29T08:23:55.392Z"
+        },
+        {
+          "id": "variety:2026-10-05",
+          "xp": 150,
+          "target": 4,
+          "awardedAt": "2026-10-29T08:23:55.392Z"
+        },
+        {
+          "id": "week-sets-10:2026-10-05",
+          "xp": 60,
+          "target": 10,
+          "awardedAt": "2026-10-29T08:23:55.392Z"
+        },
+        {
+          "id": "week-reps-100:2026-10-05",
+          "xp": 80,
+          "target": 100,
+          "awardedAt": "2026-10-29T08:23:55.393Z"
+        },
+        {
+          "id": "week-exercises-5:2026-10-05",
+          "xp": 120,
+          "target": 5,
+          "awardedAt": "2026-10-29T08:23:55.393Z"
+        },
+        {
+          "id": "week-group-0:2026-10-05",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.393Z"
+        },
+        {
+          "id": "week-group-1:2026-10-05",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.393Z"
+        },
+        {
+          "id": "week-group-2:2026-10-05",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.393Z"
+        },
+        {
+          "id": "week-group-3:2026-10-05",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.393Z"
+        },
+        {
+          "id": "week-group-6:2026-10-05",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.393Z"
+        },
+        {
+          "id": "career-sets-50",
+          "xp": 150,
+          "target": 50,
+          "awardedAt": "2026-10-29T08:23:55.393Z"
+        },
+        {
+          "id": "career-exercises-20",
+          "xp": 450,
+          "target": 20,
+          "awardedAt": "2026-10-29T08:23:55.393Z"
+        },
+        {
+          "id": "career-group-1-10",
+          "xp": 120,
+          "target": 10,
+          "awardedAt": "2026-10-29T08:23:55.393Z"
+        },
+        {
+          "id": "sets:2026-10-05",
+          "xp": 150,
+          "target": 30,
+          "awardedAt": "2026-10-29T08:23:55.394Z"
+        },
+        {
+          "id": "week-reps-300:2026-10-05",
+          "xp": 160,
+          "target": 300,
+          "awardedAt": "2026-10-29T08:23:55.394Z"
+        },
+        {
+          "id": "week-days-2:2026-10-05",
+          "xp": 100,
+          "target": 2,
+          "awardedAt": "2026-10-29T08:23:55.394Z"
+        },
+        {
+          "id": "week-group-5:2026-10-05",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.394Z"
+        },
+        {
+          "id": "career-sessions-5",
+          "xp": 200,
+          "target": 5,
+          "awardedAt": "2026-10-29T08:23:55.394Z"
+        },
+        {
+          "id": "career-group-0-10",
+          "xp": 120,
+          "target": 10,
+          "awardedAt": "2026-10-29T08:23:55.394Z"
+        },
+        {
+          "id": "career-group-3-10",
+          "xp": 120,
+          "target": 10,
+          "awardedAt": "2026-10-29T08:23:55.394Z"
+        },
+        {
+          "id": "sessions:2026-10-05",
+          "xp": 200,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.396Z"
+        },
+        {
+          "id": "week-group-4:2026-10-05",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.396Z"
+        },
+        {
+          "id": "career-group-4-10",
+          "xp": 120,
+          "target": 10,
+          "awardedAt": "2026-10-29T08:23:55.396Z"
+        },
+        {
+          "id": "week-sets-50:2026-10-05",
+          "xp": 220,
+          "target": 50,
+          "awardedAt": "2026-10-29T08:23:55.397Z"
+        },
+        {
+          "id": "week-days-4:2026-10-05",
+          "xp": 200,
+          "target": 4,
+          "awardedAt": "2026-10-29T08:23:55.397Z"
+        },
+        {
+          "id": "career-sets-100",
+          "xp": 250,
+          "target": 100,
+          "awardedAt": "2026-10-29T08:23:55.397Z"
+        },
+        {
+          "id": "career-reps-1000",
+          "xp": 300,
+          "target": 1000,
+          "awardedAt": "2026-10-29T08:23:55.397Z"
+        },
+        {
+          "id": "career-group-2-25",
+          "xp": 220,
+          "target": 25,
+          "awardedAt": "2026-10-29T08:23:55.397Z"
+        },
+        {
+          "id": "variety:2026-10-12",
+          "xp": 150,
+          "target": 4,
+          "awardedAt": "2026-10-29T08:23:55.399Z"
+        },
+        {
+          "id": "week-sets-10:2026-10-12",
+          "xp": 60,
+          "target": 10,
+          "awardedAt": "2026-10-29T08:23:55.399Z"
+        },
+        {
+          "id": "week-reps-100:2026-10-12",
+          "xp": 80,
+          "target": 100,
+          "awardedAt": "2026-10-29T08:23:55.399Z"
+        },
+        {
+          "id": "week-exercises-5:2026-10-12",
+          "xp": 120,
+          "target": 5,
+          "awardedAt": "2026-10-29T08:23:55.399Z"
+        },
+        {
+          "id": "week-group-0:2026-10-12",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.399Z"
+        },
+        {
+          "id": "week-group-1:2026-10-12",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.399Z"
+        },
+        {
+          "id": "week-group-2:2026-10-12",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.399Z"
+        },
+        {
+          "id": "week-group-3:2026-10-12",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.399Z"
+        },
+        {
+          "id": "week-group-6:2026-10-12",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.399Z"
+        },
+        {
+          "id": "career-group-6-10",
+          "xp": 120,
+          "target": 10,
+          "awardedAt": "2026-10-29T08:23:55.399Z"
+        },
+        {
+          "id": "sets:2026-10-12",
+          "xp": 150,
+          "target": 30,
+          "awardedAt": "2026-10-29T08:23:55.401Z"
+        },
+        {
+          "id": "week-reps-300:2026-10-12",
+          "xp": 160,
+          "target": 300,
+          "awardedAt": "2026-10-29T08:23:55.401Z"
+        },
+        {
+          "id": "week-days-2:2026-10-12",
+          "xp": 100,
+          "target": 2,
+          "awardedAt": "2026-10-29T08:23:55.401Z"
+        },
+        {
+          "id": "week-group-5:2026-10-12",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.401Z"
+        },
+        {
+          "id": "sessions:2026-10-12",
+          "xp": 200,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.403Z"
+        },
+        {
+          "id": "week-group-4:2026-10-12",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.403Z"
+        },
+        {
+          "id": "career-sessions-10",
+          "xp": 300,
+          "target": 10,
+          "awardedAt": "2026-10-29T08:23:55.403Z"
+        },
+        {
+          "id": "career-group-1-25",
+          "xp": 220,
+          "target": 25,
+          "awardedAt": "2026-10-29T08:23:55.403Z"
+        },
+        {
+          "id": "week-sets-50:2026-10-12",
+          "xp": 220,
+          "target": 50,
+          "awardedAt": "2026-10-29T08:23:55.405Z"
+        },
+        {
+          "id": "week-days-4:2026-10-12",
+          "xp": 200,
+          "target": 4,
+          "awardedAt": "2026-10-29T08:23:55.405Z"
+        },
+        {
+          "id": "variety:2026-10-19",
+          "xp": 150,
+          "target": 4,
+          "awardedAt": "2026-10-29T08:23:55.408Z"
+        },
+        {
+          "id": "week-sets-10:2026-10-19",
+          "xp": 60,
+          "target": 10,
+          "awardedAt": "2026-10-29T08:23:55.408Z"
+        },
+        {
+          "id": "week-reps-100:2026-10-19",
+          "xp": 80,
+          "target": 100,
+          "awardedAt": "2026-10-29T08:23:55.408Z"
+        },
+        {
+          "id": "week-exercises-5:2026-10-19",
+          "xp": 120,
+          "target": 5,
+          "awardedAt": "2026-10-29T08:23:55.408Z"
+        },
+        {
+          "id": "week-group-0:2026-10-19",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.408Z"
+        },
+        {
+          "id": "week-group-1:2026-10-19",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.408Z"
+        },
+        {
+          "id": "week-group-2:2026-10-19",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.408Z"
+        },
+        {
+          "id": "week-group-3:2026-10-19",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.408Z"
+        },
+        {
+          "id": "week-group-6:2026-10-19",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.408Z"
+        },
+        {
+          "id": "career-group-0-25",
+          "xp": 220,
+          "target": 25,
+          "awardedAt": "2026-10-29T08:23:55.408Z"
+        },
+        {
+          "id": "career-group-3-25",
+          "xp": 220,
+          "target": 25,
+          "awardedAt": "2026-10-29T08:23:55.408Z"
+        },
+        {
+          "id": "sets:2026-10-19",
+          "xp": 150,
+          "target": 30,
+          "awardedAt": "2026-10-29T08:23:55.410Z"
+        },
+        {
+          "id": "week-reps-300:2026-10-19",
+          "xp": 160,
+          "target": 300,
+          "awardedAt": "2026-10-29T08:23:55.410Z"
+        },
+        {
+          "id": "week-days-2:2026-10-19",
+          "xp": 100,
+          "target": 2,
+          "awardedAt": "2026-10-29T08:23:55.410Z"
+        },
+        {
+          "id": "week-group-5:2026-10-19",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.410Z"
+        },
+        {
+          "id": "career-group-5-10",
+          "xp": 120,
+          "target": 10,
+          "awardedAt": "2026-10-29T08:23:55.410Z"
+        },
+        {
+          "id": "sessions:2026-10-19",
+          "xp": 200,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.413Z"
+        },
+        {
+          "id": "week-group-4:2026-10-19",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.413Z"
+        },
+        {
+          "id": "week-sets-50:2026-10-19",
+          "xp": 220,
+          "target": 50,
+          "awardedAt": "2026-10-29T08:23:55.416Z"
+        },
+        {
+          "id": "week-days-4:2026-10-19",
+          "xp": 200,
+          "target": 4,
+          "awardedAt": "2026-10-29T08:23:55.416Z"
+        },
+        {
+          "id": "variety:2026-10-26",
+          "xp": 150,
+          "target": 4,
+          "awardedAt": "2026-10-29T08:23:55.419Z"
+        },
+        {
+          "id": "week-sets-10:2026-10-26",
+          "xp": 60,
+          "target": 10,
+          "awardedAt": "2026-10-29T08:23:55.419Z"
+        },
+        {
+          "id": "week-reps-100:2026-10-26",
+          "xp": 80,
+          "target": 100,
+          "awardedAt": "2026-10-29T08:23:55.419Z"
+        },
+        {
+          "id": "week-exercises-5:2026-10-26",
+          "xp": 120,
+          "target": 5,
+          "awardedAt": "2026-10-29T08:23:55.419Z"
+        },
+        {
+          "id": "week-group-0:2026-10-26",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.419Z"
+        },
+        {
+          "id": "week-group-1:2026-10-26",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.419Z"
+        },
+        {
+          "id": "week-group-2:2026-10-26",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.419Z"
+        },
+        {
+          "id": "week-group-3:2026-10-26",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.419Z"
+        },
+        {
+          "id": "week-group-6:2026-10-26",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.419Z"
+        },
+        {
+          "id": "sets:2026-10-26",
+          "xp": 150,
+          "target": 30,
+          "awardedAt": "2026-10-29T08:23:55.422Z"
+        },
+        {
+          "id": "week-reps-300:2026-10-26",
+          "xp": 160,
+          "target": 300,
+          "awardedAt": "2026-10-29T08:23:55.422Z"
+        },
+        {
+          "id": "week-days-2:2026-10-26",
+          "xp": 100,
+          "target": 2,
+          "awardedAt": "2026-10-29T08:23:55.422Z"
+        },
+        {
+          "id": "week-group-5:2026-10-26",
+          "xp": 60,
+          "target": 3,
+          "awardedAt": "2026-10-29T08:23:55.422Z"
+        },
+        {
+          "id": "career-sets-250",
+          "xp": 450,
+          "target": 250,
+          "awardedAt": "2026-10-29T08:23:55.422Z"
+        }
+      ]
+    },
+    "profile": {
+      "weightKg": 75,
+      "heightCm": 175,
+      "age": 30,
+      "sex": "male",
+      "dumbbellLoad": "per_hand"
+    },
+    "preferences": {
+      "effects": true,
+      "sound": false
+    },
+    "routineDraft": {
+      "id": "26ab84d3-52e0-427f-8c73-f75fee047763",
+      "name": "",
+      "icon": "flame",
+      "color": "#d8ff3e",
+      "archived": false,
+      "notes": "Datos ficticios de octubre de 2026 para probar Cheesit. No es una recomendación de entrenamiento.",
+      "exercises": [
+        {
+          "id": "b8c5da94-9d08-4787-9ac3-15a74ceaa3d1",
+          "exerciseId": "press-banca-barra",
+          "sets": null,
+          "repsMin": 8,
+          "repsMax": 10,
+          "targetWeight": 50,
+          "restSeconds": 90,
+          "notes": "Carga de ejemplo; mancuernas por mano."
+        },
+        {
+          "id": "0252fdab-7f3a-46d8-8bb7-def9572124df",
+          "exerciseId": "press-inclinado-mancuernas",
+          "sets": null,
+          "repsMin": 10,
+          "repsMax": 12,
+          "targetWeight": 18,
+          "restSeconds": 90,
+          "notes": "Carga de ejemplo; mancuernas por mano."
+        },
+        {
+          "id": "59f2533d-4c98-4938-8f25-fe97920c58c4",
+          "exerciseId": "press-militar",
+          "sets": null,
+          "repsMin": 8,
+          "repsMax": 10,
+          "targetWeight": 25,
+          "restSeconds": 90,
+          "notes": "Carga de ejemplo; mancuernas por mano."
+        },
+        {
+          "id": "b98af4c2-b9fd-4c3d-b4e6-f5eff464d85a",
+          "exerciseId": "elevaciones-laterales",
+          "sets": null,
+          "repsMin": 12,
+          "repsMax": 14,
+          "targetWeight": 6,
+          "restSeconds": 90,
+          "notes": "Carga de ejemplo; mancuernas por mano."
+        },
+        {
+          "id": "976c3403-a876-4e78-8cc1-fb73ad3a27b5",
+          "exerciseId": "extension-triceps-polea",
+          "sets": null,
+          "repsMin": 12,
+          "repsMax": 14,
+          "targetWeight": 20,
+          "restSeconds": 90,
+          "notes": "Carga de ejemplo; mancuernas por mano."
+        }
+      ]
+    }
+  }
+}

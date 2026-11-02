@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { flushData } from '@/lib/storage';
+
 import './offline-shell.css';
 
 type OfflineState = 'preparing' | 'ready' | 'error' | 'update' | 'applying' | 'unsupported';
@@ -19,7 +19,7 @@ function inspect(worker: ServiceWorker, prepare = false): Promise<boolean> {
   });
 }
 
-export default function OfflineShell() {
+export default function OfflineShell({ flush = async () => undefined }: { flush?: () => Promise<void> }) {
   const [state, setState] = useState<OfflineState>('preparing');
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
@@ -103,7 +103,7 @@ export default function OfflineShell() {
     if (!window.dispatchEvent(new Event('cheesit:before-update', { cancelable: true }))) return;
     setState('applying');
     try {
-      await flushData();
+      await flush();
       applying.current = true;
       registration.current.waiting.postMessage({ type: 'CHEESIT_ACTIVATE_UPDATE' });
     } catch (reason) {

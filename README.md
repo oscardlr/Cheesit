@@ -1,6 +1,6 @@
 # Cheesit
 
-Aplicación web móvil para registrar entrenamientos de fuerza, instalable como PWA. Esta implementación guarda los datos en el navegador; la cuenta y la sincronización remota siguen pendientes. La especificación completa está en [ESPECIFICACION-ENTRENOS.md](ESPECIFICACION-ENTRENOS.md).
+Aplicación web móvil para registrar entrenamientos de fuerza, instalable como PWA. Incluye acceso con Supabase, sincronización por cuenta y caché sin conexión. Configuración, pruebas y límites: [Cuentas y sincronización](docs/CUENTAS-Y-SINCRONIZACION.md). La especificación completa está en [ESPECIFICACION-ENTRENOS.md](ESPECIFICACION-ENTRENOS.md).
 
 ## Ejecutar
 
@@ -44,7 +44,7 @@ Los cofres comprados mezclan 73,33 % equipo y 26,67 % compañeras, usando pesos 
 
 Los ejercicios del catálogo con mancuernas muestran su convención junto a los campos: el peso se introduce por mancuerna y la XP utiliza la carga de las dos en movimientos bilaterales, o la individual en movimientos alternos o con una sola mancuerna. Los perfiles antiguos que registraban la pareja conservan su aviso y sus datos.
 
-El navegador debe abrir la aplicación con conexión al menos una vez. El almacenamiento de Safari y el de una PWA instalada pueden ser independientes. Los datos de esta versión se guardan en IndexedDB de este navegador; no existe una copia remota. Exporta una copia JSON y guárdala en un lugar privado. Las escrituras comprueban una revisión atómica. Cuando otra pestaña guarda cambios, la desactualizada protege lo pendiente para exportarlo y exige recargar; no sobrescribe el historial en silencio.
+El navegador debe abrir la aplicación e iniciar sesión con conexión al menos una vez. El almacenamiento de Safari y el de una PWA instalada pueden ser independientes. Los datos de esta versión se guardan en IndexedDB de este navegador; no existe una copia remota. Exporta una copia JSON y guárdala en un lugar privado. Las escrituras comprueban una revisión atómica. Cuando otra pestaña guarda cambios, la desactualizada protege lo pendiente para exportarlo y exige recargar; no sobrescribe el historial en silencio.
 
 ## Verificación
 
