@@ -1,6 +1,7 @@
-import { isCivilDate } from './dates';
+import { isCivilDate, todayMadrid } from './dates';
+import { currentSeasons, isYearSeason, MAX_CHARACTER_LEVEL } from './seasons';
 import { validSet, type Workout } from './model';
-import { levelProgress, rewardProgress, rewardSetIndex } from './rewards';
+import { levelProgress, legacyLevelProgress, rewardProgress, rewardSetIndex } from './rewards';
 import { GEAR, GEAR_SLOTS, type GearSlot } from './gear';
 import type { AthleteProfile } from './strength';
 import { COMPANIONS, type Companion } from './companions';
@@ -9,6 +10,7 @@ import { abilityMatches, getAbilityDefinition, isAbilityUse, type AbilityUse } f
 import { getAvailableAbilityCharges, getLegacyAbilityUseIds, validateAbilityChargeHistory } from './ability-charges';
 import { awardObjectiveMissions, getObjectiveMissions, missionRewardXp, validMissionRewards, type Mission, type MissionReward } from './objectives';
 import { workoutPassiveReward } from './cheesit-passives';
+import { migrateQuoteConversions, QUOTE_COMPENSATION, quoteConversionCredits, type QuoteConversion } from './quote-conversion';
 
 export type Rarity = 'common' | 'rare' | 'epic' | 'legendary';
 export const RARITIES: Record<Rarity, { label: string; color: string; sellValue: number; order: number }> = {
@@ -37,20 +39,28 @@ export const QUOTES: Quote[] = [
 ];
 export type Crate = { id: string; name: string; description: string; cost: number; odds: Record<Rarity, number> };
 export const CRATES: Crate[] = [
-  { id: 'starter', name: 'Cofre de hierro', description: 'Equipo, una frase o un cheesit para tu colección.', cost: 100, odds: { common: 70, rare: 23, epic: 6, legendary: 1 } },
+  { id: 'starter', name: 'Cofre de hierro', description: 'Equipo con cargas de habilidad o un cheesit para tu colección.', cost: 100, odds: { common: 70, rare: 23, epic: 6, legendary: 1 } },
   { id: 'charged', name: 'Cofre de energía', description: 'Más posibilidades de conseguir equipo épico.', cost: 250, odds: { common: 35, rare: 43, epic: 18, legendary: 4 } },
   { id: 'legend', name: 'Cofre de leyenda', description: 'Una recompensa rara o mejor, garantizada.', cost: 500, odds: { common: 0, rare: 55, epic: 35, legendary: 10 } },
 ];
 export type InventoryItem = { id: string; kind?: 'quote' | 'gear' | 'companion'; quoteId?: string; gearId?: string; companionId?: string; rarity: Rarity; acquiredAt: string; crateId: string; sold: boolean };
-export type GameTransaction = { id: string; kind: 'crate' | 'sale' | 'level-crate'; itemId: string; amount: number; createdAt: string; sourceLevel?: number; testFunded?:boolean };
+export type GameTransaction = { id: string; kind: 'crate' | 'sale' | 'level-crate'; itemId: string; amount: number; createdAt: string; sourceLevel?: number; sourceSeason?: string; testFunded?:boolean };
 export const SPIN_DURATION_MS = 5000;
 export const REVEAL_DURATION_MS = 800;
-export const GEAR_DROP_CHANCE = .55;
-export const QUOTE_DROP_CHANCE = .25;
-export const COMPANION_DROP_CHANCE = .2;
-export type RewardChoice = { avoidCompanionDuplicates?: boolean; gearSlot?: GearSlot };
+export const REWARD_CATEGORY_WEIGHTS = Object.freeze({ gear: .55, companion: .20 });
+const rewardWeightTotal = REWARD_CATEGORY_WEIGHTS.gear + REWARD_CATEGORY_WEIGHTS.companion;
+export const GEAR_DROP_CHANCE = REWARD_CATEGORY_WEIGHTS.gear / rewardWeightTotal;
+/** Kept for readers of historical reward rules. New draws have no quote branch. */
+export const QUOTE_DROP_CHANCE = 0;
+export const COMPANION_DROP_CHANCE = REWARD_CATEGORY_WEIGHTS.companion / rewardWeightTotal;
+export const REWARD_CATEGORY_LABEL = `${(GEAR_DROP_CHANCE * 100).toFixed(2).replace('.', ',')}% equipo · ${(COMPANION_DROP_CHANCE * 100).toFixed(2).replace('.', ',')}% cheesits`;
+export type RewardChoice = { avoidCompanionDuplicates?: boolean };
 export type PendingOpening = { itemId: string; startedAt: string; stage: 'spinning' | 'rarity' | 'revealing'; revealStartedAt?: string };
+export type SeasonCrateProgress = { season: string; baseline: number; reached: number; legacyLevels?: number[] };
 export type GameState = {
+  quoteConversionVersion?: 1;
+  quoteConversions?: QuoteConversion[];
+  quoteConversionSeenIds?: string[];
   transactions: GameTransaction[];
   inventory: InventoryItem[];
   weeklyWorkoutGoal: number;
@@ -65,9 +75,13 @@ export type GameState = {
   abilityChargeVersion?: 1;
   legacyAbilityUseIds?: string[];
   missionRewards?: MissionReward[];
+  seasonProgressionVersion?: 1;
+  seasonProgressionStartedOn?: string;
+  seasonCrateProgress?: SeasonCrateProgress[];
+  seasonCrateClaimLocks?: string[];
 };
 
-const baseGame = (): GameState => ({ transactions: [], inventory: [], weeklyWorkoutGoal: 3, weeklySetGoal: 30, equippedQuoteId: null, equippedGear: {}, pendingOpening: null, cosmeticGear: {}, equippedCompanionId: null, activeAbilityId: null, abilityUses: [], abilityChargeVersion: 1, missionRewards: [] });
+const baseGame = (): GameState => ({ transactions: [], inventory: [], quoteConversionVersion: 1, quoteConversions: [], weeklyWorkoutGoal: 3, weeklySetGoal: 30, equippedQuoteId: null, equippedGear: {}, pendingOpening: null, cosmeticGear: {}, equippedCompanionId: null, activeAbilityId: null, abilityUses: [], abilityChargeVersion: 1, missionRewards: [] });
 const record = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 const id = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 const date = (value: unknown): value is string => typeof value === 'string' && Number.isFinite(Date.parse(value));
@@ -90,28 +104,88 @@ export const itemLabel = (item: InventoryItem): string => {
   return definition?.kind === 'quote' ? definition.description : definition?.name ?? 'Recompensa';
 };
 
-export type LevelCrate = { id: string; level: number; name: string; claimed: boolean; odds: Record<Rarity, number>; guaranteedGear: true };
+export type LevelCrate = { id: string; level: number; season: string; name: string; claimed: boolean; odds: Record<Rarity, number>; guaranteedGear: true };
 const sourceLevel = (crateId: string): number | null => {
-  const match = /^level:([1-9]\d{0,3})$/.exec(crateId);
+  const match = /^level:(?:[1-9]\d{3}:)?([1-9]\d{0,3})$/.exec(crateId);
   const level = match ? Number(match[1]) : 0;
   return level >= 2 ? level : null;
 };
-export function levelCrate(level: number): LevelCrate {
+export function levelCrate(level: number, season = currentSeasons().year): LevelCrate {
   const milestone = level % 10 === 0 ? 'Leyenda' : level % 5 === 0 ? 'Élite' : 'Ascenso';
   const common = Math.max(20, 60 - level * 2), epic = Math.min(25, 8 + Math.floor(level / 3)), legendary = Math.min(10, 1 + Math.floor(level / 8));
   const odds: Record<Rarity, number> = level % 10 === 0 ? { common: 0, rare: 0, epic: 70, legendary: 30 }
     : level % 5 === 0 ? { common: 0, rare: 60, epic: 32, legendary: 8 }
       : { common, rare: 100 - common - epic - legendary, epic, legendary };
-  return { id: `level:${level}`, level, name: `Cofre ${milestone} · nivel ${level}`, claimed: false, odds, guaranteedGear: true };
+  return { id: `level:${season}:${level}`, level, season, name: `Cofre ${milestone} · nivel ${level} · ${season}`, claimed: false, odds, guaranteedGear: true };
 }
 
-export function getLevelCrates(game: GameState, history: Workout[], profile?: AthleteProfile): LevelCrate[] {
-  const currentLevel = gameProgress(game, history, profile).level;
-  const claimed = new Set(game.transactions.filter(transaction => transaction.kind === 'level-crate').map(transaction => transaction.sourceLevel));
-  return Array.from({ length: Math.max(0, Math.min(9999, currentLevel) - 1) }, (_, index) => {
-    const crate = levelCrate(index + 2);
-    return { ...crate, claimed: claimed.has(crate.level) };
-  });
+/** A legacy claim keeps its real timestamp; no invented award date is written. */
+export const transactionSeason = (transaction: GameTransaction): string => transaction.sourceSeason ?? todayMadrid(new Date(transaction.createdAt)).slice(0, 4);
+export function progressionSeasons(game: GameState, history: Workout[], current = currentSeasons().year): string[] {
+  return [...new Set([current, ...history.filter(workout => workout.status !== 'deleted').map(workout => workout.date.slice(0, 4)),
+    ...(game.missionRewards ?? []).map(reward => todayMadrid(new Date(reward.awardedAt)).slice(0, 4)),
+    ...game.transactions.map(transaction => todayMadrid(new Date(transaction.createdAt)).slice(0,4)),
+    ...game.transactions.filter(transaction => transaction.kind === 'level-crate').map(transactionSeason),
+    ...(game.seasonCrateProgress ?? []).filter(entry => entry.reached > entry.baseline || !!entry.legacyLevels?.length).map(entry => entry.season),
+    ...(game.seasonCrateClaimLocks ?? []).map(key => key.slice(0,4))])].filter(isYearSeason).sort().reverse();
+}
+
+/** Baseline the new curve once. Old unclaimed career crates keep one conservative
+ * entitlement in the adoption year, excluding every already claimed legacy level.
+ * Afterwards reached is monotonic: edits/deletions never revoke or replay a crate. */
+export function reconcileSeasonProgression(game: GameState, history: Workout[], profile?: AthleteProfile, day = currentSeasons().day): GameState {
+  const season = day.slice(0, 4);
+  if (!isGameState(game) || !isCivilDate(day)) return game;
+  let entries = game.seasonCrateProgress ?? [];
+  if (game.seasonProgressionVersion !== 1) {
+    const oldLevel = Math.min(MAX_CHARACTER_LEVEL, legacyLevelProgress(economicXp(game, history, profile)).level);
+    const oldClaims = new Set(game.transactions.filter(transaction => transaction.kind === 'level-crate').map(transaction => transaction.sourceLevel));
+    for (const key of game.seasonCrateClaimLocks ?? []) oldClaims.add(Number(key.split(':')[1]));
+    const legacyLevels = Array.from({ length: oldLevel - 1 }, (_, index) => index + 2).filter(level => !oldClaims.has(level));
+    entries = progressionSeasons(game, history, season).map(year => {
+      const baseline = gameProgress(game, history, profile, year).level;
+      return { season: year, baseline, reached: baseline, ...(year === season && legacyLevels.length ? { legacyLevels } : {}) };
+    }).sort((a,b)=>a.season.localeCompare(b.season));
+    return { ...game, seasonProgressionVersion: 1, seasonProgressionStartedOn: day, seasonCrateProgress: entries };
+  }
+  const level = gameProgress(game, history, profile, season).level;
+  const previous = entries.find(entry => entry.season === season);
+  if (previous && previous.reached >= level) return game;
+  const next = previous ? { ...previous, reached: level } : { season, baseline: 1, reached: level };
+  return { ...game, seasonCrateProgress: [...entries.filter(entry => entry.season !== season), next].sort((a, b) => a.season.localeCompare(b.season)) };
+}
+
+export function getLevelCrates(game: GameState, history: Workout[], profile?: AthleteProfile, season = currentSeasons().year): LevelCrate[] {
+  if (!isYearSeason(season)) return [];
+  const migrated = reconcileSeasonProgression(game, history, profile);
+  const entry = migrated.seasonCrateProgress?.find(entry => entry.season === season);
+  const levels = new Set(entry?.legacyLevels ?? []);
+  if (entry) for (let level = entry.baseline + 1; level <= entry.reached; level++) levels.add(level);
+  const claimed = new Set(game.transactions.filter(transaction => transaction.kind === 'level-crate' && transactionSeason(transaction) === season).map(transaction => transaction.sourceLevel));
+  for (const key of game.seasonCrateClaimLocks ?? []) if (key.startsWith(`${season}:`)) claimed.add(Number(key.split(':')[1]));
+  for (const level of claimed) if (level && level <= MAX_CHARACTER_LEVEL) levels.add(level);
+  return [...levels].sort((a, b) => a - b).map(level => ({ ...levelCrate(level, season), claimed: claimed.has(level) }));
+}
+
+/** Merge monotonic season rights independently from the chosen economic ledger.
+ * Claims from a discarded divergent ledger remain locked; choosing a ledger never
+ * turns one annual crate into a second draw. Purchases/prizes are not combined. */
+export function preserveSeasonMetadata(selected: GameState, ...sources: (GameState | undefined)[]): GameState {
+  const games = [selected, ...sources.filter((game): game is GameState => !!game)];
+  const entries = new Map<string, SeasonCrateProgress>();
+  const locks = new Set(games.flatMap(game => game.seasonCrateClaimLocks ?? []));
+  for (const game of games) {
+    for (const transaction of game.transactions) if (transaction.kind === 'level-crate' && transaction.sourceLevel && transaction.sourceLevel <= MAX_CHARACTER_LEVEL) locks.add(`${transactionSeason(transaction)}:${transaction.sourceLevel}`);
+    for (const entry of game.seasonCrateProgress ?? []) {
+      const previous = entries.get(entry.season);
+      entries.set(entry.season, previous ? { season: entry.season, baseline: Math.max(previous.baseline, entry.baseline), reached: Math.max(previous.reached, entry.reached),
+        ...((previous.legacyLevels?.length || entry.legacyLevels?.length || previous.baseline !== entry.baseline) ? { legacyLevels: [...new Set([...(previous.legacyLevels ?? []), ...(entry.legacyLevels ?? []), ...(previous.baseline !== entry.baseline ? [previous,entry].flatMap(source => Array.from({length:source.reached-source.baseline},(_,index)=>source.baseline+index+1)) : [])])].sort((a,b)=>a-b) } : {}) } : structuredClone(entry));
+    }
+  }
+  for (const transaction of selected.transactions) if (transaction.kind === 'level-crate') locks.delete(`${transactionSeason(transaction)}:${transaction.sourceLevel}`);
+  const started = games.map(game => game.seasonProgressionStartedOn).filter((day): day is string => !!day).sort()[0];
+  return { ...selected, ...(games.some(game => game.seasonProgressionVersion === 1) ? { seasonProgressionVersion: 1, ...(started ? { seasonProgressionStartedOn: started } : {}), seasonCrateProgress: [...entries.values()].sort((a,b)=>a.season.localeCompare(b.season)) } : {}),
+    ...(locks.size ? { seasonCrateClaimLocks: [...locks].sort() } : {}) };
 }
 
 /** Backups must carry the whole ledger: orphaned items or repeated sales are invalid. */
@@ -136,7 +210,7 @@ export function isGameState(value: unknown): value is GameState {
     ids.add(item.id);
     items.set(item.id, item as InventoryItem);
   }
-  const purchased = new Set<string>(), sold = new Set<string>(), levelClaims = new Set<number>();
+  const purchased = new Set<string>(), sold = new Set<string>(), levelClaims = new Set<string>(), legacyLevelClaims = new Set<number>();
   for (const transaction of value.transactions) {
     if (!record(transaction) || !id(transaction.id) || ids.has(transaction.id) || typeof transaction.itemId !== 'string' || !date(transaction.createdAt) || !Number.isSafeInteger(transaction.amount) || (transaction.testFunded!==undefined&&typeof transaction.testFunded!=='boolean')) return false;
     ids.add(transaction.id);
@@ -144,16 +218,21 @@ export function isGameState(value: unknown): value is GameState {
     if (!item || Date.parse(transaction.createdAt) < Date.parse(item.acquiredAt)) return false;
     if (transaction.kind === 'crate') {
       const crate = CRATES.find(crate => crate.id === item.crateId);
-      if (purchased.has(item.id) || !crate || transaction.amount !== -crate.cost || transaction.sourceLevel !== undefined) return false;
+      if (purchased.has(item.id) || !crate || transaction.amount !== -crate.cost || transaction.sourceLevel !== undefined || transaction.sourceSeason !== undefined) return false;
       purchased.add(item.id);
     } else if (transaction.kind === 'level-crate') {
       const level = sourceLevel(item.crateId);
-      if (level === null || transaction.amount !== 0 || transaction.sourceLevel !== level || levelClaims.has(level) || purchased.has(item.id) || transaction.testFunded) return false;
-      levelClaims.add(level); purchased.add(item.id);
+      const season = transactionSeason(transaction as GameTransaction);
+      const encodedSeason = /^level:([1-9]\d{3}):/.exec(item.crateId)?.[1];
+      const claim = `${season}:${level}`;
+      if (!encodedSeason && level !== null && legacyLevelClaims.has(level)) return false;
+      if (!encodedSeason && level !== null) legacyLevelClaims.add(level);
+      if ((transaction.sourceSeason !== undefined && !isYearSeason(transaction.sourceSeason)) || (encodedSeason && (transaction.sourceSeason !== encodedSeason || (level !== null && level > MAX_CHARACTER_LEVEL))) || level === null || transaction.amount !== 0 || transaction.sourceLevel !== level || levelClaims.has(claim) || purchased.has(item.id) || transaction.testFunded) return false;
+      levelClaims.add(claim); purchased.add(item.id);
     } else if (transaction.kind === 'sale') {
       const purchase=value.transactions.find(candidate=>record(candidate)&&(candidate.kind==='crate'||candidate.kind==='level-crate')&&candidate.itemId===item.id) as GameTransaction|undefined;
       if(Boolean(transaction.testFunded)!==Boolean(purchase?.testFunded))return false;
-      if (!purchased.has(item.id) || sold.has(item.id) || !item.sold || transaction.amount !== RARITIES[item.rarity].sellValue || transaction.sourceLevel !== undefined) return false;
+      if (!purchased.has(item.id) || sold.has(item.id) || !item.sold || transaction.amount !== RARITIES[item.rarity].sellValue || transaction.sourceLevel !== undefined || transaction.sourceSeason !== undefined) return false;
       sold.add(item.id);
     } else return false;
   }
@@ -190,6 +269,36 @@ export function isGameState(value: unknown): value is GameState {
   if (value.abilityUses !== undefined && (!Array.isArray(value.abilityUses) || value.abilityUses.length > 100000)) return false;
   if (!validateAbilityChargeHistory([...items.values()], (value.abilityUses ?? []) as AbilityUse[], record(value.pendingOpening) ? value.pendingOpening.itemId as string : null, value.abilityChargeVersion, value.legacyAbilityUseIds)) return false;
   if (value.missionRewards !== undefined && !validMissionRewards(value.missionRewards)) return false;
+  if (value.seasonCrateClaimLocks !== undefined && (!Array.isArray(value.seasonCrateClaimLocks) || value.seasonCrateClaimLocks.length > 100000 || new Set(value.seasonCrateClaimLocks).size !== value.seasonCrateClaimLocks.length || value.seasonCrateClaimLocks.some(key => typeof key !== 'string' || !/^[1-9]\d{3}:(?:[2-9]|[1-9]\d)$/.test(key)))) return false;
+  if (value.seasonProgressionVersion !== undefined && value.seasonProgressionVersion !== 1) return false;
+  if (value.seasonProgressionStartedOn !== undefined && (typeof value.seasonProgressionStartedOn !== 'string' || !isCivilDate(value.seasonProgressionStartedOn))) return false;
+  if (value.seasonCrateProgress !== undefined) {
+    if (value.seasonProgressionVersion !== 1 || !Array.isArray(value.seasonCrateProgress) || value.seasonCrateProgress.length > 9000) return false;
+    const seasons = new Set<string>();
+    for (const entry of value.seasonCrateProgress) {
+      if (!record(entry) || !isYearSeason(entry.season) || seasons.has(entry.season) || !Number.isInteger(entry.baseline) || !Number.isInteger(entry.reached) || (entry.baseline as number) < 1 || (entry.reached as number) < (entry.baseline as number) || (entry.reached as number) > MAX_CHARACTER_LEVEL) return false;
+      if (entry.legacyLevels !== undefined && (!Array.isArray(entry.legacyLevels) || new Set(entry.legacyLevels).size !== entry.legacyLevels.length || entry.legacyLevels.some(level => !Number.isInteger(level) || level < 2 || level > MAX_CHARACTER_LEVEL))) return false;
+      seasons.add(entry.season);
+    }
+  }
+  if (value.quoteConversionVersion !== undefined && value.quoteConversionVersion !== 1) return false;
+  if (value.quoteConversions !== undefined) {
+    // Audit tombstones can outlive discarded backup branches; never cap them below
+    // the union plus all currently represented copies, which would invalidate migration.
+    if (!Array.isArray(value.quoteConversions)) return false;
+    const converted = new Set<string>();
+    for (const conversion of value.quoteConversions) {
+      if (!record(conversion) || !id(conversion.itemId) || converted.has(conversion.itemId) ||
+        !QUOTES.some(quote => quote.id === conversion.quoteId && quote.rarity === conversion.rarity) ||
+        !['converted', 'previously-sold'].includes(conversion.disposition as string) ||
+        conversion.amount !== (conversion.disposition === 'previously-sold' ? 0 : QUOTE_COMPENSATION[conversion.rarity as Rarity])) return false;
+      const item = items.get(conversion.itemId);
+      if (item && (item.quoteId !== conversion.quoteId || item.rarity !== conversion.rarity)) return false;
+      converted.add(conversion.itemId);
+    }
+  }
+  if (value.quoteConversionSeenIds !== undefined && (!Array.isArray(value.quoteConversionSeenIds) ||
+    new Set(value.quoteConversionSeenIds).size !== value.quoteConversionSeenIds.length || !value.quoteConversionSeenIds.every(id))) return false;
   return true;
 }
 
@@ -211,12 +320,17 @@ export function normalizeGame(value?: unknown): GameState {
     candidate.abilityChargeVersion = 1;
     if (legacy.length) candidate.legacyAbilityUseIds = legacy;
   }
-  return isGameState(candidate) ? structuredClone(candidate) : baseGame();
+  return isGameState(candidate) ? migrateQuoteConversions(structuredClone(candidate)) : baseGame();
 }
 
-export function gameProgress(game: GameState, history: Workout[], profile?: AthleteProfile) {
-  const progress = rewardProgress(history, profile), objectiveXp = missionRewardXp(game);
-  return { ...progress, ...levelProgress(progress.xp + objectiveXp), objectiveXp };
+/** Economic XP is lifetime activity plus frozen mission awards, independent of seasons/curve. */
+export function economicXp(game: GameState, history: Workout[], profile?: AthleteProfile): number {
+  return rewardProgress(history, profile).xp + missionRewardXp(game);
+}
+export function gameProgress(game: GameState, history: Workout[], profile?: AthleteProfile, season = currentSeasons().year) {
+  const progress = rewardProgress(history, profile, season);
+  const objectiveXp = missionRewardXp(game, season);
+  return { ...progress, ...levelProgress(progress.xp + objectiveXp), objectiveXp, season };
 }
 
 export function awardMissionRewards(game: GameState, history: Workout[], day: string, changedDate?: string): GameState {
@@ -238,9 +352,9 @@ export function gameCreditStatus(game: GameState, history: Workout[], profile?: 
     passiveSessions.add(workout.id);
     return sum + workoutPassiveReward(workout).bonusCredits;
   }, 0);
-  const rawEarned=100+Math.floor(gameProgress(game,history,profile).xp/5)+abilityCredits+companionCredits+game.transactions.filter(transaction=>!transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0);
+  const rawEarned=100+quoteConversionCredits(game,false)+Math.floor(economicXp(game,history,profile)/5)+abilityCredits+companionCredits+game.transactions.filter(transaction=>!transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0);
   const earned=Math.max(0,rawEarned);
-  const testing=testAllowance>0?testAllowance+game.transactions.filter(transaction=>transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0):0;
+  const testing=testAllowance>0?testAllowance+quoteConversionCredits(game,true)+game.transactions.filter(transaction=>transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0):0;
   return { balance: Math.max(0,earned+testing), earnedBalance: earned, deficit: Math.max(0,-rawEarned), testingBalance: testing };
 }
 
@@ -270,34 +384,23 @@ export function rarityForRoll(crate: Pick<Crate, 'odds'>, roll: number): Rarity 
   return 'legendary';
 }
 
-/** Quotes never repeat; a completed quote rarity converts its 25% share to gear. */
+/** Canonical pools feed both the draw and previews; an ID has exactly one ticket. */
+export function rewardPools(rarity: Rarity, inventory: readonly InventoryItem[] = [], choice: RewardChoice = {}) {
+  const unique = <T extends { id: string }>(entries: T[]) => [...new Map(entries.map(entry => [entry.id, entry])).values()];
+  const gear = unique(GEAR.filter(candidate => candidate.rarity === rarity)).map(candidate => ({ ...candidate, kind: 'gear' as const }));
+  const companions = unique(COMPANIONS.filter(candidate => candidate.rarity === rarity && (!choice.avoidCompanionDuplicates || !inventory.some(item => item.companionId === candidate.id))))
+    .map(candidate => ({ ...candidate, kind: 'companion' as const }));
+  return { gear, companions };
+}
 export function rewardForRoll(rarity: Rarity, kindRoll: number, itemRoll: number, forceGear = false, inventory: readonly InventoryItem[] = [], choice: RewardChoice = {}): ItemDefinition {
-  const gearPool = () => {
-    const sameRarity = GEAR.filter(candidate => candidate.rarity === rarity);
-    const chosenSlot = forceGear && choice.gearSlot ? sameRarity.filter(candidate => candidate.slot === choice.gearSlot) : [];
-    return (chosenSlot.length ? chosenSlot : sameRarity).map(candidate => ({ ...candidate, kind: 'gear' as const }));
-  };
-  let pool: ItemDefinition[];
-  if (forceGear || kindRoll < GEAR_DROP_CHANCE) {
-    pool = gearPool();
-  } else if (kindRoll < GEAR_DROP_CHANCE + QUOTE_DROP_CHANCE) {
-    // Includes historical sales, legacy cards and reserved prizes: once obtained,
-    // a quote stays out of the draw after reloading or restoring a saved game.
-    const obtained = new Set(inventory.map(item => item.quoteId));
-    pool = QUOTES.filter(candidate => candidate.rarity === rarity && !obtained.has(candidate.id))
-      .map(candidate => ({ id: candidate.id, name: 'Frase motivacional', description: candidate.text, rarity: candidate.rarity, kind: 'quote' as const }));
-    if (!pool.length) pool = gearPool();
-  } else {
-    pool = COMPANIONS.filter(candidate => candidate.rarity === rarity).map(candidate => ({ ...candidate, kind: 'companion' as const }));
-    if (choice.avoidCompanionDuplicates) {
-      const fresh = pool.filter(candidate => !inventory.some(item => item.companionId === candidate.id));
-      pool = fresh.length ? fresh : gearPool();
-    }
-  }
+  const { gear, companions } = rewardPools(rarity, inventory, choice);
+  // Missing/exhausted cheesits explicitly transfer their share to gear of SAME rarity.
+  const pool = forceGear || kindRoll < GEAR_DROP_CHANCE || !companions.length ? gear : companions;
+  if (!pool.length) throw new Error(`No hay equipo elegible de rareza ${rarity}.`);
   return pool[Math.min(pool.length - 1, Math.max(0, Math.floor(itemRoll * pool.length)))];
 }
 
-function openReward(game: GameState, crateId: string, rarity: Rarity, transaction: { kind: 'crate'; amount: number } | { kind: 'level-crate'; amount: 0; sourceLevel: number }, choice: RewardChoice = {}) {
+function openReward(game: GameState, crateId: string, rarity: Rarity, transaction: { kind: 'crate'; amount: number } | { kind: 'level-crate'; amount: 0; sourceLevel: number; sourceSeason: string }, choice: RewardChoice = {}) {
   const definition = rewardForRoll(rarity, randomUnit(), randomUnit(), transaction.kind === 'level-crate', game.inventory, choice);
   const now = new Date(Date.now()).toISOString();
   const item: InventoryItem = { id: crypto.randomUUID(), kind: definition.kind,
@@ -316,11 +419,12 @@ export function openCrate(game: GameState, history: Workout[], crateId: string, 
   return openReward(game, crate.id, rarity, { kind: 'crate', amount: -crate.cost }, choice);
 }
 
-export function openLevelCrate(game: GameState, history: Workout[], level: number, profile?: AthleteProfile, choice: RewardChoice = {}): { game: GameState; item: InventoryItem } | null {
-  if (!isGameState(game) || game.pendingOpening || !Number.isInteger(level) || level < 2 || level > 9999 || level > gameProgress(game, history, profile).level ||
-    game.transactions.some(transaction => transaction.kind === 'level-crate' && transaction.sourceLevel === level)) return null;
-  const crate = levelCrate(level);
-  return openReward(game, crate.id, rarityForRoll(crate, randomUnit()), { kind: 'level-crate', amount: 0, sourceLevel: level }, choice);
+export function openLevelCrate(game: GameState, history: Workout[], level: number, profile?: AthleteProfile, choice: RewardChoice = {}, season = currentSeasons().year): { game: GameState; item: InventoryItem } | null {
+  if (!isGameState(game) || game.pendingOpening || !Number.isInteger(level) || level < 2 || level > MAX_CHARACTER_LEVEL || !isYearSeason(season)) return null;
+  const migrated = reconcileSeasonProgression(game, history, profile);
+  const available = getLevelCrates(migrated, history, profile, season).find(crate => crate.level === level && !crate.claimed);
+  if (!available) return null;
+  return openReward(migrated, available.id, rarityForRoll(available, randomUnit()), { kind: 'level-crate', amount: 0, sourceLevel: level, sourceSeason: season }, choice);
 }
 
 /** The prize stays hidden until both stages have finished, including after a reload. */
@@ -348,11 +452,9 @@ export function sellItem(game: GameState, _itemId: string): GameState {
   return game;
 }
 
-export function equipItem(game: GameState, itemId: string | null): GameState {
-  if (itemId === null) return { ...game, equippedQuoteId: null };
-  // Old sales remain in the ledger; obtaining a quote permanently unlocks its motto.
-  const item = game.inventory.find(candidate => candidate.id === itemId);
-  return item?.quoteId && game.pendingOpening?.itemId !== item.id ? { ...game, equippedQuoteId: item.quoteId } : game;
+/** Legacy entry point: quotes can no longer be equipped. */
+export function equipItem(game: GameState, _itemId: string | null): GameState {
+  return game.equippedQuoteId === null ? game : { ...game, equippedQuoteId: null };
 }
 
 export function equipGearItem(game: GameState, itemId: string | null, slot?: GearSlot): GameState {
@@ -382,10 +484,9 @@ export function unlockedCompanions(game: GameState): Companion[] {
   const unlocked = new Set(game.inventory.filter(item => item.id !== game.pendingOpening?.itemId && item.companionId).map(item => item.companionId));
   return COMPANIONS.filter(companion => unlocked.has(companion.id));
 }
-export function unlockedQuotes(game: GameState): Quote[] {
-  const obtained = new Set(game.inventory.filter(item => item.id !== game.pendingOpening?.itemId).map(item => item.quoteId));
-  return QUOTES.filter(quote => obtained.has(quote.id));
-}
+/** Historical definitions remain available for audit, never in the collection. */
+export function unlockedQuotes(_game: GameState): Quote[] { return []; }
+
 export function equipCosmetic(game: GameState, gearId: string | null, slot?: GearSlot): GameState {
   if (!isGameState(game)) return game;
   if (gearId === null) {
@@ -453,7 +554,8 @@ export function getMissions(history: Workout[], day: string, game: GameState, _p
 }
 
 export function getAchievements(history: Workout[], profile?: AthleteProfile, game?: GameState): Achievement[] {
-  const progress = game ? gameProgress(game, history, profile) : rewardProgress(history, profile);
+  const lifetime = rewardProgress(history, profile);
+  const progress = { ...lifetime, level: game ? gameProgress(game, history, profile).level : lifetime.level };
   const sessions = history.filter(workout => workout.status === 'finished');
   const groups = new Set(sessions.flatMap(workout => workout.exercises.filter(exercise => exercise.sets.some(set => set.confirmed && validSet(set, exercise.mode))).map(exercise => exercise.group))).size;
   return [

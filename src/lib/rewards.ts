@@ -2,6 +2,7 @@ import { validSet, type Workout, type WorkoutExercise, type WorkoutSet } from '.
 import { effectiveLoad, normalizeProfile, strengthReference, type AthleteProfile } from './strength';
 import { isAbilityUse } from './abilities';
 import { workoutPassiveReward } from './cheesit-passives';
+import { annualLevelProgress, inSeason } from './seasons';
 
 /** Base only: the full series reward also reflects reps, load and personal progress. */
 export const SET_XP = 30;
@@ -81,7 +82,7 @@ export function rewardSetIndex(history: Workout[], profile?: AthleteProfile): Ma
   return rewards;
 }
 
-export function levelProgress(xp: number) {
+export function legacyLevelProgress(xp: number) {
   const safeXp = Number.isFinite(xp) ? Math.max(0, Math.floor(xp)) : 0;
   let level = Math.max(1, Math.floor((-875 + Math.sqrt(875 ** 2 + 500 * safeXp)) / 250) + 1);
   const threshold = (value: number) => 1000 * (value - 1) + 125 * (value - 1) * (value - 2);
@@ -90,6 +91,8 @@ export function levelProgress(xp: number) {
   const levelXp = safeXp - threshold(level), nextLevelXp = 1000 + (level - 1) * 250;
   return { xp: safeXp, level, levelXp, nextLevelXp, percent: levelXp / nextLevelXp * 100 };
 }
+/** Shared annual character curve, capped at 99. The legacy curve is migration-only. */
+export const levelProgress = annualLevelProgress;
 function sessionReward(workout: Workout, index: Map<string, SetReward>, visited = new Set<string>()) {
   let sets = 0, setXp = 0, records = 0, abilityXp = 0;
   const groups = new Set<string>();
@@ -116,12 +119,12 @@ export function workoutReward(workout: Workout, history: Workout[], profile?: At
   return sessionReward(workout, rewardSetIndex(complete, profile));
 }
 /** Recompute saved activity instead of accumulating awards, including after edits/deletions. */
-export function rewardProgress(history: Workout[], profile?: AthleteProfile) {
+export function rewardProgress(history: Workout[], profile?: AthleteProfile, season?: string) {
   const index = rewardSetIndex(history, profile), visited = new Set<string>();
   const sessions = new Set<string>();
   let sets = 0, workouts = 0, xp = 0;
   for (const workout of history) {
-    if (sessions.has(workout.id)) continue;
+    if (sessions.has(workout.id) || (season && !inSeason(workout.date, season))) continue;
     sessions.add(workout.id);
     const reward = sessionReward(workout, index, visited);
     sets += reward.sets; xp += reward.totalXp;

@@ -12,12 +12,12 @@ test('XP includes confirmed draft sets, a finish bonus and exact level boundarie
   const finished = workout([exercise(Array.from({ length: 15 }, () => series(50, 8)))]);
   const draft = workout([exercise([series(0, 10)], 'bodyweight_reps')], 'draft');
   assert.deepEqual(rewardProgress([finished, draft]), {
-    xp: 1160, level: 2, levelXp: 160, nextLevelXp: 1250, percent: 12.8, sets: 16, workouts: 1,
+    xp: 1160, level: 2, levelXp: 360, nextLevelXp: 860, percent: 360 / 860 * 100, sets: 16, workouts: 1,
   });
   assert.equal(SET_XP, 30);
   assert.equal(WORKOUT_XP, 200);
   assert.deepEqual(rewardProgress([]), {
-    xp: 0, level: 1, levelXp: 0, nextLevelXp: 1000, percent: 0, sets: 0, workouts: 0,
+    xp: 0, level: 1, levelXp: 0, nextLevelXp: 800, percent: 0, sets: 0, workouts: 0,
   });
 });
 
@@ -37,13 +37,13 @@ test('level thresholds grow and finish popup distinguishes previously earned ser
   const large = workout([exercise(Array.from({ length: 45 }, () => series(50, 8)))], 'draft');
   const progress = rewardProgress([large]);
   assert.equal(progress.xp, 2700);
-  assert.equal(progress.level, 3);
-  assert.equal(progress.levelXp, 450);
-  assert.equal(progress.nextLevelXp, 1500);
+  assert.equal(progress.level, 4);
+  assert.equal(progress.levelXp, 120);
+  assert.equal(progress.nextLevelXp, 980);
   large.exercises[0].sets.pop();
-  assert.equal(rewardProgress([large]).level, 3);
-  assert.equal(rewardProgress([large]).levelXp, 390);
-  assert.deepEqual(levelProgress(2250), { xp: 2250, level: 3, levelXp: 0, nextLevelXp: 1500, percent: 0 });
+  assert.equal(rewardProgress([large]).level, 4);
+  assert.equal(rewardProgress([large]).levelXp, 60);
+  assert.deepEqual(levelProgress(1660), { xp: 1660, level: 3, levelXp: 0, nextLevelXp: 920, percent: 0 });
 });
 
 test('bulk record rewards respect earlier dates and award each qualifying series once', () => {

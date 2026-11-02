@@ -32,7 +32,7 @@ export default function WardrobeV3({game,level,effectsEnabled,soundEnabled,onCha
   const saveLock=useRef(false);
   const [saving,setSaving]=useState(false);
   const [filter,setFilter]=useState<Rarity|'all'>('all');
-  const [kind,setKind]=useState<'all'|'gear'|'quote'|'companion'>('all');
+  const [kind,setKind]=useState<'all'|'gear'|'companion'>('all');
   const [lookFilter,setLookFilter]=useState<LookSlot|'all'>('all');
   const [collectionFilter,setCollectionFilter]=useState('all');
   const [motion,setMotion]=useState<CharacterMotion>('idle');
@@ -51,10 +51,10 @@ export default function WardrobeV3({game,level,effectsEnabled,soundEnabled,onCha
     looksRef.current?.focus({preventScroll:true});
     looksRef.current?.scrollIntoView({block:'start',behavior:'instant'});
   },[lookFocusRequest]);
-  const inventory=game.inventory.filter(item=>(!item.sold||Boolean(item.quoteId))&&item.id!==game.pendingOpening?.itemId);
+  const inventory=game.inventory.filter(item=>(!item.sold&&!item.quoteId)&&item.id!==game.pendingOpening?.itemId);
   const stacks=new Map<string,{item:InventoryItem;definition:ItemDefinition;quantity:number}>();
   for(const item of inventory){
-    const definition=getItemDefinition(item);if(!definition)continue;
+    const definition=getItemDefinition(item);if(!definition || definition.kind==='quote')continue;
     const key=`${definition.kind}:${definition.id}`,existing=stacks.get(key);
     if(existing)existing.quantity++;
     else stacks.set(key,{item,definition,quantity:1});
@@ -71,11 +71,11 @@ export default function WardrobeV3({game,level,effectsEnabled,soundEnabled,onCha
       {companion&&<CheesitPassive companionId={companion.id} status="equipped" compact/>}
       {companion&&<button className="wardrobe-slot-remove" aria-label="Quitar cheesit del armario" onClick={()=>change(value=>equipCompanion(value,null),'Cheesit guardado. Su pasiva se desactiva para las próximas sesiones.')}>Quitar cheesit</button>}
     </div></div></div>
-    <div className="wardrobe-permanence"><Star size={18}/><p><strong>Colección guardada.</strong> Los objetos no se pueden vender. Las frases obtenidas se conservan sin mostrar su contenido. El equipo y los cheesits repetidos muestran su cantidad; el equipo suma cargas de habilidad. Agotarlas conserva el aspecto.</p></div>
+    <div className="wardrobe-permanence"><Star size={18}/><p><strong>Colección guardada.</strong> Los objetos no se pueden vender. El equipo y los cheesits repetidos muestran su cantidad; el equipo suma cargas de habilidad. Agotarlas conserva el aspecto.</p></div>
     <nav className="collection-subtabs" aria-label="Organizar colección">{panels.map(({id,label,Icon})=><button key={id} aria-pressed={panel===id} onClick={()=>{setPanel(id);setFilter('all')}}><Icon size={15}/>{label}</button>)}</nav>
     {panel==='inventory'&&<>
       <div className="collection-counts"><span>{inventory.length} copias disponibles</span><span>{available.length+companions.length} aspectos desbloqueados</span><span>{companions.length} cheesits</span></div>
-      <div className="collection-type-filters" aria-label="Tipo de recompensa">{[{id:'all',label:'Todo'},{id:'gear',label:'Equipo'},{id:'quote',label:'Frases'},{id:'companion',label:'Cheesits'}].map(value=><button key={value.id} aria-pressed={kind===value.id} onClick={()=>setKind(value.id as typeof kind)}>{value.label}</button>)}</div>
+      <div className="collection-type-filters" aria-label="Tipo de recompensa">{[{id:'all',label:'Todo'},{id:'gear',label:'Equipo'},{id:'companion',label:'Cheesits'}].map(value=><button key={value.id} aria-pressed={kind===value.id} onClick={()=>setKind(value.id as typeof kind)}>{value.label}</button>)}</div>
       <div className="collection-filters" aria-label="Filtrar objetos por rareza"><button aria-pressed={filter==='all'} onClick={()=>setFilter('all')}>Todas las rarezas</button>{rarityFilters.map(rarity=><button key={rarity} style={styleFor(rarity)} aria-pressed={filter===rarity} onClick={()=>setFilter(rarity)}><i/>{RARITIES[rarity].label}</button>)}</div>
       {filtered.length?<div className="quote-collection">{filtered.map(({item,definition,quantity})=>{
         const selected=definition.kind==='gear'?equipped.some(value=>value.definition.id===item.gearId):definition.kind==='companion'?game.equippedCompanionId===item.companionId:false;
@@ -83,9 +83,8 @@ export default function WardrobeV3({game,level,effectsEnabled,soundEnabled,onCha
         return <article className={`quote-card loot-item-card ${selected?'equipped':''}`} data-item-id={item.id} data-item-kind={definition.kind} data-definition-id={definition.id} data-rarity={item.rarity} key={`${definition.kind}:${definition.id}`} style={styleFor(item.rarity)}>
           {definition.kind!=='quote'&&quantity>1&&<span className="inventory-quantity" aria-label={`${quantity} copias`}>{quantity}x</span>}
           <div className="quote-card-top"><span><i/>{RARITIES[item.rarity].label}</span>{selected?<span><Check size={12}/> EQUIPADO</span>:<Sparkles size={18}/>}</div>
-          {item.gearId?<><div className="gear-card-preview"><GearSprite gearId={item.gearId}/></div><span className="gear-slot-tag">{definition.slot?SLOT_LABELS[definition.slot]:'EQUIPO'}</span><h3 className="gear-item-name">{definition.name}</h3><p className="gear-item-description">{definition.description}</p>{ability&&<><GearAbility gearId={item.gearId}/><p className="ability-drop-note">+{chargeLabel(ability.chargesPerDrop)} por copia revelada.</p></>}</>:item.companionId?<><div className="inventory-companion-art"><CompanionSprite companionId={item.companionId} animated={effectsEnabled}/></div><h3 className="gear-item-name">{definition.name}</h3><p className="gear-item-description">{definition.description}</p><CheesitPassive companionId={item.companionId} status={selected?'equipped':'available'}/></>:<><div className="gear-card-preview"><PackageOpen size={48} aria-hidden="true"/></div><h3 className="gear-item-name">Frase guardada</h3><p className="gear-item-description">Esta recompensa se conserva en tu colección.</p></>}
+          {item.gearId?<><div className="gear-card-preview"><GearSprite gearId={item.gearId}/></div><span className="gear-slot-tag">{definition.slot?SLOT_LABELS[definition.slot]:'EQUIPO'}</span><h3 className="gear-item-name">{definition.name}</h3><p className="gear-item-description">{definition.description}</p>{ability&&<><GearAbility gearId={item.gearId}/><p className="ability-drop-note">+{chargeLabel(ability.chargesPerDrop)} por copia revelada.</p></>}</>:item.companionId?<><div className="inventory-companion-art"><CompanionSprite companionId={item.companionId} animated={effectsEnabled}/></div><h3 className="gear-item-name">{definition.name}</h3><p className="gear-item-description">{definition.description}</p><CheesitPassive companionId={item.companionId} status={selected?'equipped':'available'}/></>:null}
           <small>CONSEGUIDO EL {new Intl.DateTimeFormat('es-ES',{day:'numeric',month:'short',timeZone:'Europe/Madrid'}).format(new Date(item.acquiredAt))}</small>
-          {item.sold&&item.quoteId&&<p className="legacy-quote-note">Frase recuperada de una venta antigua. Se conservan la venta y sus créditos.</p>}
           {definition.kind!=='quote'&&<div className="quote-card-actions"><button className="quote-equip" aria-pressed={selected} onClick={()=>{
             if(item.gearId)change(value=>equipCosmetic(value,selected?null:item.gearId!,definition.slot),selected?'Pieza guardada en tus aspectos.':'Aspecto equipado. Sus cargas se activan en Habilidades.');
             else if(item.companionId)change(value=>equipCompanion(value,selected?null:item.companionId!),selected?'Cheesit guardado. Su pasiva se desactiva para las próximas sesiones.':'Cheesit equipado. Su pasiva queda disponible para las próximas sesiones.');

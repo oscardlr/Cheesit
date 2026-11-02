@@ -31,5 +31,5 @@ test('V2 backups reject an invalid profile and retain legacy motivational cards'
   const legacy={transactions:[{id:crypto.randomUUID(),kind:'crate' as const,itemId,amount:-100,createdAt:now}],inventory:[{id:itemId,quoteId:'show-up',rarity:'common' as const,acquiredAt:now,crateId:'starter',sold:false}],weeklyWorkoutGoal:3,weeklySetGoal:30,equippedQuoteId:'show-up'};
   const result=previewBackup(createBackup({...base,game:legacy}),base);
   assert.equal(result.merged.game?.inventory[0].quoteId,'show-up');
-  assert.equal(normalizeGame(result.merged.game).equippedQuoteId,'show-up');
+  assert.equal(normalizeGame(result.merged.game).equippedQuoteId,null);
 });

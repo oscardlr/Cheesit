@@ -1,6 +1,8 @@
+const madridDateFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' });
+
 /** Civil dates are strings, never instants in the browser's time zone. */
 export function todayMadrid(now = new Date()): string {
-  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now);
+  const parts = madridDateFormatter.formatToParts(now);
   const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value;
   return `${part('year')}-${part('month')}-${part('day')}`;
 }

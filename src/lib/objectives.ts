@@ -85,7 +85,7 @@ export function validMissionRewards(value: unknown): value is MissionReward[] {
   return true;
 }
 
-export const missionRewardXp = (game: Pick<MissionState, 'missionRewards'>): number => validMissionRewards(game.missionRewards ?? []) ? (game.missionRewards ?? []).reduce((total, reward) => total + reward.xp, 0) : 0;
+export const missionRewardXp = (game: Pick<MissionState, 'missionRewards'>, season?: string): number => validMissionRewards(game.missionRewards ?? []) ? (game.missionRewards ?? []).reduce((total, reward) => total + (!season || todayMadrid(new Date(reward.awardedAt)).startsWith(season) ? reward.xp : 0), 0) : 0;
 
 /** Freeze each completed reward once; edits, reloads and changing targets cannot replay it. */
 export function awardObjectiveMissions<T extends MissionState>(game: T, history: Workout[], day = todayMadrid(), changedDate?: string): T {
@@ -98,7 +98,7 @@ export function awardObjectiveMissions<T extends MissionState>(game: T, history:
     for (const mission of getObjectiveMissions(history, end, game)) {
       if (!mission.complete || earned.has(mission.id)) continue;
       earned.add(mission.id);
-      additions.push({ id: mission.id, xp: mission.xp, target: mission.target, awardedAt: new Date().toISOString() });
+      additions.push({ id: mission.id, xp: mission.xp, target: mission.target, awardedAt: new Date(Date.now()).toISOString() });
     }
   }
   return additions.length ? { ...game, missionRewards: [...(game.missionRewards ?? []), ...additions] } : game;

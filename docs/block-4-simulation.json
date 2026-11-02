@@ -1,0 +1,259 @@
+{
+  "thresholds": {
+    "25": 35760,
+    "50": 109760,
+    "75": 221260,
+    "99": 363580
+  },
+  "profile": {
+    "weightKg": 70,
+    "heightCm": 180,
+    "age": 20,
+    "sex": "male",
+    "dumbbellLoad": "per_hand"
+  },
+  "results": [
+    {
+      "sessionsPerWeek": 2,
+      "companion": "none",
+      "sessions": 104,
+      "xp": 226830,
+      "level": 76,
+      "objectiveXp": 80190,
+      "passiveXp": 0,
+      "reached": {
+        "25": "2026-02-23",
+        "50": "2026-06-25",
+        "75": "2026-12-24",
+        "99": null
+      }
+    },
+    {
+      "sessionsPerWeek": 2,
+      "companion": "athlete",
+      "sessions": 104,
+      "xp": 228910,
+      "level": 76,
+      "objectiveXp": 80190,
+      "passiveXp": 2080,
+      "reached": {
+        "25": "2026-02-23",
+        "50": "2026-06-22",
+        "75": "2026-12-21",
+        "99": null
+      }
+    },
+    {
+      "sessionsPerWeek": 3,
+      "companion": "none",
+      "sessions": 155,
+      "xp": 309760,
+      "level": 90,
+      "objectiveXp": 91210,
+      "passiveXp": 0,
+      "reached": {
+        "25": "2026-02-09",
+        "50": "2026-05-06",
+        "75": "2026-09-16",
+        "99": null
+      }
+    },
+    {
+      "sessionsPerWeek": 3,
+      "companion": "athlete",
+      "sessions": 155,
+      "xp": 312860,
+      "level": 91,
+      "objectiveXp": 91210,
+      "passiveXp": 3100,
+      "reached": {
+        "25": "2026-02-09",
+        "50": "2026-05-06",
+        "75": "2026-09-14",
+        "99": null
+      }
+    },
+    {
+      "sessionsPerWeek": 4,
+      "companion": "none",
+      "sessions": 207,
+      "xp": 393500,
+      "level": 99,
+      "objectiveXp": 101630,
+      "passiveXp": 0,
+      "reached": {
+        "25": "2026-02-02",
+        "50": "2026-04-11",
+        "75": "2026-07-23",
+        "99": "2026-12-03"
+      }
+    },
+    {
+      "sessionsPerWeek": 4,
+      "companion": "athlete",
+      "sessions": 207,
+      "xp": 397640,
+      "level": 99,
+      "objectiveXp": 101630,
+      "passiveXp": 4140,
+      "reached": {
+        "25": "2026-02-02",
+        "50": "2026-04-09",
+        "75": "2026-07-21",
+        "99": "2026-11-30"
+      }
+    },
+    {
+      "sessionsPerWeek": 5,
+      "companion": "none",
+      "sessions": 258,
+      "xp": 465410,
+      "level": 99,
+      "objectiveXp": 101630,
+      "passiveXp": 0,
+      "reached": {
+        "25": "2026-01-28",
+        "50": "2026-03-25",
+        "75": "2026-06-22",
+        "99": "2026-10-12"
+      }
+    },
+    {
+      "sessionsPerWeek": 5,
+      "companion": "athlete",
+      "sessions": 258,
+      "xp": 470570,
+      "level": 99,
+      "objectiveXp": 101630,
+      "passiveXp": 5160,
+      "reached": {
+        "25": "2026-01-28",
+        "50": "2026-03-25",
+        "75": "2026-06-19",
+        "99": "2026-10-09"
+      }
+    }
+  ],
+  "passiveSensitivity": [
+    {
+      "sessionsPerWeek": 4,
+      "companion": "athlete",
+      "sessions": 207,
+      "xp": 397640,
+      "level": 99,
+      "objectiveXp": 101630,
+      "passiveXp": 4140,
+      "reached": {
+        "25": "2026-02-02",
+        "50": "2026-04-09",
+        "75": "2026-07-21",
+        "99": "2026-11-30"
+      }
+    },
+    {
+      "sessionsPerWeek": 4,
+      "companion": "warrior",
+      "sessions": 207,
+      "xp": 393500,
+      "level": 99,
+      "objectiveXp": 101630,
+      "passiveXp": 0,
+      "reached": {
+        "25": "2026-02-02",
+        "50": "2026-04-11",
+        "75": "2026-07-23",
+        "99": "2026-12-03"
+      }
+    },
+    {
+      "sessionsPerWeek": 4,
+      "companion": "sorceress",
+      "sessions": 207,
+      "xp": 397640,
+      "level": 99,
+      "objectiveXp": 101630,
+      "passiveXp": 4140,
+      "reached": {
+        "25": "2026-02-02",
+        "50": "2026-04-09",
+        "75": "2026-07-21",
+        "99": "2026-11-30"
+      }
+    },
+    {
+      "sessionsPerWeek": 4,
+      "companion": "dragon-queen",
+      "sessions": 207,
+      "xp": 393500,
+      "level": 99,
+      "objectiveXp": 101630,
+      "passiveXp": 0,
+      "reached": {
+        "25": "2026-02-02",
+        "50": "2026-04-11",
+        "75": "2026-07-23",
+        "99": "2026-12-03"
+      }
+    },
+    {
+      "sessionsPerWeek": 4,
+      "companion": "iris",
+      "sessions": 207,
+      "xp": 393500,
+      "level": 99,
+      "objectiveXp": 101630,
+      "passiveXp": 0,
+      "reached": {
+        "25": "2026-02-02",
+        "50": "2026-04-11",
+        "75": "2026-07-23",
+        "99": "2026-12-03"
+      }
+    },
+    {
+      "sessionsPerWeek": 4,
+      "companion": "lua",
+      "sessions": 207,
+      "xp": 393500,
+      "level": 99,
+      "objectiveXp": 101630,
+      "passiveXp": 0,
+      "reached": {
+        "25": "2026-02-02",
+        "50": "2026-04-11",
+        "75": "2026-07-23",
+        "99": "2026-12-03"
+      }
+    },
+    {
+      "sessionsPerWeek": 4,
+      "companion": "sol",
+      "sessions": 207,
+      "xp": 396605,
+      "level": 99,
+      "objectiveXp": 101630,
+      "passiveXp": 3105,
+      "reached": {
+        "25": "2026-02-02",
+        "50": "2026-04-09",
+        "75": "2026-07-21",
+        "99": "2026-12-01"
+      }
+    },
+    {
+      "sessionsPerWeek": 4,
+      "companion": "mara",
+      "sessions": 207,
+      "xp": 397350,
+      "level": 99,
+      "objectiveXp": 101630,
+      "passiveXp": 3850,
+      "reached": {
+        "25": "2026-02-02",
+        "50": "2026-04-09",
+        "75": "2026-07-21",
+        "99": "2026-11-30"
+      }
+    }
+  ]
+}

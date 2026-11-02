@@ -29,14 +29,14 @@ test('static/quick reveal retains the reserved item, single debit and round-trip
   assert.deepEqual(reserved.game,snapshot);
 });
 
-test('a legacy sold phrase is permanently selectable while sale and credit history remain unchanged',()=>{
+test('a legacy sold phrase is retired while sale and credit history remain unchanged',()=>{
   const quote=QUOTES[0],now=new Date().toISOString();
   const item:InventoryItem={id:crypto.randomUUID(),quoteId:quote.id,rarity:quote.rarity,acquiredAt:now,crateId:'starter',sold:false};
   const owned:GameState={...normalizeGame(),inventory:[item],transactions:[{id:crypto.randomUUID(),kind:'crate',itemId:item.id,amount:-100,createdAt:now}]};
   const sold=legacySaleSnapshot(owned,item.id),before=structuredClone(sold);
-  assert.deepEqual(unlockedQuotes(sold).map(value=>value.id),[quote.id]);
-  const selected=equipItem(sold,item.id);
-  assert.equal(selected.equippedQuoteId,quote.id);
+  assert.deepEqual(unlockedQuotes(sold).map(value=>value.id),[]);
+  const selected=normalizeGame(equipItem(sold,item.id));
+  assert.equal(selected.equippedQuoteId,null);
   assert.ok(isGameState(selected));
   assert.deepEqual(selected.transactions,before.transactions);
   assert.deepEqual(selected.inventory,before.inventory);
@@ -93,8 +93,8 @@ test('reward choices affect only explicit future draws and retain rarity and def
   assert.equal(rewardForRoll('common',.9,0,false,completedRarity,{avoidCompanionDuplicates:true}).kind,'gear');
   assert.equal(inventory.length,1);
   const target=GEAR.find(value=>value.rarity==='rare'&&value.slot==='top')!;
-  const selected=rewardForRoll('rare',.9,0,true,inventory,{gearSlot:target.slot});
-  assert.equal(selected.kind,'gear');assert.equal(selected.slot,'top');assert.equal(selected.rarity,'rare');
+  const selected=rewardForRoll('rare',.9,0,true,inventory,{gearSlot:target.slot} as unknown as import('../src/lib/game').RewardChoice);
+  assert.equal(selected.kind,'gear');assert.equal(selected.id,GEAR.find(value=>value.rarity==='rare')!.id);assert.equal(selected.rarity,'rare');
 });
 
 test('legacy record and profile economics stay unchanged until an explicit versioned migration exists',async()=>{

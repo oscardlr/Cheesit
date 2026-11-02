@@ -1,3 +1,4 @@
+import { isGameState, normalizeGame } from './game';
 import { emptyData, snapshotLoadConventions, type AppData } from './model';
 
 const DB = 'entrenos-local';
@@ -34,12 +35,30 @@ export function createStorageClient(onCommit?: (revision: number) => void) {
     const db = await openDatabase();
     try {
       const stored = await new Promise<{ data: AppData; revision: number }>((resolve, reject) => {
-        const tx = db.transaction(STORE, 'readonly');
-        const data = tx.objectStore(STORE).get(KEY);
-        const currentRevision = tx.objectStore(STORE).get(REVISION_KEY);
-        tx.oncomplete = () => resolve({ data: data.result ?? emptyData(), revision: currentRevision.result ?? 0 });
+        // Serialize migration with other tabs in the same atomic transaction.
+        const tx = db.transaction(STORE, 'readwrite', { durability: 'strict' });
+        const store = tx.objectStore(STORE);
+        const data = store.get(KEY);
+        const currentRevision = store.get(REVISION_KEY);
+        let migrated: AppData;
+        let nextRevision = 0;
+        let ready = 0;
+        let migrationError: unknown;
+        const migrate = () => {
+          if (++ready < 2) return;
+          const original = (data.result ?? emptyData()) as AppData;
+          migrated = { ...original, ...(original.game && isGameState(original.game) ? { game: normalizeGame(original.game) } : {}) };
+          nextRevision = currentRevision.result ?? 0;
+          if (JSON.stringify(original) !== JSON.stringify(migrated)) {
+            try { store.put(migrated, KEY); store.put(++nextRevision, REVISION_KEY); }
+            catch (error) { migrationError = error; tx.abort(); }
+          }
+        };
+        data.onsuccess = migrate;
+        currentRevision.onsuccess = migrate;
+        tx.oncomplete = () => resolve({ data: migrated, revision: nextRevision });
         tx.onerror = () => reject(tx.error ?? new Error('No se pudieron recuperar los datos'));
-        tx.onabort = () => reject(tx.error ?? new Error('Se canceló la lectura de los datos'));
+        tx.onabort = () => reject(migrationError ?? tx.error ?? new Error('Se canceló la lectura de los datos'));
       });
       revision = stored.revision;
       pending = null;
@@ -60,17 +79,18 @@ export function createStorageClient(onCommit?: (revision: number) => void) {
         const tx = db.transaction(STORE, 'readwrite', { durability: 'strict' });
         const store = tx.objectStore(STORE);
         let conflict = false;
+        let writeError: unknown;
         let next = revision! + 1;
         const current = store.get(REVISION_KEY);
         current.onsuccess = () => {
           if ((current.result ?? 0) !== revision) { conflict = true; tx.abort(); return; }
           next = revision! + 1;
-          store.put(data, KEY);
-          store.put(next, REVISION_KEY);
+          try { store.put(data, KEY); store.put(next, REVISION_KEY); }
+          catch (error) { writeError = error; tx.abort(); }
         };
         tx.oncomplete = () => resolve(next);
         tx.onerror = () => reject(tx.error ?? new Error('No se pudieron guardar los datos'));
-        tx.onabort = () => reject(conflict ? new StorageConflictError() : tx.error ?? new Error('Se canceló el guardado'));
+        tx.onabort = () => reject(conflict ? new StorageConflictError() : writeError ?? tx.error ?? new Error('Se canceló el guardado'));
       });
       revision = nextRevision;
       // A notification failure must never turn an already committed write into a reported failure.
@@ -84,7 +104,7 @@ export function createStorageClient(onCommit?: (revision: number) => void) {
     const existing = inflight.get(data);
     if (existing) return existing;
     // Snapshot before any asynchronous work so later UI edits cannot mutate a queued write.
-    const snapshot = structuredClone(data);
+    const snapshot = structuredClone({ ...data, ...(data.game && isGameState(data.game) ? { game: normalizeGame(data.game) } : {}) });
     const save = lastSave.catch(() => undefined).then(() => commitData(snapshot)).then(() => {
       if (pending === data) pending = null;
     });

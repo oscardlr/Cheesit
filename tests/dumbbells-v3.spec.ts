@@ -18,7 +18,7 @@ test('dumbbell exercise notes retain the entered per-hand weight and award XP fo
   await expect(page.locator('.celebration-reward')).toContainText('+57');
   await page.getByRole('button', { name: 'Cerrar celebración' }).click();
   await navigation.getByRole('button', { name: 'Resumen', exact: true }).click();
-  await expect(page.locator('.xp-label > strong')).toHaveText(/57 \/ 1\.?000 XP/);
+  await expect(page.locator('.xp-label > strong')).toHaveText(/57 \/ 800 XP/);
   await expect(page.getByRole('status')).toContainText('Guardado en este dispositivo');
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
