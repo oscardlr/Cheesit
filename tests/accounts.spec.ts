@@ -27,13 +27,13 @@ async function routine(page:Page,name:string) {
 test('requires an account, registration confirmation, recovery and persistent session',async({page})=>{
   await page.goto('/'); await expect(page.getByRole('button',{name:'Empezar entrenamiento',exact:true})).toHaveCount(0);
   await page.getByRole('button',{name:'Crear cuenta',exact:true}).click();
-  await page.getByLabel('Correo electrónico').fill('register@example.test');await page.getByLabel('Contraseña',{exact:true}).fill('test-password-123');await page.getByRole('button',{name:'Crear cuenta',exact:true}).click();
+  await page.getByLabel('Correo electrónico').fill('register@example.test');await page.getByLabel('Contraseña',{exact:true}).fill('test-password-123');await page.getByLabel('Repetir contraseña',{exact:true}).fill('test-password-123');await page.getByRole('button',{name:'Crear cuenta',exact:true}).click();
   await expect(page.getByRole('status')).toContainText('correo para confirmar');
   harness.confirm('register@example.test');await page.getByRole('button',{name:'Volver a iniciar sesión'}).click();
-  await page.getByRole('button',{name:'Entrar',exact:true}).click();await expect(page.getByRole('heading',{name:'Resumen',exact:true})).toBeVisible();await synced(page);
+  await page.getByLabel('Contraseña',{exact:true}).fill('test-password-123');await page.getByRole('button',{name:'Entrar',exact:true}).click();await expect(page.getByRole('heading',{name:'Resumen',exact:true})).toBeVisible();await synced(page);
   await page.reload();await expect(page.getByRole('heading',{name:'Resumen',exact:true})).toBeVisible();
   await page.goto('/'+harness.recovery('register@example.test'));
-  await expect(page.getByRole('heading',{name:'Nueva contraseña'})).toBeVisible();await page.getByLabel('Contraseña',{exact:true}).fill('new-password-456');await page.getByRole('button',{name:'Guardar contraseña'}).click();
+  await expect(page.getByRole('heading',{name:'Nueva contraseña'})).toBeVisible();await page.getByLabel('Contraseña',{exact:true}).fill('new-password-456');await page.getByLabel('Repetir contraseña',{exact:true}).fill('new-password-456');await page.getByRole('button',{name:'Guardar contraseña'}).click();
   await expect(page.getByRole('heading',{name:'Resumen',exact:true})).toBeVisible();
   await page.getByText('Mi cuenta',{exact:true}).click();await page.getByRole('button',{name:'Cerrar sesión',exact:true}).click();
   await page.getByRole('button',{name:'He olvidado mi contraseña'}).click();await page.getByLabel('Correo electrónico').fill('register@example.test');await page.getByRole('button',{name:'Enviar correo'}).click();await expect(page.getByRole('status')).toContainText('recibirás un correo');
