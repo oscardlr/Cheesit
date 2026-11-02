@@ -1,3 +1,4 @@
+import { account, settings } from './account-navigation';
 import { test, expect, type Page } from '@playwright/test';
 import { accountsHarness } from './accounts-harness';
 import { CATALOG } from '../src/lib/catalog';
@@ -18,8 +19,8 @@ async function login(page: Page, email: string) {
   await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
   await synced(page);
 }
-async function synced(page: Page) { await expect(page.locator('.account-toolbar')).toContainText('Sincronizado con tu cuenta', { timeout: 15000 }); }
-async function open(page: Page) { await page.getByRole('button', { name: 'Mi perfil', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Mi perfil', exact: true })).toBeVisible(); }
+async function synced(page: Page) { await expect(page.locator('.account-sync-copy')).toContainText('Sincronizado con tu cuenta', { timeout: 15000 }); }
+async function open(page: Page) { await page.getByLabel('Menú de perfil', { exact: true }).click(); await page.locator('.profile-nav-options').getByRole('button', { name: 'Mi perfil', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Mi perfil', exact: true })).toBeVisible(); }
 async function edit(page: Page) { await page.getByRole('button', { name: 'Editar perfil', exact: true }).click(); await expect(page.getByRole('dialog')).toBeVisible(); }
 async function save(page: Page) { await page.getByRole('button', { name: 'Guardar cambios', exact: true }).click(); await expect(page.getByRole('dialog')).toHaveCount(0); }
 async function upload(page: Page, color: string) {
@@ -63,17 +64,17 @@ test('new private profile: edit, upload/change/remove photo, offline reload, sec
     await page.reload(); await expect(page.locator('.personal-avatar img')).toHaveAttribute('src', secondPhoto!);
     await expect(page.getByText('Disponible sin conexión', { exact: true })).toBeVisible();
     await context.setOffline(true); await edit(page); await page.getByRole('button', { name: 'Eliminar foto', exact: true }).click(); await save(page);
-    await expect(page.locator('.account-toolbar')).toContainText('Pendiente de conexión');
+    await expect(page.locator('.account-sync-copy')).toContainText('Pendiente de conexión');
     await page.reload(); await expect(page.getByRole('heading', { name: 'Álex Cheesit' })).toBeVisible();
     await expect(page.getByRole('img', { name: 'Avatar predeterminado' })).toBeVisible();
-    await context.setOffline(false); await page.getByRole('button', { name: 'Reintentar sincronización' }).click(); await synced(page);
+    await context.setOffline(false); await settings(page);await page.getByRole('button', { name: 'Reintentar sincronización' }).click(); await synced(page);
     await expect.poll(async () => ((await harness.account('profile@example.test')).data as AppData).personalProfile?.photo === null).toBe(true);
     const downloaded = device.waitForResponse(response => response.url().includes('/rest/v1/cheesit_accounts') && response.request().method() === 'GET');
     await device.reload();
     const remote = await (await downloaded).json(); expect(remote.data.personalProfile.photo).toBeNull();
     await synced(device);
     await expect(device.getByRole('img', { name: 'Avatar predeterminado' })).toBeVisible();
-    await page.getByText('Mi cuenta', { exact: true }).click(); await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click(); await login(page, 'profile-other@example.test'); await open(page);
+    await account(page); await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click(); await login(page, 'profile-other@example.test'); await open(page);
     await expect(page.locator('.profile-name h2')).toHaveText('Tu perfil'); await expect(page.locator('.profile-bio')).not.toContainText('Entreno a mi ritmo'); await expect(page.locator('.profile-stats dd')).toHaveText(['0', '0', '1']);
     expect((await harness.account('profile@example.test')).data).toMatchObject({ personalProfile: { photo: null } });
     expect(errors).toEqual([]);
@@ -106,7 +107,7 @@ test('real recent activity, details and responsive layout with accessible editin
   page.once('dialog', dialog => dialog.dismiss()); await page.keyboard.press('Escape'); await expect(page.getByRole('dialog')).toBeVisible();
   page.once('dialog', dialog => dialog.accept()); await page.keyboard.press('Escape'); await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.locator('.profile-name h2')).toHaveText(data.personalProfile!.displayName);
-  await page.getByRole('button', { name: 'Mi perfil', exact: true }).focus(); await page.keyboard.press('Enter'); await expect(page.getByRole('heading', { name: 'Mi perfil', exact: true })).toBeVisible();
+  await page.getByLabel('Menú de perfil', { exact: true }).focus(); await page.keyboard.press('Enter'); await page.keyboard.press('Tab'); await page.keyboard.press('Enter'); await expect(page.getByRole('heading', { name: 'Mi perfil', exact: true })).toBeVisible();
 });
 
 test('two different personal profile edits require review and display both private versions', async ({ page, browser }) => {
@@ -116,13 +117,12 @@ test('two different personal profile edits require review and display both priva
     await login(second, 'profile-conflict@example.test'); await open(second); await secondContext.setOffline(true);
     await edit(page); await page.getByRole('dialog').getByLabel('Nombre', { exact: true }).fill('Versión en la cuenta'); await save(page); await synced(page);
     await edit(second); await second.getByRole('dialog').getByLabel('Nombre', { exact: true }).fill('Versión sin conexión'); await save(second);
-    await expect(second.locator('.account-toolbar')).toContainText('Pendiente de conexión'); await secondContext.setOffline(false);
-    await second.getByRole('button', { name: 'Reintentar sincronización' }).click();
+    await expect(second.locator('.account-sync-copy')).toContainText('Pendiente de conexión'); await settings(second);await secondContext.setOffline(false);
     await expect(second.getByRole('heading', { name: 'Revisa los cambios de tus dispositivos' })).toBeVisible();
     await expect(second.getByRole('group', { name: 'Foto, nombre y biografía' })).toBeVisible();
     await second.getByRole('group', { name: 'Foto, nombre y biografía' }).locator('summary').click();
     await expect(second.getByText('Versión en la cuenta', { exact: true })).toBeVisible(); await expect(second.getByText('Versión sin conexión', { exact: true })).toBeVisible();
     await second.getByLabel('Usar versión de la cuenta', { exact: true }).check(); await second.getByRole('button', { name: 'Confirmar resolución' }).click(); await synced(second);
-    await expect(second.locator('.profile-name h2')).toHaveText('Versión en la cuenta');
+    await open(second);await expect(second.locator('.profile-name h2')).toHaveText('Versión en la cuenta');
   } finally { await secondContext.close(); }
 });
