@@ -36,7 +36,7 @@ export function createBackup(data: AppData) {
     origin: 'browser', units: 'kg', scope: 'local-device-only', data: { ...data, ...(data.game && isGameState(data.game) ? { game: normalizeGame(data.game) } : {}) } };
 }
 
-function validateData(value: unknown): AppData {
+export function validateData(value: unknown): AppData {
   if (!record(value) || !bounded(value.routines, 10000) || !bounded(value.workouts, 50000) || !bounded(value.customExercises, 10000)) return fail('estructura o cantidad de registros');
   const ids = new Set<string>();
   const add = (id: unknown) => { if (!uuid(id) || ids.has(id)) fail('identificador ausente, inválido o duplicado'); ids.add(id as string); };

@@ -1,5 +1,5 @@
-import EntrenosApp from "@/components/EntrenosApp";
+import AccountGate from "@/components/AccountGate";
 
 export default function Home() {
-  return <EntrenosApp />;
+  return <AccountGate />;
 }

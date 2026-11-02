@@ -9,7 +9,7 @@ const CHANGE_KEY = 'cheesit-storage-revision';
 
 export class StorageConflictError extends Error {
   constructor() {
-    super('Otra pestaña ha guardado cambios. Exporta lo pendiente y recarga esta pestaña antes de seguir editando.');
+    super('Otra pestaña ha guardado cambios. Recupera los cambios de las pestañas antes de seguir editando.');
     this.name = 'StorageConflictError';
   }
 }

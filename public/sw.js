@@ -66,7 +66,7 @@ self.addEventListener('fetch', event => {
   } else if (url.pathname.startsWith('/_next/static/')) {
     // Immutable hashed chunks from either current or immediately previous build are safe to reuse.
     event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request)));
-  } else if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/exercises/') || url.pathname.startsWith('/icon') || url.pathname === '/manifest.webmanifest') {
+  } else if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/exercises/') || url.pathname.startsWith('/icon') || url.pathname === '/cheesit-logo.png' || url.pathname === '/manifest.webmanifest') {
     event.respondWith(caches.open(CACHE).then(cache => cache.match(event.request)).then(cached => cached || fetch(event.request)));
   }
 });
