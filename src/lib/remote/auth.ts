@@ -1,7 +1,14 @@
 import { createClient, isAuthRetryableFetchError, type SupabaseClient, type User } from '@supabase/supabase-js';
 import { RemoteConnectionError } from './errors';
+import { authReturnInfo } from './oauth';
 
 let client: SupabaseClient | undefined;
+let returned: ReturnType<typeof authReturnInfo> | undefined;
+
+export function authRedirect() {
+  if (typeof window !== 'undefined') returned ??= authReturnInfo(window.location.href);
+  return returned;
+}
 
 /** No secret keys belong in these variables. Null means account services are not configured. */
 export function remoteClient(): SupabaseClient | null {
@@ -13,6 +20,7 @@ export function remoteClient(): SupabaseClient | null {
     try { if (JSON.parse(atob(key.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).role === 'service_role') throw new Error('No se permite una clave administrativa en el navegador.'); }
     catch (error) { if (error instanceof Error && error.message.includes('administrativa')) throw error; }
   }
+  authRedirect();
   client ??= createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
   return client;
 }
@@ -72,4 +80,25 @@ export async function resendConfirmation(email: string, redirectTo: string): Pro
   const client = remoteClient(); if (!client) throw new Error('La cuenta no está configurada.');
   const { error } = await client.auth.resend({ type: 'signup', email, options: { emailRedirectTo: redirectTo } });
   if (error) throw new Error('No se pudo enviar el enlace. Espera un momento y vuelve a intentarlo.');
+}
+
+export async function googleSignInUrl(redirectTo: string): Promise<string> {
+  const supabase = remoteClient();
+  if (!supabase) throw new Error('La cuenta no está configurada.');
+  // Check live availability so an unfinished provider setup never sends people to a JSON error page.
+  let response: Response;
+  try {
+    response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`, {
+      headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY! }, signal: AbortSignal.timeout(10000), cache: 'no-store',
+    });
+  } catch { throw new RemoteConnectionError(); }
+  if (!response.ok) throw new Error('No se pudo comprobar el acceso con Google. Inténtalo de nuevo.');
+  let settings: { external?: { google?: boolean } } | null;
+  try { settings = await response.json(); } catch { throw new Error('No se pudo comprobar el acceso con Google. Inténtalo de nuevo.'); }
+  if (settings?.external?.google !== true) throw new Error('El acceso con Google aún no está disponible. Puedes entrar con correo y contraseña.');
+  const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: {
+    redirectTo, scopes: 'openid email profile', queryParams: { prompt: 'select_account' }, skipBrowserRedirect: true,
+  } });
+  if (error || !data.url) throw new Error('No se pudo iniciar el acceso con Google. Inténtalo de nuevo.');
+  return data.url;
 }

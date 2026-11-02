@@ -125,3 +125,7 @@ Esta prueba comprueba acceso al servicio real, dos cuentas, lectura y escritura 
 - El documento tiene un límite de 16 MiB y se descarga completo. El protocolo prioriza consistencia y conservación de la economía; una cuenta muy grande necesitará paginación por revisiones y archivado de recibos con un protocolo de retención seguro. No purgar marcas ni recibos unilateralmente.
 - Los conflictos de actividad son conservadores y pueden requerir elegir una rama completa. No hay fusión automática de dos economías gastadas independientemente.
 - No se han añadido amigos, chats, publicaciones ni challenges. Los resultados de esta guía describen las comprobaciones previas; el commit y despliegue de publicación se identifican en la PR de cuentas.
+
+## Google y mejoras de contraseña
+
+El registro y la recuperación incluyen confirmación de contraseña y controles para mostrarla. Se añade Google como acceso alternativo, usando el mismo aislamiento y migración por usuario. Configuración externa, pruebas y límites del regreso desde móvil/PWA: [Acceso con Google](ACCESO-GOOGLE.md).

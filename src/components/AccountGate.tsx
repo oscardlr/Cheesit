@@ -6,7 +6,8 @@ import { AccountVersion } from './AccountVersion';
 import { AccountPanel } from './AccountPanel';
 import EntrenosApp from './EntrenosApp';
 import OfflineShell from './OfflineShell';
-import { remoteClient } from '../lib/remote/auth';
+import { authRedirect, remoteClient } from '../lib/remote/auth';
+import { GOOGLE_PENDING, oauthErrorMessage } from '../lib/remote/oauth';
 import { AccountStore, claimLegacy, legacySource, recoveryCopies, syncStatusLabel, type LegacySource } from '../lib/remote/account-store';
 import { accountTransport } from '../lib/remote/account-sync';
 import type { BackupResolution } from '../lib/backup';
@@ -34,18 +35,32 @@ export default function AccountGate() {
   const configured = !!remoteClient();
 
   useEffect(() => {
-    // Capture recovery/errors before the SDK consumes the URL fragment.
-    const params = new URLSearchParams(window.location.hash.slice(1));
-    if (params.get('type') === 'recovery' || new URLSearchParams(window.location.search).get('recovery') === '1') setRecovery(true);
-    if (params.has('error_description')) setError('El enlace no es válido o ha caducado. Solicita otro correo de acceso.');
+    // The client captures only callback metadata before the SDK consumes the URL.
+    const returned = authRedirect();
+    let googlePending = false;
+    try { googlePending = sessionStorage.getItem(GOOGLE_PENDING) === '1'; } catch { /* Storage may be unavailable. */ }
+    if (returned?.recovery) setRecovery(true);
+    if (returned?.error) setError(returned.google || googlePending ? oauthErrorMessage(returned.error) : 'El enlace no es válido o ha caducado. Solicita otro correo de acceso.');
     const client = remoteClient();
     if (!client) { setReady(true); return; }
     const { data } = client.auth.onAuthStateChange((event, value) => {
+      if (event === 'INITIAL_SESSION') {
+        if (!value && !returned?.error && (returned?.google || googlePending)) setError(oauthErrorMessage('access_denied'));
+        try { sessionStorage.removeItem(GOOGLE_PENDING); } catch { /* No credentials are kept in the marker. */ }
+        if (returned?.google) window.history.replaceState(null, '', window.location.pathname);
+      }
       if (event === 'PASSWORD_RECOVERY') setRecovery(true);
       if (storeRef.current && storeRef.current.owner !== value?.user.id) { const previous = storeRef.current; void previous.closePreservingPending().catch(() => undefined); storeRef.current = null; setStore(null); }
       setSession(value); setReady(true);
     });
-    return () => data.subscription.unsubscribe();
+    const backFromGoogle = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      try {
+        if (sessionStorage.getItem(GOOGLE_PENDING)) { sessionStorage.removeItem(GOOGLE_PENDING); setError(oauthErrorMessage('access_denied')); }
+      } catch { /* The provider also returns explicit cancellation errors. */ }
+    };
+    window.addEventListener('pageshow', backFromGoogle);
+    return () => { data.subscription.unsubscribe(); window.removeEventListener('pageshow', backFromGoogle); };
   }, []);
 
   useEffect(() => {
