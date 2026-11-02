@@ -1,5 +1,23 @@
 # Cuentas y sincronización de Cheesit — 2 de noviembre de 2026
 
+## Perfil personal — 3 de noviembre de 2026
+
+El icono de persona del extremo derecho abre `#view=profile`, siempre dentro de la cuenta autenticada. No acepta un propietario en la ruta ni incorpora perfiles públicos o funciones sociales. El nombre (80 caracteres), la biografía (300) y la foto se guardan en `AppData.personalProfile`, sin modificar `profile`, que sigue siendo el perfil de entrenamiento utilizado por las reglas de XP.
+
+La foto se admite en JPG, PNG o WebP de hasta 8 MiB y 40 megapíxeles; el navegador recorta el centro, reduce a 384 × 384 y vuelve a codificar como JPEG, sin conservar los metadatos del archivo original. Se almacena una única imagen embebida de hasta 262.144 caracteres dentro del documento privado de la cuenta. No se crean buckets, enlaces públicos ni peticiones a servidores de imágenes. Cambiar o quitar la foto pasa por la misma cola, revisión y recibo que el resto de cambios; quitarla guarda `photo: null`. Los recibos históricos y las copias de recuperación mantienen su comportamiento anterior y pueden conservar versiones anteriores del perfil.
+
+La identidad personal tiene su propia comparación de tres versiones: una edición del nombre puede combinarse con actividad guardada en otro dispositivo; dos cambios distintos de identidad requieren elegir una versión y conservan una copia de recuperación. La comparación muestra foto, nombre y biografía. Las copias JSON incluyen esta información, conservan el perfil actual al incorporar una copia antigua sin él y exigen resolver identidades divergentes. El editor protege los cambios sin guardar frente a navegación, recarga y actualizaciones automáticas.
+
+Los contadores reutilizan `totals`: solo entrenamientos finalizados y series confirmadas válidas. El nivel usa exactamente el cálculo de la cabecera. Las seis sesiones recientes se ordenan por fecha de entrenamiento y desempatan por creación e ID, excluyendo borradores y eliminadas. Sus detalles conservan el regreso al perfil incluso después de recargar. Las cuentas nuevas muestran avatar predeterminado, cero actividad y el nivel inicial real del juego.
+
+Se corrigió además el refresco inicial de una cuenta ya almacenada en caché: cuando la primera descarga cambia el documento, la vista montada se actualiza. Una edición sin guardar aplaza esa actualización hasta que pueda completarse con seguridad.
+
+**Migración aplicada:** `supabase/migrations/20261102233213_personal_profiles.sql` amplía el validador existente; conserva sus comprobaciones anteriores, RLS, RPC y permisos. Se aplicó con autorización del usuario al proyecto `fwfmwyyufafaxckkdwrx`; la versión local coincide con el historial remoto. La consulta real acepta perfiles vacíos y mantiene denegada la ejecución directa del validador para `authenticated` y la escritura anónima. Los asesores conservan sus avisos anteriores, sin introducir avisos nuevos. Las pruebas funcionales completas usan Auth de prueba y PostgreSQL local, sin modificar perfiles reales.
+
+Verificación de la versión aislada completada: **203 pruebas aprobadas, 0 fallos y 1 LIVE omitida**; **9 recorridos Chrome aprobados** (6 de cuentas y 3 de perfil), TypeScript, compilación y revisión de diff correctos. Se inspeccionaron las capturas responsive y el editor.
+
+Pruebas del perfil: `tests/personal-profile.test.ts` cubre validación, copias, mezcla de cambios, SQL transaccional, CAS, borrado de foto y aislamiento RLS. `tests/personal-profile.spec.ts` recorre subida/cambio/eliminación de foto, persistencia offline, dos dispositivos, aislamiento de cuentas, actividad real, detalle, conflictos y tamaños 320/390/768/1440. Ejecutar esta última junto a `tests/accounts.spec.ts` con la configuración de fixture descrita abajo. Las capturas se guardan en `artifacts/personal-profile/`.
+
 ## Conexión de desarrollo verificada
 
 La aplicación local está conectada a **Cheesit**, proyecto Supabase `fwfmwyyufafaxckkdwrx` (eu-west-1). Antes de conectar se comprobó que no tenía tablas públicas, migraciones ni usuarios. Se aplicaron las cinco migraciones de `supabase/migrations/`, en orden, y su historial remoto coincide con las versiones locales. En la verificación inicial no se publicó en producción ni se cambió la configuración de Vercel. La publicación posterior se prepara desde un worktree aislado y añade exclusivamente las tres variables públicas de `.env.example`, con créditos de prueba desactivados.

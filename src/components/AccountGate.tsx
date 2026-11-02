@@ -31,6 +31,7 @@ export default function AccountGate() {
   const [copies, setCopies] = useState<Awaited<ReturnType<typeof recoveryCopies>>>([]);
   const [migrationBusy, setMigrationBusy] = useState(false);
   const syncing = useRef(false);
+  const initialRefresh = useRef(false);
   const storeRef = useRef<AccountStore | null>(null);
   const configured = !!remoteClient();
 
@@ -68,11 +69,20 @@ export default function AccountGate() {
     let active = true; let current: AccountStore | undefined;
     setError(''); setStore(null); setLegacy(undefined); setMigrationPreview(undefined); setConflictChoices({}); setCopies([]); setMigrationChoices({});
     const owner = session.user.id;
+    initialRefresh.current = false;
     void (async () => {
       current = await new AccountStore(owner, accountTransport(owner)).initialize();
       if (!active) { current.dispose(); return; }
       storeRef.current = current; setStore(current);
-      try { await current.synchronize(); }
+      try {
+        const changed = await current.synchronize();
+        if (active && changed) {
+          // A verified cache can mount the app before the first download ends.
+          // Refresh that mounted view, while preserving an open unsaved editor.
+          if (window.dispatchEvent(new Event('cheesit:before-update', { cancelable: true }))) setGeneration(v => v + 1);
+          else initialRefresh.current = true;
+        }
+      }
       catch (reason) { if (active) setError(reason instanceof Error ? reason.message : 'No se pudo abrir tu cuenta.'); }
       if (!active) return;
       redraw(v => v + 1);
@@ -95,7 +105,8 @@ export default function AccountGate() {
       if (storeRef.current !== store) return;
       await store.flushData();
       if (storeRef.current !== store) return;
-      const refresh = store.consumeRefresh();
+      const refresh = store.consumeRefresh() || initialRefresh.current;
+      initialRefresh.current = false;
       if (changed || refresh) setGeneration(v => v + 1);
       setError('');
       if (legacy && store.getSnapshot().base.migrations.includes(legacy.id)) { await claimLegacy(store.owner, legacy); setLegacy(undefined); setMigrationPreview(undefined); }
@@ -138,7 +149,7 @@ export default function AccountGate() {
   return <>
     <aside className="account-toolbar" aria-label="Cuenta y sincronización"><span role="status">{store ? syncStatusLabel[store.status] : 'Abriendo tu cuenta…'}</span><button className="text-action" disabled={syncing.current} onClick={() => void synchronize()}>Reintentar sincronización</button><details><summary>Mi cuenta</summary><div className="account-menu">{panel}<button onClick={()=>void recoveryCopies(store!.owner).then(value => { if (storeRef.current === store) setCopies(value); })}>Revisar copias de conflictos</button>{copies.map(copy=><details key={copy.key}><summary>Copia {new Date(Number(copy.key.split(':').at(-1))).toLocaleString('es-ES')}</summary><p>Rama conservada en este navegador. Puedes revisarla e incorporarla como una migración, con sus conflictos.</p><button onClick={()=>{setLegacy({id:copy.key,data:copy.local.data,owner:store!.owner});setMigrationPreview(undefined);setMigrationChoices({})}}>Revisar incorporación de esta copia</button></details>)}</div></details></aside>
     {(error || store?.error) && <div className="account-notice" role="alert">{error || store?.error}</div>}
-    {store && store.conflicts().length > 0 && <section className="account-notice account-conflicts" aria-label="Conflictos de sincronización"><h2>Revisa los cambios de tus dispositivos</h2><p>Ambas versiones están conservadas. Historial, perfil y economía se resuelven juntos para evitar duplicar premios o gastar dos veces una carga. La versión descartada quedará como copia de recuperación local. Las eliminaciones confirmadas se mantienen al elegir cualquiera de las versiones.</p>{store.conflicts().map(c => <fieldset key={c.key}><legend>{c.label}</legend><details><summary>Comparar versiones</summary><h3>Este dispositivo</h3><AccountVersion value={c.local}/><h3>Cuenta</h3><AccountVersion value={c.server}/></details><label><input type="radio" name={c.key} checked={conflictChoices[c.key] === 'server'} onChange={() => setConflictChoices(v => ({ ...v, [c.key]: 'server' }))}/> Usar versión de la cuenta</label><label><input type="radio" name={c.key} checked={conflictChoices[c.key] === 'local'} onChange={() => setConflictChoices(v => ({ ...v, [c.key]: 'local' }))}/> Usar versión de este dispositivo</label></fieldset>)}<button className="primary" onClick={() => void store.resolve(conflictChoices).then(() => { setConflictChoices({}); setGeneration(v => v + 1); return synchronize(); }).catch(e => setError(e.message))}>Confirmar resolución</button></section>}
+    {store && store.conflicts().length > 0 && <section className="account-notice account-conflicts" aria-label="Conflictos de sincronización"><h2>Revisa los cambios de tus dispositivos</h2><p>Ambas versiones están conservadas. Historial, perfil de entrenamiento y economía se resuelven juntos para evitar duplicar premios o gastar dos veces una carga. La foto, el nombre y la biografía se revisan por separado. La versión descartada quedará como copia de recuperación local. Las eliminaciones confirmadas se mantienen al elegir cualquiera de las versiones.</p>{store.conflicts().map(c => <fieldset key={c.key}><legend>{c.label}</legend><details><summary>Comparar versiones</summary><h3>Este dispositivo</h3><AccountVersion value={c.local}/><h3>Cuenta</h3><AccountVersion value={c.server}/></details><label><input type="radio" name={c.key} checked={conflictChoices[c.key] === 'server'} onChange={() => setConflictChoices(v => ({ ...v, [c.key]: 'server' }))}/> Usar versión de la cuenta</label><label><input type="radio" name={c.key} checked={conflictChoices[c.key] === 'local'} onChange={() => setConflictChoices(v => ({ ...v, [c.key]: 'local' }))}/> Usar versión de este dispositivo</label></fieldset>)}<button className="primary" onClick={() => void store.resolve(conflictChoices).then(() => { setConflictChoices({}); setGeneration(v => v + 1); return synchronize(); }).catch(e => setError(e.message))}>Confirmar resolución</button></section>}
     {legacy && (!legacy.owner || legacy.owner === store?.owner) && usable && <section className="account-notice" aria-label="Historial anterior"><h2>Tu historial anterior sigue aquí</h2><p>{legacy.data.workouts.length} entrenamientos y {legacy.data.routines.length} rutinas, junto con tus borradores y estado del juego. Puedes incorporarlos a esta cuenta sin archivos. Conservaremos el original incluso después del guardado.</p>{store?.getSnapshot().draft.migrations.includes(legacy.id) ? <p>Incorporación pendiente de confirmación en la nube. Reintenta la sincronización.</p> : <><button className="secondary" disabled={migrationBusy} onClick={() => { try { previewMigration(); } catch (e) { setError((e as Error).message); } }}>Revisar incorporación</button>{migrationPreview && <><p>Se añadirán {Object.values(migrationPreview.newCounts).reduce((a, b) => a + b, 0)} registros. Los identificadores coincidentes no se duplican.</p>{migrationPreview.conflictDetails.map(c => <fieldset key={c.key}><legend>{c.name}</legend><details><summary>Comparar versiones</summary><h3>Cuenta</h3><AccountVersion value={c.local}/><h3>Historial anterior</h3><AccountVersion value={c.incoming}/></details>{c.choices.filter(x => x !== 'duplicate').map(choice => <label key={choice}><input type="radio" name={`migration-${c.key}`} checked={migrationChoices[c.key] === choice} onChange={() => { const next = { ...migrationChoices, [c.key]: choice }; setMigrationChoices(next); try { previewMigration(next); } catch (e) { setError((e as Error).message); } }}/>{choice === 'local' ? 'Conservar cuenta' : 'Usar historial anterior'}</label>)}</fieldset>)}<button className="primary" disabled={migrationBusy || migrationPreview.conflicts.length > 0} onClick={() => void migrate()}>Incorporar a mi cuenta</button></>}</>}</section>}
     {usable && store && store.conflicts().length > 0 ? null : usable && store ? <EntrenosApp key={`${store.owner}:${generation}`} store={store}/> : <main className="account-page"><div className="account-card"><h1>Preparando tu cuenta</h1><p>Necesitas conexión para descargarla por primera vez. Después podrás entrenar sin cobertura.</p><button className="primary" onClick={() => void synchronize()}>Reintentar</button>{panel}</div></main>}
   </>;

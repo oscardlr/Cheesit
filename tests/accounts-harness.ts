@@ -8,12 +8,14 @@ export async function accountsHarness(port = 55440) {
   const db = new PGlite();
   await db.exec(`create role anon; create role authenticated; create schema auth; create table auth.users(id uuid primary key); create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$; grant usage on schema auth to authenticated,anon; grant execute on function auth.uid() to authenticated,anon;`);
   await db.exec(readFileSync('supabase/migrations/202611020001_accounts.sql','utf8'));
+  await db.exec(readFileSync('supabase/migrations/20261102233213_personal_profiles.sql','utf8'));
   const users = new Map<string, { id: string; email: string; password: string; confirmed: boolean }>();
   const authUser = (u: { id: string; email: string }) => ({ id:u.id,email:u.email,aud:'authenticated',role:'authenticated',created_at:new Date().toISOString(),app_metadata:{provider:'email'},user_metadata:{},identities:[] });
   const token = (u: {id:string}) => `${Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url')}.${Buffer.from(JSON.stringify({sub:u.id,exp:Math.floor(Date.now()/1000)+3600,role:'authenticated',aud:'authenticated'})).toString('base64url')}.local-test-signature`;
   const session = (u: {id:string;email:string}) => ({ access_token:token(u),refresh_token:u.id,expires_in:3600,expires_at:Math.floor(Date.now()/1000)+3600,token_type:'bearer',user:authUser(u) });
   async function body(req: IncomingMessage) { let text='';for await(const chunk of req)text+=chunk;return text?JSON.parse(text):{}; }
   const server = createServer(async (req,res) => {
+    res.setHeader('cache-control', 'no-store');
     res.setHeader('access-control-allow-origin','*');res.setHeader('access-control-allow-headers','*');res.setHeader('access-control-allow-methods','GET,POST,PUT,PATCH,DELETE,OPTIONS');res.setHeader('content-type','application/json');
     const send=(status:number,data:unknown)=>{res.statusCode=status;res.end(JSON.stringify(data));};
     if(req.method==='OPTIONS'){send(200,{});return;}
@@ -53,7 +55,7 @@ export async function accountsHarness(port = 55440) {
   });
   await new Promise<void>(resolve=>server.listen(port,'127.0.0.1',resolve));
   return {
-    async seed(email:string,password='test-password-123'){const u={id:crypto.randomUUID(),email,password,confirmed:true};users.set(email,u);await db.query('insert into auth.users values ($1)',[u.id]);return u;},
+    async seed(email:string,password='test-password-123',data?:unknown){const u={id:crypto.randomUUID(),email,password,confirmed:true};users.set(email,u);await db.query('insert into auth.users values ($1)',[u.id]);if(data)await db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('request.jwt.claim.sub',$1,true)",[u.id]);await tx.query('select public.cheesit_commit_account($1,$2,0,$3::jsonb)',[u.id,crypto.randomUUID(),JSON.stringify({data,tombstones:((data as {workouts?:{id:string;status:string}[]}).workouts??[]).filter(w=>w.status==='deleted').map(w=>`workouts:${w.id}`),migrations:[]})]);});return u;},
     confirm(email:string){const u=users.get(email)!;u.confirmed=true;return session(u);},
     recovery(email:string){const u=users.get(email)!;const s=session(u);return `?recovery=1#access_token=${s.access_token}&refresh_token=${s.refresh_token}&token_type=bearer&expires_in=3600&type=recovery`;},
     async account(email:string){const u=users.get(email)!;return (await db.query<{data:unknown;revision:number}>('select data,revision from public.cheesit_accounts where owner_id=$1',[u.id])).rows[0];},
