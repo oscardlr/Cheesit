@@ -104,12 +104,12 @@ test('same level can be claimed once in separate years; old unclaimed crates sta
     assert.ok(getLevelCrates(game, history, undefined, '2026').some(crate => crate.level === 3 && !crate.claimed));
     history.push(representativeWorkout('2027-01-02'));
     game = reconcileSeasonProgression(game, history);
-    const opened = openLevelCrate(game, history, 2, undefined, {}, '2027')!;
+    const opened = openLevelCrate(game, history, 2, undefined, '2027')!;
     assert.ok(opened); assert.equal(opened.item.crateId, 'level:2027:2');
     assert.equal(opened.game.transactions.filter(transaction => transaction.sourceLevel === 2).length, 2);
     assert.ok(isGameState(opened.game));
-    assert.equal(openLevelCrate(revealReservedOpening(opened.game), history, 2, undefined, {}, '2027'), null);
-    const oldPending = openLevelCrate(revealReservedOpening(opened.game), history, 3, undefined, {}, '2026')!;
+    assert.equal(openLevelCrate(revealReservedOpening(opened.game), history, 2, undefined, '2027'), null);
+    const oldPending = openLevelCrate(revealReservedOpening(opened.game), history, 3, undefined, '2026')!;
     assert.ok(oldPending); assert.equal(oldPending.game.transactions.at(-1)?.sourceSeason,'2026');
     assert.ok(oldPending.item.acquiredAt.startsWith('2027')); assert.ok(isGameState(oldPending.game));
   } finally { time.mock.restore(); }

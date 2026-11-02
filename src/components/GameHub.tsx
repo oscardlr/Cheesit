@@ -74,7 +74,6 @@ export default function GameHub({ data, onChange, today, effectsEnabled, soundEn
   const selectedMonth = monthChoice || today.slice(0, 7);
   const selectedYear = yearChoice || today.slice(0, 4);
   const [selectedMuscle, setSelectedMuscle] = useState('chest');
-  const [avoidCompanionDuplicates, setAvoidCompanionDuplicates] = useState(false);
   const [missionFilter, setMissionFilter] = useState<'all' | 'pending' | 'rewarded'>('all');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
@@ -121,7 +120,7 @@ export default function GameHub({ data, onChange, today, effectsEnabled, soundEn
     if (lock.current) return;
     lock.current = true; setBusy(true); setNotice('');
     const latest = dataRef.current;
-    const result = level ? openLevelCrate(normalizeGame(latest.game), latest.workouts, level, latest.profile, {}, season) : openCrate(normalizeGame(latest.game), latest.workouts, crateId, latest.profile, { avoidCompanionDuplicates });
+    const result = level ? openLevelCrate(normalizeGame(latest.game), latest.workouts, level, latest.profile, season) : openCrate(normalizeGame(latest.game), latest.workouts, crateId, latest.profile);
     if (!result) { setNotice(game.pendingOpening ? 'Termina la apertura pendiente antes de abrir otro cofre.' : 'No puedes abrir este cofre todavía. Revisa tu saldo o tu nivel.'); setBusy(false); lock.current = false; if (soundEnabled) playSound('error'); return; }
     const next = { ...latest, game: result.game };
     // Reserve synchronously in the parent before waiting for disk. Navigating away
@@ -173,7 +172,6 @@ export default function GameHub({ data, onChange, today, effectsEnabled, soundEn
       {tab === 'crates' && <>
         <div className="arcade-crate-intro"><div><span className="eyebrow">RECOMPENSAS</span><h2>Cofres disponibles</h2><p>Equipo con cargas de habilidad y cheesits. Primero gira la rareza; el contenido se descubre después.</p><div><span><Zap size={14} />5 XP = 1 crédito</span><span><Shirt size={14} />{REWARD_CATEGORY_LABEL}</span></div></div><CharacterAvatar game={game} level={currentProgress.level} animated={effectsEnabled} compact /></div>
         {allLevelCrates.some(crate => !crate.claimed) && <LevelRewards crates={allLevelCrates} busy={busy || Boolean(game.pendingOpening)} onOpen={(level, season) => void buyCrate('level:' + level, level, season)} />}
-        <label className="crate-reward-choice"><input type="checkbox" checked={avoidCompanionDuplicates} disabled={busy||Boolean(game.pendingOpening)} onChange={event=>setAvoidCompanionDuplicates(event.target.checked)}/><span>Evitar cheesits repetidos<small>Se priorizan los cheesits pendientes de la rareza sorteada. Si ya tienes todos, recibirás equipo de esa rareza. Solo aplica a las próximas compras con esta opción marcada.</small></span></label>
         <div className="arcade-crates">{CRATES.map((crate, index) => <article key={crate.id} className={'arcade-crate crate-' + index}><div className="crate-art" aria-hidden="true"><div className="crate-halo" /><CrateArtwork crateId={crate.id}/></div><span className="eyebrow">{index === 0 ? 'COFRE BÁSICO' : index === 1 ? 'COFRE INTERMEDIO' : 'COFRE AVANZADO'}</span><h3>{crate.name}</h3><p>{crate.description}</p><div className="crate-odds">{(Object.keys(RARITIES) as Rarity[]).map(rarity => <span key={rarity} style={rarityStyle(rarity)}><i />{RARITIES[rarity].label}<strong>{crate.odds[rarity]}%</strong></span>)}</div><button className="arcade-primary" disabled={busy || Boolean(game.pendingOpening) || balance < crate.cost} onClick={() => void buyCrate(crate.id)}><PackageOpen size={17} /><span>{busy ? 'Guardando recompensa…' : balance < crate.cost ? 'Necesitas más créditos' : 'Abrir cofre'}</span><strong>{fmt(crate.cost)} <Coins size={14} /></strong></button></article>)}</div>
         <p className="arcade-economy-note"><Coins size={15} />Créditos virtuales. Cada cofre sortea primero la rareza y después equipo o cheesit de esa rareza. Los objetos no se pueden vender. El equipo duplicado añade cargas de habilidad.</p>
       </>}

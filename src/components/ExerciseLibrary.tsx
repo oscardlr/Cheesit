@@ -33,8 +33,11 @@ export default function ExerciseLibrary({ exercises, onSelect, onSave }: {
     setEdit({ ...edit, [key]: edit[key]?.includes(id) ? edit[key]?.filter(value => value !== id) : [...(edit[key] ?? []), id], [other]: edit[other]?.filter(value => value !== id) });
   };
   return <div className={`exercise-library ${styles.library}`}>
+    <fieldset className={styles.groupFilter}>
+      <legend>Grupo muscular</legend>
+      <div className={styles.groupButtons}>{['Todos', ...GROUPS].map(value => <button type="button" key={value} aria-pressed={group === value} onClick={() => setGroup(value)}>{value}</button>)}</div>
+    </fieldset>
     <label>Buscar ejercicio<input type="search" placeholder="Busca por nombre" value={search} onChange={event => setSearch(event.target.value)} /></label>
-    <label>Grupo muscular<select value={group} onChange={event => setGroup(event.target.value)}>{['Todos', ...GROUPS].map(value => <option key={value}>{value}</option>)}</select></label>
     <label className="check-label"><input type="checkbox" checked={archived} onChange={event => setArchived(event.target.checked)} /> Mostrar ejercicios archivados</label>
     <div className="catalog-list">{visible.map(ex => <div className="catalog-entry" key={ex.id}><button className="list-row" onClick={() => onSelect && !ex.archived ? onSelect(ex) : setDetail(ex)}><ExerciseThumbnail exerciseId={ex.id} image={ex.image} /><span className="list-copy"><strong>{ex.name}</strong><small>{ex.group}{ex.archived ? ' · Archivado' : ex.mode === 'bodyweight_reps' ? ' · Peso corporal' : ''}</small></span><span>{onSelect && !ex.archived ? '＋' : '→'}</span></button><button className="text-action" aria-label={`Ficha técnica ${ex.id}`} onClick={() => setDetail(ex)}>Ficha</button>{isCustom(ex) && <button className="text-action" aria-label={`Editar ficha ${ex.id}`} onClick={() => { setEdit(structuredClone(ex)); setDetail(null); }}>Editar</button>}</div>)}{!visible.length && <p>No hay ejercicios con ese nombre.</p>}</div>
     <button className="secondary wide" onClick={() => { setEdit({ id: newId(), name: '', group: GROUPS[0], mode: 'external_load_reps', loadConvention: 'total', primaryMuscles: [], secondaryMuscles: [] }); setError(''); }}>Crear ejercicio propio</button>

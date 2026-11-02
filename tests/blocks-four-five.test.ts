@@ -34,7 +34,7 @@ test('a committed seasonal chest crosses January with its original reward while 
   let game = reconcileSeasonProgression(normalizeGame(legacy), [], undefined, '2025-12-01');
   game = reconcileSeasonProgression(game, [first], undefined, '2025-12-31');
   assert.ok(getLevelCrates(game, [first], undefined, '2025').some(crate => crate.level === 2 && !crate.claimed));
-  const opened = openLevelCrate(game, [first], 2, undefined, {}, '2025');
+  const opened = openLevelCrate(game, [first], 2, undefined, '2025');
   assert.ok(opened); assert.equal(opened.item.kind, 'gear');
   const previousBalance = gameBalance(opened.game, [first], undefined, 0);
   t.mock.method(Date, 'now', () => Date.parse('2026-01-01T01:00:00Z'));
@@ -45,10 +45,10 @@ test('a committed seasonal chest crosses January with its original reward while 
   assert.equal(gameBalance(january, [first], undefined, 0), previousBalance);
   assert.equal(gameProgress(january, [first]).level, 1);
   assert.equal(gameProgress(january, [first]).xp, 0);
-  assert.equal(openLevelCrate(january, [first], 2, undefined, {}, '2026'), null);
+  assert.equal(openLevelCrate(january, [first], 2, undefined, '2026'), null);
   const second = training('2026-01-01'), history = [first, second];
   game = reconcileSeasonProgression(revealReservedOpening(january), history, undefined, '2026-01-01');
-  const next = openLevelCrate(game, history, 2, undefined, {}, '2026');
+  const next = openLevelCrate(game, history, 2, undefined, '2026');
   assert.ok(next); assert.equal(next.item.kind, 'gear');
   assert.deepEqual(next.game.transactions.filter(tx => tx.kind === 'level-crate').map(tx => tx.sourceSeason), ['2025', '2026']);
   assert.equal(next.game.quoteConversions?.length, 1);

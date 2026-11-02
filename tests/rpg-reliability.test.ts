@@ -3,7 +3,6 @@ import { test } from 'node:test';
 import { createBackup, previewBackup } from '../src/lib/backup';
 import { activityEconomyAdjustment, awardMissionRewards, equipItem, gameBalance, gameCreditStatus, getMissions, isGameState, normalizeGame, openCrate, QUOTES, revealReservedOpening, rewardForRoll, unlockedQuotes, type GameState, type InventoryItem } from '../src/lib/game';
 import { GEAR } from '../src/lib/gear';
-import { COMPANIONS } from '../src/lib/companions';
 import type { AppData, Workout } from '../src/lib/model';
 import { legacySaleSnapshot } from './fixtures/legacy-sale';
 
@@ -82,18 +81,8 @@ test('activity deletion exposes the clamped credit adjustment without changing e
   assert.equal(purchase.game.transactions.length,1);
 });
 
-test('reward choices affect only explicit future draws and retain rarity and default companion behavior',()=>{
-  const companion=COMPANIONS[0];
-  const inventory:InventoryItem[]=[{id:crypto.randomUUID(),kind:'companion',companionId:companion.id,rarity:companion.rarity,acquiredAt:new Date().toISOString(),crateId:'starter',sold:false}];
-  assert.equal(rewardForRoll('common',.9,0,false,inventory).kind,'companion');
-  const choice=rewardForRoll('common',.9,0,false,inventory,{avoidCompanionDuplicates:true});
-  assert.equal(choice.kind,'companion');assert.equal(choice.rarity,'common');
-  assert.notEqual(choice.id,companion.id,'another common cheesit remains obtainable');
-  const completedRarity:InventoryItem[]=COMPANIONS.filter(value=>value.rarity==='common').map(value=>({...inventory[0],id:crypto.randomUUID(),companionId:value.id}));
-  assert.equal(rewardForRoll('common',.9,0,false,completedRarity,{avoidCompanionDuplicates:true}).kind,'gear');
-  assert.equal(inventory.length,1);
-  const target=GEAR.find(value=>value.rarity==='rare'&&value.slot==='top')!;
-  const selected=rewardForRoll('rare',.9,0,true,inventory,{gearSlot:target.slot} as unknown as import('../src/lib/game').RewardChoice);
+test('guaranteed equipment draws retain rarity',()=>{
+  const selected=rewardForRoll('rare',.9,0,true);
   assert.equal(selected.kind,'gear');assert.equal(selected.id,GEAR.find(value=>value.rarity==='rare')!.id);assert.equal(selected.rarity,'rare');
 });
 
