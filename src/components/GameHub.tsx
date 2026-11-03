@@ -16,6 +16,7 @@ import WardrobeV3 from './WardrobeV3';
 import CrateOpening from './CrateOpening';
 import CrateArtwork from './CrateArtwork';
 import './game-hub.css';
+import filterStyles from './ExerciseLibrary.module.css';
 import { formatCreditBalance, TEST_CREDITS } from '@/lib/test-credits';
 import { acknowledgeQuoteConversions, quoteConversionNotice } from '@/lib/quote-conversion';
 import type { Mission } from '@/lib/objectives';
@@ -29,12 +30,6 @@ const tabs: { id: Tab; label: string; Icon: typeof Target }[] = [
 const fmt = (value: number) => new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(value);
 const rarityStyle = (rarity: Rarity): CSSProperties => ({ '--rarity': RARITIES[rarity].color } as CSSProperties);
 const percent = (current: number, target: number) => Math.min(100, Math.max(0, current / target * 100));
-
-export function GamePreview({ data, today, onOpen }: { data: AppData; today: string; onOpen: () => void }) {
-  const game = normalizeGame(data.game);
-  const missions = getMissions(data.workouts, today, game);
-  return <section className="arcade-preview"><div><span className="eyebrow">ZONA ARCADE</span><h2>Objetivos y recompensas</h2><p>{missions.filter(mission => mission.complete).length} de {missions.length} objetivos completados · {fmt(gameBalance(game, data.workouts, data.profile))} créditos</p></div><button onClick={onOpen}><span>Entrar en la zona arcade</span><ArrowRight size={18} /></button></section>;
-}
 
 function ProgressBar({ value, label }: { value: number; label: string }) {
   return <div className="arcade-progress" role="progressbar" aria-label={label} aria-valuenow={Math.round(value)} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${value}%` }} /></div>;
@@ -154,7 +149,7 @@ export default function GameHub({ data, onChange, today, effectsEnabled, soundEn
         <div className="arcade-section-head"><div><span className="eyebrow">OBJETIVOS</span><h2>Objetivos de actividad</h2></div><span className="arcade-tag"><Check size={13} /> {missions.filter(mission => mission.complete).length}/{missions.length} completas</span></div>
         <div className="mission-xp-summary"><Zap size={18}/><p><strong>{fmt(currentProgress.objectiveXp)} XP ganados con objetivos en {today.slice(0,4)}.</strong> Cada recompensa se suma automáticamente una sola vez. Los objetivos semanales se renuevan cada lunes.</p></div>
         <form className="arcade-goal-editor" onSubmit={async event => { event.preventDefault(); try { await updateGame(current => awardMissionRewards({ ...current, weeklyWorkoutGoal: Math.max(1, Math.min(7, Math.round(workoutGoal || 1))) }, dataRef.current.workouts, today)); setNotice('Objetivo de días guardado. Una recompensa ya obtenida conserva su meta hasta el próximo lunes.'); if (soundEnabled) playSound('confirm'); } catch { setNotice('No se ha confirmado el guardado. Reintenta desde el aviso de la app.'); } }}><div><Target size={22} /><h3>Objetivo semanal</h3><p>Elige cuántos días quieres entrenar por semana.</p></div><label>Días de entreno por semana<input type="number" min={1} max={7} required value={workoutGoal} onChange={event => setWorkoutGoal(Number(event.target.value))} /></label><button className="arcade-primary" type="submit">Guardar objetivos<Check size={16} /></button></form>
-        <label className="mission-filter">Mostrar objetivos<select value={missionFilter} onChange={event => setMissionFilter(event.target.value as typeof missionFilter)}><option value="all">Todos</option><option value="pending">Pendientes</option><option value="rewarded">Recompensados</option></select></label>
+        <fieldset className={filterStyles.groupFilter}><legend>Mostrar objetivos</legend><div className={filterStyles.groupButtons}>{([{ value: 'all', label: 'Todos' }, { value: 'pending', label: 'Pendientes' }, { value: 'rewarded', label: 'Recompensados' }] as const).map(({ value, label }) => <button type="button" key={value} aria-pressed={missionFilter === value} onClick={() => setMissionFilter(value)}>{label}</button>)}</div></fieldset>
         {(['weekly','career'] as const).map(scope => <MissionCategory key={scope} scope={scope} missions={missions.filter(mission => mission.scope === scope && (missionFilter === 'all' || (missionFilter === 'rewarded' ? mission.rewarded : !mission.rewarded)))}/>)}
         <div className="arcade-section-head"><div><span className="eyebrow">LOGROS</span><h2>Logros de actividad</h2></div><Award size={23} /></div>
         <div className="arcade-achievements">{achievements.map(achievement => <article key={achievement.id} className={achievement.complete ? 'unlocked' : ''}><span>{achievement.complete ? <Trophy size={24} /> : <LockKeyhole size={22} />}</span><div><h3>{achievement.title}</h3><p>{achievement.description}</p><small>{fmt(achievement.current)} / {fmt(achievement.target)} {achievement.unit}</small><ProgressBar value={percent(achievement.current, achievement.target)} label={achievement.title} /></div>{achievement.complete && <Check size={16} />}</article>)}</div>

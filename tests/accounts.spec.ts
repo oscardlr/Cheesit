@@ -53,7 +53,7 @@ test('two browser devices retrieve account data and switching accounts hides pri
 
 test('offline training draft persists, reconnect uploads, and pending logout preserves the account queue',async({page,context})=>{
   await harness.seed('offline@example.test');await login(page,'offline@example.test');await synced(page);
-  await expect(page.getByText('Disponible sin conexión',{exact:true})).toBeVisible();
+  await expect(page.locator('.offline-shell')).toContainText('Disponible sin conexión', { timeout: 30000 });
   await context.setOffline(true);await page.reload();await expect(page.getByRole('heading',{name:'Resumen',exact:true})).toBeVisible();
   await page.getByRole('navigation').getByRole('button',{name:'Empezar entrenamiento',exact:true}).click();
   await page.getByRole('main').getByRole('button',{name:/Empezar entrenamiento/}).click();

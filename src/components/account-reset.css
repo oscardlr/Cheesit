@@ -1,0 +1,38 @@
+.account-reset-section {
+  border-top: 1px solid #ed68683d;
+  padding-top: 26px;
+}
+.account-reset-section > .eyebrow {
+  color: #ff9999;
+}
+.account-reset-section > p {
+  line-height: 1.7;
+}
+.account-reset-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 18px;
+  padding: 14px 20px;
+  border: 1px solid #ff8989;
+  border-radius: 10px;
+  background: #b82c3b;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+.account-reset-button:hover:not(:disabled) {
+  background: #d03546;
+}
+.account-reset-button:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+.account-reset-section > .account-reset-warning {
+  margin-top: 12px;
+  color: #ffabab;
+  font-size: 11px;
+}

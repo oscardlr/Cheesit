@@ -3,6 +3,7 @@ import { validateData } from '../backup';
 import { StorageConflictError } from '../storage';
 import { blankDocument, documentAfter, mergeDocuments, same, type AccountDocument, type CloudSnapshot } from './document';
 import { RemoteConnectionError } from './errors';
+import { resetAccountData } from '../account-reset';
 
 const DB = 'cheesit-accounts-v2';
 export class RemoteValidationError extends Error {}
@@ -128,6 +129,22 @@ export class AccountStore {
     }).catch(error => { this.error = error instanceof Error ? error.message : 'No se ha podido guardar.'; this.status = this.cache.tabConflict ? 'conflict' : 'error'; this.notify(); throw error; });
   };
   flushData = async () => { if (this.pending) await this.saveData(this.pending); else await this.serial; };
+  resetData = async (): Promise<AppData> => {
+    await this.flushData();
+    return this.run(async () => {
+      if (this.cache.conflict || this.cache.tabConflict) throw new Error('Resuelve los conflictos de sincronización antes de resetear la cuenta.');
+      const data = resetAccountData(this.cache.draft.data);
+      const draft = documentAfter(this.cache.draft, data);
+      draft.migrations = [...draft.migrations, `account-reset:${crypto.randomUUID()}`];
+      await this.commit({ ...this.cache, draft });
+      this.view = structuredClone(draft);
+      this.committedSequence = ++this.stageSequence;
+      this.pending = null;
+      this.refreshRequired = false;
+      this.status = 'pending'; this.notify();
+      return structuredClone(data);
+    });
+  };
   /** Network failure leaves the exact request in IndexedDB. CAS and a receipt
    * make a lost response safe to retry, including after a browser restart. */
   private network?: Promise<boolean>;

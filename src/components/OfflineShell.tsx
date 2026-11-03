@@ -114,7 +114,7 @@ export default function OfflineShell({ flush = async () => undefined }: { flush?
   }
 
   if (process.env.NODE_ENV !== 'production') return null;
-  return <aside className={`offline-shell offline-shell-${state}`} aria-label="Disponibilidad sin conexión" aria-live="polite">
+  return <aside hidden={state === 'ready'} className={`offline-shell offline-shell-${state}`} aria-label="Disponibilidad sin conexión" aria-live="polite">
     <p>{({ preparing: 'Preparando uso sin conexión…', ready: 'Disponible sin conexión', error: 'Preparación offline pendiente', update: 'Hay una actualización preparada', applying: 'Guardando y actualizando…', unsupported: 'Este navegador no permite preparar el arranque offline' })[state]}</p>
     {error && <p className="offline-shell-detail">{error}</p>}
     {state === 'error' && <button type="button" onClick={() => { setState('preparing'); setError(''); setAttempt(value => value + 1); }}>Reintentar preparación</button>}

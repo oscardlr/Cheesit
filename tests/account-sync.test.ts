@@ -9,6 +9,7 @@ import { emptyData, type AppData, type Routine } from '../src/lib/model';
 import { gameBalance, normalizeGame } from '../src/lib/game';
 import { StorageConflictError } from '../src/lib/storage';
 import { RemoteConnectionError } from '../src/lib/remote/errors';
+import { resetAccountData } from '../src/lib/account-reset';
 
 const routine = (name: string): Routine => ({ id: crypto.randomUUID(), name, color: '#d8ff3e', archived: false, exercises: [] });
 function server() {
@@ -30,6 +31,68 @@ function server() {
   };
   return { transport, disconnect: () => { connected = false; }, connect: () => { connected = true; }, lose: () => { loseResponse = true; }, snapshot: () => snapshot, receipts };
 }
+
+test('account reset removes all training and game progress and restores the initial 100 credits', async () => {
+  const previous: AppData = JSON.parse(readFileSync('tests/fixtures/legacy-account.json', 'utf8')).data;
+  previous.personalProfile = { displayName: 'Mi perfil', bio: 'Mi biografía', photo: null };
+  previous.preferences = { effects: false, sound: false };
+  previous.routineDraft = { ...routine('Pendiente'), exercises: [] };
+  const clean = resetAccountData(previous);
+  assert.deepEqual(clean.routines, []); assert.deepEqual(clean.workouts, []); assert.deepEqual(clean.customExercises, []);
+  assert.equal(clean.routineDraft, undefined);
+  assert.deepEqual(clean.game, normalizeGame());
+  assert.equal(gameBalance(clean.game!, clean.workouts, clean.profile), 100);
+  assert.deepEqual(clean.profile, previous.profile); assert.deepEqual(clean.personalProfile, previous.personalProfile);
+  assert.deepEqual(clean.preferences, previous.preferences);
+  assert.notEqual(clean.personalProfile, previous.personalProfile);
+});
+
+test('reset survives offline restart, lost acknowledgement and an older device with unsent progress', async () => {
+  const remote = server(), owner = crypto.randomUUID();
+  let store = await new AccountStore(owner, remote.transport).initialize(); await store.synchronize();
+  const original: AppData = JSON.parse(readFileSync('tests/fixtures/legacy-account.json', 'utf8')).data;
+  await store.saveData(original); await store.synchronize();
+  const oldDevice = await new AccountStore(crypto.randomUUID(), remote.transport).initialize(); await oldDevice.synchronize();
+  const stale = await oldDevice.loadData();
+  await oldDevice.saveData({ ...stale, routines: [...stale.routines, routine('Creada sin conexión')] });
+  remote.disconnect();
+  const clean = await store.resetData();
+  await assert.rejects(store.synchronize(), /offline/); store.dispose();
+  store = await new AccountStore(owner, remote.transport).initialize();
+  assert.deepEqual(await store.loadData(), clean);
+  remote.connect(); remote.lose(); await assert.rejects(store.synchronize(), /response lost/);
+  const resetOperation = store.getSnapshot().outbox!;
+  assert.ok(resetOperation.document.migrations.some(id => id.startsWith('account-reset:')));
+  await store.synchronize();
+  assert.equal(store.hasUnsynced(), false);
+  const resetRevision = remote.snapshot().revision;
+  await oldDevice.synchronize();
+  assert.equal(oldDevice.conflicts().length, 0);
+  assert.deepEqual(remote.snapshot().data, clean);
+  assert.deepEqual(oldDevice.getSnapshot().draft.data, clean);
+  // The rejected pre-reset additions get deletion markers on the next upload.
+  if (oldDevice.hasUnsynced()) await oldDevice.synchronize();
+  assert.deepEqual(remote.snapshot().data, clean);
+  assert.ok(remote.snapshot().revision >= resetRevision);
+  assert.ok(remote.snapshot().tombstones.includes(`routines:${stale.routines[0].id}`));
+  store.dispose(); oldDevice.dispose();
+});
+
+test('reset prevents a delayed autosave from restoring a pre-reset draft', async () => {
+  const remote = server(), store = await new AccountStore(crypto.randomUUID(), remote.transport).initialize();
+  await store.synchronize();
+  const old = { ...emptyData(), routines: [routine('Antigua')] };
+  await store.saveData(old);
+  const clean = await store.resetData();
+  await store.saveData(old);
+  await store.synchronize();
+  assert.deepEqual(remote.snapshot().data, clean);
+  // A stale render that creates a new object is also rejected by reset markers.
+  const staleView = documentAfter(blankDocument(), old);
+  const merged = mergeDocuments(blankDocument(), staleView, remote.snapshot(), { activity: 'local' });
+  assert.deepEqual(merged.document.data, clean);
+  store.dispose();
+});
 
 test('durable offline queue, restart, lost response and retry preserve exact operation identity', async () => {
   const remote = server(), owner = crypto.randomUUID();
