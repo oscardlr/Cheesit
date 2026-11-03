@@ -63,8 +63,8 @@ test('new private profile: edit, upload/change/remove photo, offline reload, sec
     await expect.poll(async () => ((await harness.account('profile@example.test')).data as AppData).personalProfile?.photo === secondPhoto).toBe(true);
     await page.reload(); await expect(page.locator('.personal-avatar img')).toHaveAttribute('src', secondPhoto!);
     await expect(page.locator('.offline-shell')).toContainText('Disponible sin conexión', { timeout: 30000 });
-    await context.setOffline(true); await edit(page); await page.getByRole('button', { name: 'Eliminar foto', exact: true }).click(); await save(page);
-    await expect(page.locator('.account-sync-copy')).toContainText('Pendiente de conexión');
+    await context.setOffline(true); await edit(page); await page.getByRole('button', { name: 'Eliminar foto', exact: true }).click(); await page.getByRole('button',{name:'Guardar cambios',exact:true}).click(); await expect(page.getByRole('dialog').getByRole('alert')).toContainText('conexión'); await context.setOffline(false); await save(page);
+    await synced(page);
     await page.reload(); await expect(page.getByRole('heading', { name: 'Álex Cheesit' })).toBeVisible();
     await expect(page.getByRole('img', { name: 'Avatar predeterminado' })).toBeVisible();
     await context.setOffline(false); await settings(page);await page.getByRole('button', { name: 'Reintentar sincronización' }).click(); await synced(page);
@@ -116,7 +116,7 @@ test('two different personal profile edits require review and display both priva
   try {
     await login(second, 'profile-conflict@example.test'); await open(second); await secondContext.setOffline(true);
     await edit(page); await page.getByRole('dialog').getByLabel('Nombre', { exact: true }).fill('Versión en la cuenta'); await save(page); await synced(page);
-    await edit(second); await second.getByRole('dialog').getByLabel('Nombre', { exact: true }).fill('Versión sin conexión'); await save(second);
+    await edit(second); await second.getByRole('dialog').getByLabel('Nombre', { exact: true }).fill('Versión sin conexión'); await second.getByRole('button',{name:'Guardar cambios',exact:true}).click(); await expect(second.getByRole('dialog').getByRole('alert')).toContainText('conexión'); await second.getByRole('button',{name:'Cancelar',exact:true}).click();
     await expect(second.locator('.account-sync-copy')).toContainText('Pendiente de conexión'); await settings(second);await secondContext.setOffline(false);
     await expect(second.getByRole('heading', { name: 'Revisa los cambios de tus dispositivos' })).toBeVisible();
     await expect(second.getByRole('group', { name: 'Foto, nombre y biografía' })).toBeVisible();

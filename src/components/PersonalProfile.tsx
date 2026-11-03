@@ -75,12 +75,12 @@ function EditProfile({ profile, onSave, onClose }: { profile: Profile; onSave: (
       {processing && <p role="status" className="notice">Preparando tu foto…</p>}
       {error && <p role="alert" className="error">{error}</p>}
       <footer><button type="button" className="secondary" disabled={busy} onClick={close}>Cancelar</button><button type="submit" className="primary" disabled={busy}>{saving ? 'Guardando…' : 'Guardar cambios'}{!saving && <Check size={17}/>}</button></footer>
-      <p className="profile-edit-note">Tus cambios se guardan en tu cuenta. Sin conexión, se sincronizarán cuando vuelvas a tener red.</p>
+      <p className="profile-edit-note">El guardado se confirma al completarse. Si falla la conexión, conserva los cambios y vuelve a intentarlo.</p>
     </form>
   </dialog>;
 }
 
-export default function PersonalProfile({ data, level, onSave, onWorkout, onStart, onBack }: { data: AppData; level: number; onSave: (profile: Profile) => Promise<void>; onWorkout: (id: string) => void; onStart: () => void; onBack: () => void }) {
+export default function PersonalProfile({ data, level, onSave, onWorkout, onStart, onBack, username, guest }: { username?: string; guest?: boolean; data: AppData; level: number; onSave: (profile: Profile) => Promise<void>; onWorkout: (id: string) => void; onStart: () => void; onBack: () => void }) {
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
   const profile = data.personalProfile ?? EMPTY_PERSONAL_PROFILE;
@@ -91,9 +91,9 @@ export default function PersonalProfile({ data, level, onSave, onWorkout, onStar
     <header className="profile-page-heading"><button className="icon-button" aria-label="Volver al resumen" onClick={onBack}><ArrowLeft size={21}/></button><h1>Mi perfil</h1><span><LockKeyhole size={13}/>Solo tú</span></header>
     <section className="personal-profile-card" aria-label="Tu perfil personal">
       <div className="profile-cover" aria-hidden="true"><span>BUILT BY YOU.</span><ArrowUpRight/></div>
-      <div className="profile-identity"><PersonalAvatar photo={profile.photo} name={name}/><div className="profile-name"><span className="eyebrow">CADA REP CUENTA</span><h2>{name}</h2><span className="profile-rank"><Zap size={13}/>Nivel {number(level)} · {levelRank(level)}</span></div><button className="secondary profile-edit-button" onClick={() => { setSaved(false); setEditing(true); }}><Pencil size={15}/>Editar perfil</button></div>
+      <div className="profile-identity"><PersonalAvatar photo={profile.photo} name={name}/><div className="profile-name"><span className="eyebrow">CADA REP CUENTA</span><h2>{name}</h2>{username && <p className="profile-username">@{username}</p>}<span className="profile-rank"><Zap size={13}/>Nivel {number(level)} · {levelRank(level)}</span></div><button className="secondary profile-edit-button" onClick={() => { setSaved(false); setEditing(true); }}><Pencil size={15}/>Editar perfil</button></div>
       <p className={`profile-bio ${profile.bio ? '' : 'profile-bio-empty'}`}>{profile.bio || 'Este es tu espacio. Añade tu nombre, una foto y eso que te mueve a entrenar.'}</p>
-      {saved && <p role="status" className="profile-saved"><Check size={15}/>Perfil guardado en este dispositivo. Consulta la sincronización de tu cuenta en Ajustes.</p>}
+      {saved && <p role="status" className="profile-saved"><Check size={15}/>{guest ? 'Perfil guardado en este navegador.' : 'Perfil guardado en tu cuenta.'}</p>}
       <dl className="profile-stats" aria-label="Resumen de actividad"><div><dt><Dumbbell size={16}/>Entrenamientos</dt><dd>{number(stats.workouts)}</dd><span>completados</span></div><div><dt><Layers size={16}/>Series</dt><dd>{number(stats.sets)}</dd><span>realizadas</span></div><div><dt><Zap size={16}/>Nivel actual</dt><dd>{number(level)}</dd><span>{levelRank(level)}</span></div></dl>
     </section>
     <div className="profile-activity-layout"><section className="profile-recent" aria-labelledby="profile-recent-title"><div className="profile-section-title"><div><span className="eyebrow">TU ESFUERZO, EN EL TIEMPO</span><h2 id="profile-recent-title">Últimos entrenamientos<span> ({stats.workouts})</span></h2></div></div>

@@ -1,5 +1,6 @@
 import { createClient, isAuthRetryableFetchError, type SupabaseClient, type User } from '@supabase/supabase-js';
 import { RemoteConnectionError } from './errors';
+import { normalizeUsername, USERNAME_TAKEN, validateIdentity } from '../account-profile';
 import { authReturnInfo } from './oauth';
 
 let client: SupabaseClient | undefined;
@@ -25,6 +26,14 @@ export function remoteClient(): SupabaseClient | null {
   return client;
 }
 
+export async function usernameAvailable(username: string): Promise<boolean> {
+  const client = remoteClient();
+  if (!client) throw new Error('La cuenta no está configurada.');
+  const { data, error } = await client.rpc('cheesit_username_available', { p_username: normalizeUsername(username) });
+  if (error || typeof data !== 'boolean') throw new Error('No se ha podido comprobar el nombre de usuario. Comprueba tu conexión y reintenta.');
+  return data;
+}
+
 export async function verifiedUser(): Promise<User> {
   const supabase = remoteClient();
   if (!supabase) throw new Error('La cuenta no está configurada.');
@@ -46,11 +55,18 @@ export async function signIn(email: string, password: string): Promise<User> {
   return verifiedUser();
 }
 
-export async function signUp(email: string, password: string, redirectTo: string): Promise<void> {
+export async function signUp(email: string, password: string, redirectTo: string, displayName: string, username: string): Promise<void> {
   const supabase = remoteClient();
   if (!supabase) throw new Error('La cuenta no está configurada.');
-  const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo } });
-  if (error) throw new Error('No se ha podido completar el registro. Inténtalo de nuevo.');
+  username = normalizeUsername(username);
+  validateIdentity(displayName, username);
+  if (!await usernameAvailable(username)) throw new Error(USERNAME_TAKEN);
+  const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo, data: { display_name: displayName.trim(), username } } });
+  if (error) {
+    // Auth can hide trigger errors; check again to explain a concurrent claim.
+    if (!await usernameAvailable(username)) throw new Error(USERNAME_TAKEN);
+    throw new Error('No se ha podido completar el registro. Inténtalo de nuevo.');
+  }
 }
 
 export async function requestPasswordReset(email: string, redirectTo: string): Promise<void> {

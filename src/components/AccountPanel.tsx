@@ -1,18 +1,21 @@
 'use client';
 
 import { useEffect, useId, useState, type FormEvent } from 'react';
-import { remoteClient, resendConfirmation, requestPasswordReset, signIn, signOut, signUp, updatePassword, googleSignInUrl } from '../lib/remote/auth';
+import { remoteClient, resendConfirmation, requestPasswordReset, signIn, signUp, updatePassword, googleSignInUrl } from '../lib/remote/auth';
 import { GOOGLE_PENDING, googleRedirectUrl } from '../lib/remote/oauth';
+import { normalizeUsername, USERNAME_HINT } from '../lib/account-profile';
 import { PasswordField } from './PasswordField';
 
-type Props = { ownerId?: string; email?: string; hasPending: boolean; recovery?: boolean; onRecovered?: () => void; beforeSignOut?: () => Promise<boolean>; onAuthenticated: (ownerId: string) => void; onSignedOut: () => void };
+type Props = { ownerId?: string; email?: string; hasPending: boolean; recovery?: boolean; onRecovered?: () => void; onAuthenticated: (ownerId: string) => void; onSignOut: () => Promise<boolean> };
 type Mode = 'sign-in' | 'sign-up' | 'forgot' | 'recovery';
 
 /** Standalone account form; callers own account transitions and must not mix local data. */
-export function AccountPanel({ ownerId, email: accountEmail, hasPending, recovery, onRecovered, beforeSignOut, onAuthenticated, onSignedOut }: Props) {
+export function AccountPanel({ ownerId, email: accountEmail, hasPending, recovery, onRecovered, onAuthenticated, onSignOut }: Props) {
   const [mode, setMode] = useState<Mode>('sign-in');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const [mismatch, setMismatch] = useState(false);
   const messageId = useId();
@@ -36,7 +39,7 @@ export function AccountPanel({ ownerId, email: accountEmail, hasPending, recover
     try {
       const redirect = window.location.origin + window.location.pathname;
       if (mode === 'sign-in') onAuthenticated((await signIn(email.trim(), password)).id);
-      if (mode === 'sign-up') { await signUp(email.trim(), password, redirect); setPassword(''); setConfirmation(''); setMessage('Si procede, recibirás un correo para confirmar el acceso.'); }
+      if (mode === 'sign-up') { await signUp(email.trim(), password, redirect, displayName, username); setPassword(''); setConfirmation(''); setMessage('Cuenta solicitada. Confirma tu correo para continuar y completar tus datos iniciales.'); }
       if (mode === 'forgot') { await requestPasswordReset(email.trim(), redirect + '?recovery=1'); setMessage('Si es posible, recibirás un correo con los pasos para recuperar el acceso.'); }
       if (mode === 'recovery') { await updatePassword(password); changeMode('sign-in'); setMessage('Contraseña actualizada.'); onRecovered?.(); }
     } catch (error) { setMessage(error instanceof Error ? error.message : 'No se ha podido completar la operación.'); }
@@ -55,9 +58,7 @@ export function AccountPanel({ ownerId, email: accountEmail, hasPending, recover
   async function leave() {
     setBusy(true); setMessage('');
     try {
-      if (beforeSignOut && !await beforeSignOut()) { setMessage('Guarda o descarta la edición abierta antes de cerrar sesión.'); return; }
-      if (hasPending && !window.confirm('Hay cambios pendientes de subir. Se conservarán vinculados a esta cuenta en este navegador y se enviarán al volver a iniciar sesión con ella. No aparecerán en otra cuenta. ¿Cerrar sesión y conservarlos aquí?')) return;
-      await signOut(); onSignedOut(); setPassword('');
+      if (await onSignOut()) setPassword('');
     }
     catch (error) { setMessage(error instanceof Error ? error.message : 'No se ha podido cerrar la sesión.'); }
     finally { setBusy(false); }
@@ -67,6 +68,7 @@ export function AccountPanel({ ownerId, email: accountEmail, hasPending, recover
   return <section aria-label="Acceso a la cuenta">
     <h2>{mode === 'sign-in' ? 'Iniciar sesión' : mode === 'sign-up' ? 'Crear cuenta' : mode === 'forgot' ? 'Recuperar acceso' : 'Nueva contraseña'}</h2>
     <form onSubmit={submit}>
+      {mode === 'sign-up' && <><label>Nombre visible<input autoComplete="name" maxLength={80} required value={displayName} onChange={e => setDisplayName(e.target.value)}/></label><label>Nombre de usuario<input autoComplete="username" autoCapitalize="none" spellCheck={false} required maxLength={31} value={username ? `@${username}` : ''} placeholder="@usuario" onChange={e => setUsername(normalizeUsername(e.target.value))} aria-describedby="signup-username-hint"/></label><small id="signup-username-hint">{USERNAME_HINT}</small></>}
       {mode !== 'recovery' && <label>Correo electrónico<input type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} /></label>}
       {mode !== 'forgot' && <PasswordField key={mode} value={password} onChange={setPassword} autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}/>}
       {(mode === 'sign-up' || mode === 'recovery') && <PasswordField label="Repetir contraseña" value={confirmation} onChange={value => { setConfirmation(value); if (mismatch) setMessage(''); setMismatch(false); }} autoComplete="new-password" invalid={mismatch} describedBy={messageId}/>}

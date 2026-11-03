@@ -6,19 +6,26 @@ import { AccountVersion } from './AccountVersion';
 import { AccountPanel } from './AccountPanel';
 import EntrenosApp from './EntrenosApp';
 import OfflineShell from './OfflineShell';
-import { authRedirect, remoteClient } from '../lib/remote/auth';
+import { authRedirect, remoteClient, signOut } from '../lib/remote/auth';
 import { GOOGLE_PENDING, oauthErrorMessage } from '../lib/remote/oauth';
 import { AccountStore, claimLegacy, legacySource, recoveryCopies, syncStatusLabel, type LegacySource } from '../lib/remote/account-store';
 import { accountTransport } from '../lib/remote/account-sync';
 import type { BackupResolution } from '../lib/backup';
 import { previewLegacy, type MigrationPreview } from '../lib/remote/migration';
 import './account.css';
+import { guestStore } from '../lib/guest-store';
+import { fetchIdentity, type AccountIdentity } from '../lib/remote/profile';
+import { metadata } from '../lib/remote/account-store';
+import ProfileOnboarding from './ProfileOnboarding';
 
 
 
 export default function AccountGate() {
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
+  const [guest, setGuest] = useState(false);
+  const [guestStorage] = useState(guestStore);
+  const [identity, setIdentity] = useState<AccountIdentity | null>();
   const [store, setStore] = useState<AccountStore | null>(null);
   const [generation, setGeneration] = useState(0);
   const [, redraw] = useState(0);
@@ -32,6 +39,7 @@ export default function AccountGate() {
   const [migrationBusy, setMigrationBusy] = useState(false);
   const syncing = useRef(false);
   const initialRefresh = useRef(false);
+  const signingOut = useRef(false);
   const storeRef = useRef<AccountStore | null>(null);
   const configured = !!remoteClient();
 
@@ -67,13 +75,18 @@ export default function AccountGate() {
   useEffect(() => {
     if (!session?.user.id || recovery) return;
     let active = true; let current: AccountStore | undefined;
-    setError(''); setStore(null); setLegacy(undefined); setMigrationPreview(undefined); setConflictChoices({}); setCopies([]); setMigrationChoices({});
+    setError(''); setGuest(false); setIdentity(undefined); setStore(null); setLegacy(undefined); setMigrationPreview(undefined); setConflictChoices({}); setCopies([]); setMigrationChoices({});
     const owner = session.user.id;
     initialRefresh.current = false;
     void (async () => {
       current = await new AccountStore(owner, accountTransport(owner)).initialize();
       if (!active) { current.dispose(); return; }
       storeRef.current = current; setStore(current);
+      // A previously confirmed identity can open the verified account cache
+      // immediately, while the cloud refresh retries in the background.
+      const cachedIdentity = await metadata<AccountIdentity>(`identity:${owner}`);
+      if (!active) return;
+      if (cachedIdentity?.owner_id === owner && cachedIdentity.completed_at) setIdentity(cachedIdentity);
       try {
         const changed = await current.synchronize();
         if (active && changed) {
@@ -85,6 +98,16 @@ export default function AccountGate() {
       }
       catch (reason) { if (active) setError(reason instanceof Error ? reason.message : 'No se pudo abrir tu cuenta.'); }
       if (!active) return;
+      try {
+        const savedIdentity = await fetchIdentity(owner);
+        if (!active) return;
+        if (savedIdentity?.completed_at) await metadata(`identity:${owner}`, savedIdentity);
+        if (active) setIdentity(savedIdentity);
+      } catch (reason) {
+        const cached = await metadata<AccountIdentity>(`identity:${owner}`);
+        if (active && cached?.owner_id === owner && cached.completed_at) setIdentity(cached);
+        else if (active) setError(reason instanceof Error ? reason.message : 'No se pudo recuperar tu perfil.');
+      }
       redraw(v => v + 1);
       const savedCopies = await recoveryCopies(owner); if (active) setCopies(savedCopies);
       const source = await legacySource();
@@ -108,6 +131,11 @@ export default function AccountGate() {
       const refresh = store.consumeRefresh() || initialRefresh.current;
       initialRefresh.current = false;
       if (changed || refresh) setGeneration(v => v + 1);
+      const savedIdentity = await fetchIdentity(store.owner);
+      if (storeRef.current !== store) return;
+      if (savedIdentity?.completed_at) await metadata(`identity:${store.owner}`, savedIdentity);
+      if (storeRef.current !== store) return;
+      setIdentity(savedIdentity);
       setError('');
       if (legacy && store.getSnapshot().base.migrations.includes(legacy.id)) { await claimLegacy(store.owner, legacy); setLegacy(undefined); setMigrationPreview(undefined); }
     } catch (reason) { if (storeRef.current === store) setError(reason instanceof Error ? reason.message : 'No se pudo sincronizar.'); }
@@ -142,16 +170,35 @@ export default function AccountGate() {
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'No se pudo incorporar el historial. Se conserva el original.'); }
     finally { setMigrationBusy(false); }
   }
-  const panel = <AccountPanel ownerId={session?.user.id} email={session?.user.email} hasPending={store?.hasUnsynced() ?? false} recovery={recovery} onRecovered={() => { window.history.replaceState(null, '', window.location.pathname); setRecovery(false); }} beforeSignOut={async () => { if (!window.dispatchEvent(new Event('cheesit:before-update', { cancelable: true }))) return false; await store?.flushData(); return true; }} onAuthenticated={() => setRecovery(false)} onSignedOut={() => { setSession(null); setStore(null); }}/>;
+  async function leaveAccount() {
+    if (signingOut.current) return false;
+    signingOut.current = true;
+    try {
+      if (!window.dispatchEvent(new Event('cheesit:before-update', { cancelable: true }))) throw new Error('Guarda o descarta la edición abierta antes de cerrar sesión.');
+      await store?.flushData();
+      if (store?.hasUnsynced() && !window.confirm('Hay cambios pendientes de subir. Se conservarán vinculados a esta cuenta en este navegador y se enviarán al volver a iniciar sesión con ella. No aparecerán en otra cuenta. ¿Cerrar sesión y conservarlos aquí?')) return false;
+      await signOut(); setSession(null); setStore(null);
+      return true;
+    } finally { signingOut.current = false; }
+  }
+  const panel = <AccountPanel ownerId={session?.user.id} email={session?.user.email} hasPending={store?.hasUnsynced() ?? false} recovery={recovery} onRecovered={() => { window.history.replaceState(null, '', window.location.pathname); setRecovery(false); }} onAuthenticated={() => setRecovery(false)} onSignOut={leaveAccount}/>;
   const accountSettings = <section className="settings-section account-settings" aria-label="Cuenta y sincronización"><span className="eyebrow">TU CUENTA</span><h2>Cuenta y sincronización</h2><div className="settings-card account-sync-card"><div className="account-sync-copy"><strong>Sincronización</strong><span role="status">{store ? syncStatusLabel[store.status] : 'Abriendo tu cuenta…'}</span></div><button className="secondary" disabled={syncing.current} onClick={() => void synchronize()}>Reintentar sincronización</button></div>{(error || store?.error) && <p className="account-settings-error" role="alert">{error || store?.error}</p>}<details className="account-settings-details"><summary>Mi cuenta</summary><div className="account-settings-content">{panel}<button onClick={()=>void recoveryCopies(store!.owner).then(value => { if (storeRef.current === store) setCopies(value); })}>Revisar copias de conflictos</button>{copies.map(copy=><details key={copy.key}><summary>Copia {new Date(Number(copy.key.split(':').at(-1))).toLocaleString('es-ES')}</summary><p>Rama conservada en este navegador. Puedes revisarla e incorporarla como una migración, con sus conflictos.</p><button onClick={()=>{setLegacy({id:copy.key,data:copy.local.data,owner:store!.owner});setMigrationPreview(undefined);setMigrationChoices({})}}>Revisar incorporación de esta copia</button></details>)}</div></details></section>;
   if (!ready) return <main className="account-page"><p role="status">Comprobando tu sesión…</p></main>;
-  if (!session || recovery) return <main className="account-page"><div className="account-card"><img src="/cheesit-logo.png" width="144" height="96" alt="Cheesit"/><span className="eyebrow">TU ESFUERZO, CONTIGO</span><h1>Tu entrenamiento.<br/>En tu cuenta.</h1><p>Inicia sesión para registrar actividad y recuperar tus datos en otros dispositivos. Si tienes historial anterior, se conserva para incorporarlo después.</p>{panel}{error && <p role="alert">{error}</p>}{!configured && <p>Falta configurar el servicio de cuentas. El historial anterior permanece guardado y no se modificará.</p>}</div><OfflineShell/></main>;
+  if (!session && guest && !recovery) return <EntrenosApp store={guestStorage} guest accountSettings={<section className="settings-section"><h2>Modo invitado</h2><p>Tu actividad se guarda solo en este navegador. Inicia sesión para usar una cuenta con sincronización.</p><button className="secondary" onClick={() => { if (window.dispatchEvent(new Event('cheesit:before-update', { cancelable: true }))) void guestStorage.flushData().then(() => setGuest(false)).catch(e => setError(e.message)); }}>Ir a iniciar sesión</button></section>}/>;
+  if (!session || recovery) return <main className="account-page"><div className="account-card"><img src="/cheesit-logo.png" width="144" height="96" alt="Cheesit"/><span className="eyebrow">TU ESFUERZO, CONTIGO</span><h1>Tu entrenamiento.<br/>En tu cuenta.</h1><p>Inicia sesión para registrar actividad y recuperar tus datos en otros dispositivos. Si tienes historial anterior, se conserva para incorporarlo después.</p>{panel}{!recovery && <button type="button" className="guest-access" onClick={() => { setError(''); setGuest(true); }}>Continuar como invitado</button>}{error && <p role="alert">{error}</p>}{!configured && <p>Falta configurar el servicio de cuentas. El historial anterior permanece guardado y no se modificará.</p>}</div><OfflineShell/></main>;
   const usable = store?.owner === session.user.id && store.getSnapshot().verified;
+  if (usable && store && identity !== undefined && !identity?.completed_at) return <ProfileOnboarding key={store.owner} owner={store.owner} identity={identity} data={store.getSnapshot().base.data} accountPanel={panel} onComplete={async saved => {
+    await store.synchronize();
+    if (storeRef.current !== store) return;
+    await metadata(`identity:${store.owner}`, saved);
+    if (storeRef.current !== store) return;
+    setIdentity(saved); setGeneration(v => v + 1);
+  }}/>;
   return <>
 
-    {(!usable || !!store?.conflicts().length) && (error || store?.error) && <div className="account-notice" role="alert">{error || store?.error}</div>}
+    {(!usable || !identity?.completed_at || !!store?.conflicts().length) && (error || store?.error) && <div className="account-notice" role="alert">{error || store?.error}</div>}
     {store && store.conflicts().length > 0 && <section className="account-notice account-conflicts" aria-label="Conflictos de sincronización"><h2>Revisa los cambios de tus dispositivos</h2><p>Ambas versiones están conservadas. Historial, perfil de entrenamiento y economía se resuelven juntos para evitar duplicar premios o gastar dos veces una carga. La foto, el nombre y la biografía se revisan por separado. La versión descartada quedará como copia de recuperación local. Las eliminaciones confirmadas se mantienen al elegir cualquiera de las versiones.</p>{store.conflicts().map(c => <fieldset key={c.key}><legend>{c.label}</legend><details><summary>Comparar versiones</summary><h3>Este dispositivo</h3><AccountVersion value={c.local}/><h3>Cuenta</h3><AccountVersion value={c.server}/></details><label><input type="radio" name={c.key} checked={conflictChoices[c.key] === 'server'} onChange={() => setConflictChoices(v => ({ ...v, [c.key]: 'server' }))}/> Usar versión de la cuenta</label><label><input type="radio" name={c.key} checked={conflictChoices[c.key] === 'local'} onChange={() => setConflictChoices(v => ({ ...v, [c.key]: 'local' }))}/> Usar versión de este dispositivo</label></fieldset>)}<button className="primary" onClick={() => void store.resolve(conflictChoices).then(() => { setConflictChoices({}); setGeneration(v => v + 1); return synchronize(); }).catch(e => setError(e.message))}>Confirmar resolución</button></section>}
     {legacy && (!legacy.owner || legacy.owner === store?.owner) && usable && <section className="account-notice" aria-label="Historial anterior"><h2>Tu historial anterior sigue aquí</h2><p>{legacy.data.workouts.length} entrenamientos y {legacy.data.routines.length} rutinas, junto con tus borradores y estado del juego. Puedes incorporarlos a esta cuenta sin archivos. Conservaremos el original incluso después del guardado.</p>{store?.getSnapshot().draft.migrations.includes(legacy.id) ? <p>Incorporación pendiente de confirmación en la nube. Reintenta la sincronización.</p> : <><button className="secondary" disabled={migrationBusy} onClick={() => { try { previewMigration(); } catch (e) { setError((e as Error).message); } }}>Revisar incorporación</button>{migrationPreview && <><p>Se añadirán {Object.values(migrationPreview.newCounts).reduce((a, b) => a + b, 0)} registros. Los identificadores coincidentes no se duplican.</p>{migrationPreview.conflictDetails.map(c => <fieldset key={c.key}><legend>{c.name}</legend><details><summary>Comparar versiones</summary><h3>Cuenta</h3><AccountVersion value={c.local}/><h3>Historial anterior</h3><AccountVersion value={c.incoming}/></details>{c.choices.filter(x => x !== 'duplicate').map(choice => <label key={choice}><input type="radio" name={`migration-${c.key}`} checked={migrationChoices[c.key] === choice} onChange={() => { const next = { ...migrationChoices, [c.key]: choice }; setMigrationChoices(next); try { previewMigration(next); } catch (e) { setError((e as Error).message); } }}/>{choice === 'local' ? 'Conservar cuenta' : 'Usar historial anterior'}</label>)}</fieldset>)}<button className="primary" disabled={migrationBusy || migrationPreview.conflicts.length > 0} onClick={() => void migrate()}>Incorporar a mi cuenta</button></>}</>}</section>}
-    {usable && store && store.conflicts().length > 0 ? null : usable && store ? <EntrenosApp key={`${store.owner}:${generation}`} store={store} accountSettings={accountSettings}/> : <main className="account-page"><div className="account-card"><h1>Preparando tu cuenta</h1><p>Necesitas conexión para descargarla por primera vez. Después podrás entrenar sin cobertura.</p><button className="primary" onClick={() => void synchronize()}>Reintentar</button>{panel}</div></main>}
+    {usable && store && store.conflicts().length > 0 ? null : usable && store && identity?.completed_at ? <EntrenosApp key={`${store.owner}:${generation}`} store={store} username={identity.username} accountSettings={accountSettings} onSignOut={leaveAccount}/> : <main className="account-page"><div className="account-card"><h1>Preparando tu cuenta</h1><p>Necesitas conexión para descargarla por primera vez. Después podrás entrenar sin cobertura.</p><button className="primary" onClick={() => void synchronize()}>Reintentar</button>{panel}</div></main>}
   </>;
 }
