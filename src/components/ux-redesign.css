@@ -1,0 +1,414 @@
+/* Presentation only. Existing brand tokens, artwork and domain rules are retained. */
+.skip-link{position:fixed;left:16px;top:-100px;z-index:300;padding:14px 20px;border-radius:8px;background:var(--lime);color:var(--bg);font-weight:700}
+.skip-link:focus{top:16px}
+.app-loading{min-height:80dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;color:var(--muted)}
+.loading-track{width:160px;height:4px;border-radius:4px;background:var(--line);overflow:hidden}
+.loading-track::after{content:'';display:block;width:45%;height:100%;background:var(--lime);animation:loading-progress 1.4s ease-in-out infinite alternate}
+@keyframes loading-progress{to{transform:translateX(125%)}}
+.ux-shell{font-size:14px;line-height:1.5}
+.ux-shell :is(button,summary,a,input,select,textarea):focus-visible{outline:3px solid var(--purple);outline-offset:3px}
+.ux-shell .app-content:focus{outline:none}
+.ux-shell .app-content{max-width:1380px;padding:36px 40px 48px;animation:none}
+.ux-shell :is(.screen-title,h1,h2,h3){overflow-wrap:anywhere}
+.ux-shell .home-header{margin-bottom:26px;gap:16px}
+.ux-shell .home-header h1{font-size:36px;letter-spacing:-1.5px;margin:6px 0}
+.ux-shell .home-header p,.ux-shell .intro{font-size:14px;color:var(--muted)}
+.ux-shell .eyebrow{font-size:11px;letter-spacing:1.2px;line-height:1.5}
+.ux-shell .home-header>.daily-badge{display:none}
+.ux-shell .rail-caption{font-size:10px;letter-spacing:1px;color:var(--muted);margin-top:16px}
+.ux-shell .rail-account{display:flex;align-items:center;gap:10px;overflow-wrap:anywhere;color:var(--purple);font-size:13px}
+.ux-shell .rail-bottom{border-top:1px solid var(--line);padding-top:18px}
+.ux-shell .rail-bottom p{margin-top:8px;color:var(--muted);font-size:12px}
+.ux-shell .bottom-nav{top:150px;gap:7px}
+.ux-shell .bottom-nav button{font-size:14px;min-height:48px;gap:12px;order:initial}
+.ux-shell .bottom-nav .nav-caption{font-size:10px;letter-spacing:1px;margin-bottom:10px}
+.ux-shell .bottom-nav .nav-settings{margin-top:24px;order:initial}
+.ux-shell .bottom-nav .nav-add{margin-top:12px;order:initial;transform:none;box-shadow:none}
+.ux-shell .topbar{padding-inline:40px}
+.ux-shell .topbar-location{font-size:11px;letter-spacing:.8px}
+.ux-shell .topbar-page{font-size:13px}
+.ux-shell .topbar-date{font-size:12px}
+.ux-shell .topbar-actions{gap:8px}
+.ux-shell .topbar :is(.sound-toggle,.profile-button){width:44px;height:44px;min-height:44px}
+.ux-shell .topbar :is(.credit-pill,.level-pill){min-height:44px;font-size:12px;padding:9px 12px;letter-spacing:0}
+.ux-shell .credit-pill small{font-size:10px}
+.ux-shell .next-session{position:relative;display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:210px;margin-bottom:28px;padding:30px 32px;border:1px solid #b8a0ff45;border-radius:16px;background:linear-gradient(110deg,#30243f,var(--card));overflow:hidden}
+.ux-shell .next-session-copy{position:relative;z-index:1;min-width:0}
+.ux-shell .next-session .eyebrow{color:var(--purple)}
+.ux-shell .next-session h2{font-size:34px;letter-spacing:-1px;line-height:1.15;margin:10px 0}
+.ux-shell .next-session p{font-size:14px;color:#c4b4ce}
+.ux-shell .next-session-actions{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:22px}
+.ux-shell .next-session .primary{min-height:50px;padding-inline:20px;font-size:14px;gap:10px}
+.ux-shell .next-session-art{width:160px;height:160px;object-fit:contain;flex-shrink:0;transform:rotate(-12deg)}
+.ux-shell .dashboard-grid{grid-template-columns:minmax(0,1fr) 290px;gap:28px}
+.ux-shell .dashboard-main,.ux-shell .dashboard-aside{min-width:0}
+.ux-shell .dashboard-main{display:block}
+.ux-shell .dashboard-aside{display:flex;flex-direction:column;gap:20px}
+.ux-shell .activity-section{margin-top:0}
+.ux-shell .section-top,.ux-shell .section-heading{gap:12px;margin-bottom:16px}
+.ux-shell .section-top h2,.ux-shell .section-heading h2{font-size:21px;letter-spacing:-.5px}
+.ux-shell .segmented{flex-shrink:0}
+.ux-shell .segmented button{font-size:12px;min-height:44px;padding-inline:16px}
+.ux-shell .period-row{display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+.ux-shell .period-row strong{font-size:13px}
+.ux-shell .period-row small{font-size:10px;letter-spacing:0;color:var(--muted);margin-left:auto}
+.ux-shell .icon-button{min-width:44px;min-height:44px;width:44px;height:44px}
+.ux-shell .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ux-shell .stat-card{min-height:124px;padding:18px;background:var(--card);border-color:var(--line);box-shadow:none;transform:none!important}
+.ux-shell .stat-label{font-size:12px;gap:6px;color:#c4b4ce}
+.ux-shell .stat-label>svg{width:17px;height:17px}
+.ux-shell .stat-card>strong{font-size:34px;margin:12px 0 5px;line-height:1.1;letter-spacing:-1px;overflow-wrap:anywhere}
+.ux-shell .stat-card>small{font-size:11px;line-height:1.5;color:var(--muted)}
+.ux-shell .comparison-caption{font-size:12px;line-height:1.6;color:var(--muted);margin-top:14px}
+.ux-shell .section{margin-top:32px}
+.ux-shell .starter-grid{gap:12px}
+.ux-shell .starter-card{padding:20px;min-height:176px;border-radius:12px;background:var(--card);border:1px solid var(--line);color:var(--text);box-shadow:none;transform:none}
+.ux-shell .starter-card:hover{border-color:var(--purple);background:#25202e}
+.ux-shell .starter-top{color:var(--purple);gap:8px}
+.ux-shell .starter-card.lime .starter-top{color:var(--lime)}
+.ux-shell .starter-top>span{font-size:10px;letter-spacing:.5px}
+.ux-shell .starter-card>strong{font-family:inherit;font-size:20px;font-weight:700;line-height:1.25;letter-spacing:-.5px;max-width:100%;margin:18px 0 8px;text-transform:none}
+.ux-shell .starter-card>p{font-size:13px;line-height:1.5;color:var(--muted);max-width:none;min-height:0}
+.ux-shell .starter-bottom{font-size:10px;letter-spacing:.4px;line-height:1.5;margin-top:16px;color:var(--purple);gap:8px}
+.ux-shell .starter-card.lime .starter-bottom{color:var(--lime)}
+.ux-shell .text-action{min-height:44px;display:inline-flex;align-items:center;justify-content:flex-start;gap:7px;font-size:13px;line-height:1.5;white-space:normal}
+.ux-shell .section-heading .text-action.subtle{font-size:13px;gap:5px}
+.ux-shell .section-heading .text-action.subtle>svg{width:16px}
+.ux-shell .list-row{min-height:76px;padding:16px;gap:12px}
+.ux-shell .list-copy{min-width:0}
+.ux-shell .list-copy strong{font-size:14px;line-height:1.45;overflow-wrap:anywhere}
+.ux-shell .list-copy small{font-size:12px;line-height:1.5;margin-top:4px;color:var(--muted)}
+.ux-shell .evolution-empty{padding:20px;gap:14px}
+.ux-shell .evolution-empty strong{font-size:14px}
+.ux-shell .evolution-empty p{font-size:13px;margin-top:5px}
+.ux-shell :is(.week-card,.missions-card){padding:20px;border-radius:12px;background:var(--card);border-color:var(--line)}
+.ux-shell .week-card h2,.ux-shell .missions-card h2{font-size:19px}
+.ux-shell .week-count{font-size:17px}
+.ux-shell .week-strip{gap:2px}
+.ux-shell .week-strip>button{min-height:60px;gap:8px;min-width:0}
+.ux-shell .week-strip>button>span{font-size:12px}
+.ux-shell .week-strip strong{width:30px;height:30px;font-size:13px}
+.ux-shell .week-card>p{font-size:12px;line-height:1.6;margin-top:14px}
+.ux-shell .summary-character{display:flex;flex-direction:column;gap:14px;align-items:stretch;min-width:0;margin:0;padding:20px;border-radius:12px;border-color:#b8a0ff45;background:linear-gradient(145deg,#30243f,var(--card))}
+.ux-shell .summary-character-copy h2{font-size:19px;letter-spacing:-.5px;line-height:1.3;margin:0 0 8px}
+.ux-shell .summary-character-rank{font-size:12px;gap:6px}
+.ux-shell .summary-character-rank>span{font-size:12px}
+.ux-shell .summary-character-stage{width:100%;max-width:230px;margin-inline:auto}
+.ux-shell .summary-character-stage>.character-party{width:100%}
+.ux-shell .character-progress{min-width:0}
+.ux-shell .xp-label{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
+.ux-shell .xp-label>strong{font-size:13px}
+.ux-shell .xp-label>strong>span{font-size:12px}
+.ux-shell .xp-label .text-action{font-size:12px;min-height:36px}
+.ux-shell .character-season{font-size:12px;color:var(--muted);margin-top:10px}
+.ux-shell .summary-character-equipment{font-size:12px;margin-top:8px}
+.ux-shell .summary-character-equipment>summary{min-height:36px;display:list-item;padding-block:8px}
+.ux-shell .summary-character-equipment p{margin-top:8px;font-size:12px}
+.ux-shell .cheesit-empty-passive{font-size:12px;color:var(--muted);margin-top:8px}
+.ux-shell .summary-character-actions{display:flex}
+.ux-shell .summary-character-actions>.secondary{width:100%;min-height:44px;font-size:13px}
+.ux-shell .mission{gap:10px;padding:14px 0}
+.ux-shell .mission strong{font-size:13px}
+.ux-shell .mission small{font-size:12px;line-height:1.5;margin-top:3px}
+.ux-shell .mission-icon{width:34px;height:36px;flex-shrink:0}
+.ux-shell .mission>div{flex:1}
+.ux-shell .missions-card>.text-action{margin-top:8px}
+.ux-shell .dashboard-footer{margin-top:30px;padding-top:18px}
+.ux-shell .storage-status{font-size:12px;line-height:1.6}
+.ux-shell .draft-card{padding:16px 20px;min-height:76px;gap:12px}
+.ux-shell .draft-card>span:not(.draft-icon){flex:1;min-width:0}
+.ux-shell .draft-card strong{font-size:14px;overflow-wrap:anywhere}
+.ux-shell .draft-card small{font-size:12px;line-height:1.5}
+.ux-shell :is(.primary,.secondary){font-size:14px;min-height:48px;gap:8px;line-height:1.4}
+.ux-shell :is(label,legend){font-size:13px;line-height:1.6}
+.ux-shell :is(input,select,textarea){font-size:16px;min-height:48px;border-color:#594664}
+.ux-shell textarea{font-family:inherit;line-height:1.6}
+.ux-shell :is(.form-card,.exercise-card,.calendar-card){padding:24px;border-color:var(--line);border-radius:12px;background:var(--card)}
+.ux-shell .page-header{margin-bottom:24px;gap:12px}
+.ux-shell .page-header h1{font-size:26px;letter-spacing:-.8px}
+.ux-shell .start-form{margin-top:24px}
+.ux-shell .start-form>label{margin-bottom:20px}
+.ux-shell .start-form>.primary{margin-top:8px}
+.ux-shell .notice{font-size:13px;line-height:1.7}
+.ux-shell .error{font-size:14px;line-height:1.6}
+.ux-shell .routine-card{display:flex;align-items:center;flex-wrap:wrap;min-width:0}
+.ux-shell .routine-card .routine-main{padding:18px 16px;flex:1;min-width:130px}
+.ux-shell .routine-card>.routine-start{font-size:12px;padding-inline:12px;min-height:44px;margin:8px 4px}
+.ux-shell .routine-card>.icon-button{width:44px;min-height:44px;margin-right:4px}
+.ux-shell .routine-list{display:grid;gap:12px}
+.ux-shell .routine-card .routine-main strong{font-size:15px}
+.ux-shell .routine-card .routine-main small{font-size:12px}
+.ux-shell .routine-icon-choices button{min-width:44px;min-height:44px}
+.ux-shell .routine-colors .color-choice{min-width:44px;min-height:44px}
+.ux-shell .session-compact{padding:18px 20px;gap:16px;margin-bottom:18px}
+.ux-shell .session-compact strong{font-size:16px}
+.ux-shell .session-compact span{font-size:12px}
+.ux-shell .session-compact .progress-track{height:6px}
+.ux-shell .rest-timer{margin-block:16px 20px;padding:16px;background:var(--card);border-color:var(--line)}
+.ux-shell .rest-main strong{font-size:14px}
+.ux-shell .rest-main .secondary{font-size:12px;min-height:44px;padding:10px 12px}
+.ux-shell summary{cursor:pointer;font-size:13px;line-height:1.6;min-height:44px;padding-block:10px}
+.ux-shell .profile-nav>summary{padding:0;display:flex}
+.ux-shell .exercise-head{gap:12px;margin-bottom:14px}
+.ux-shell .exercise-head strong{font-size:15px}
+.ux-shell .exercise-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ux-shell .exercise-actions .text-action{font-size:12px}
+.ux-shell .sets-heading{font-size:12px;margin-top:16px}
+.ux-shell .set-row,.ux-shell .sets-heading{grid-template-columns:30px minmax(50px,1fr) minmax(50px,1fr) minmax(100px,1.1fr) 32px;gap:10px}
+.ux-shell .set-row input{min-height:48px;padding:10px 6px;font-size:16px;text-align:center}
+.ux-shell .set-number{font-size:13px}
+.ux-shell .confirm-set{min-height:48px;font-size:12px;gap:4px;padding:8px 4px}
+.ux-shell .remove-set{width:32px;min-height:44px;font-size:24px}
+.ux-shell .set-options>summary{font-size:12px;color:var(--muted)}
+.ux-shell .set-options p{font-size:12px}
+.ux-shell .add-set{min-height:44px;font-size:13px}
+.ux-shell .previous{font-size:12px;gap:8px}
+.ux-shell .previous button{font-size:12px;min-height:44px}
+.ux-shell .finish{position:sticky;bottom:20px;z-index:10;margin-top:22px;box-shadow:0 4px 20px #0006}
+.ux-shell .danger-link{min-height:44px;font-size:13px}
+.ux-shell .empty-card{padding:28px 20px}
+.ux-shell .empty-card :is(h2,h3){font-size:20px;line-height:1.35;letter-spacing:-.5px}
+.ux-shell .empty-card p{font-size:14px;margin-top:8px;color:var(--muted)}
+.ux-shell .session-next-step{display:flex;justify-content:center;margin:20px auto 0}
+.ux-shell .modal{padding:28px;max-height:90dvh}
+.ux-shell .modal-head{margin-bottom:20px}
+.ux-shell .modal-head h2{font-size:24px}
+.ux-shell .catalog-list{max-height:44dvh}
+.ux-shell .catalog-entry{border-bottom:1px solid var(--line)}
+.ux-shell .catalog-entry>.list-row{padding:12px 8px;gap:12px}
+.ux-shell .catalog-entry>.text-action{font-size:12px;padding-inline:12px;min-height:44px}
+.ux-shell .library-results{display:flex;align-items:center;justify-content:space-between;margin:12px 0;color:var(--muted);font-size:12px}
+.ux-shell .library-results .check-label{font-size:12px;margin:0}
+.ux-shell .library-results input{min-height:20px}
+.ux-shell .exercise-library input[type=search]{margin-bottom:18px}
+.ux-shell .exercise-library .empty-card{margin-block:16px}
+.ux-shell .exercise-guide p{font-size:14px}
+.ux-shell .calendar-title h2{font-size:21px;line-height:1.3}
+.ux-shell .calendar-grid,.ux-shell .weekdays{gap:6px}
+.ux-shell .day{min-height:56px}
+.ux-shell .day-number{font-size:14px}
+.ux-shell .weekdays{font-size:12px;padding-bottom:12px}
+.ux-shell .calendar-legend{font-size:12px;margin-top:20px;gap:20px}
+.ux-shell .draft-inline{font-size:13px;min-height:48px}
+.ux-shell .detail-hero h2{font-family:inherit;text-transform:none;font-size:32px;letter-spacing:-1px;line-height:1.3}
+.ux-shell .detail-hero p,.ux-shell .history-sets>div{font-size:14px}
+.ux-shell .done-text{font-size:12px}
+.ux-shell .detail-stats{font-size:14px;gap:24px;flex-wrap:wrap}
+.ux-shell .progress-chart figcaption,.ux-shell .progress-table caption{font-size:12px;line-height:1.7}
+.ux-shell .progress-table :is(th,td){font-size:13px;padding:14px 12px}
+.ux-shell .progress-table-scroll{border-radius:12px;overscroll-behavior-x:contain}
+.ux-shell .progress-search-list{margin-top:20px}
+.ux-shell .settings-section h2{font-size:22px;margin-bottom:18px}
+.ux-shell .settings-section>p,.ux-shell .settings-card p{font-size:13px;line-height:1.7}
+.ux-shell .settings-card{padding:20px;font-size:14px}
+.ux-shell .settings-action{min-height:64px;padding:18px 20px;font-size:14px}
+.ux-shell .settings-action strong{font-size:14px}
+.ux-shell .settings-action small{font-size:12px}
+.ux-shell .toggle{min-height:44px;width:52px;background:transparent;position:relative;isolation:isolate;padding:12px 4px}
+.ux-shell .toggle::before{content:'';position:absolute;inset:8px 0;z-index:-1;background:#63466b;border-radius:20px}
+.ux-shell .toggle.on::before{background:var(--lime)}
+.ux-shell .toggle>span{height:20px;width:20px}
+.ux-shell .toggle.on>span{transform:translateX(24px)}
+.ux-shell .game-hub .arcade-header{margin-bottom:24px}
+.ux-shell .game-hub .arcade-header h1{font-size:36px;letter-spacing:-1px}
+.ux-shell .arcade-header h1>span,.ux-shell .arcade-header .eyebrow{display:none}
+.ux-shell .arcade-header p{font-size:14px;line-height:1.6}
+.ux-shell .arcade-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:6px;margin-bottom:24px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:visible}
+.ux-shell .arcade-tabs button{padding:12px 8px;min-width:0;min-height:52px;gap:8px;font-size:13px;letter-spacing:0;white-space:normal;border-radius:8px}
+.ux-shell .arcade-tabs button>span{font-size:inherit}
+.ux-shell .arcade-section-head h2{font-size:22px}
+.ux-shell .arcade-section-head .eyebrow{font-size:10px}
+.ux-shell .arcade-panel p{font-size:13px;line-height:1.65}
+.ux-shell .arcade-panel :is(.arcade-primary,.more-missions>summary){min-height:48px;font-size:13px}
+.ux-shell .arcade-mission h3{font-size:18px;letter-spacing:-.3px}
+.ux-shell .arcade-mission p{font-size:13px}
+.ux-shell .arcade-mission-top>span:last-child{font-size:10px;letter-spacing:.5px}
+.ux-shell .arcade-mission-count>span{font-size:12px}
+.ux-shell .arcade-goal-editor{gap:16px}
+.ux-shell .arcade-goal-editor h3{font-size:18px}
+.ux-shell .arcade-goal-editor p{font-size:13px}
+.ux-shell .arcade-goal-editor label{font-size:13px}
+.ux-shell .arcade-crate h3{font-size:26px}
+.ux-shell .crate-odds{font-size:12px}
+.ux-shell .arcade-crate .arcade-primary{font-size:13px;line-height:1.4}
+.ux-shell .wardrobe-tabs button,.ux-shell .wardrobe-v3 button{min-height:44px}
+.ux-shell .personal-profile-card .profile-cover{height:64px;background:linear-gradient(115deg,#352443,#21192d)}
+.ux-shell .profile-cover>span,.ux-shell .profile-cover>svg{display:none}
+.ux-shell .profile-manifesto{padding:24px;min-height:0;align-self:start}
+.ux-shell .profile-manifesto>p{font-size:42px}
+.ux-shell .profile-manifesto>span:last-of-type{font-size:13px;line-height:1.7}
+.ux-shell .profile-bio{font-size:14px}
+.ux-shell .profile-workout-copy>span{font-size:12px}
+.ux-shell .profile-workout-copy time{font-size:12px}
+.ux-shell .profile-edit-dialog :is(label,p,button){font-size:14px}
+/* Account views live outside the application shell. */
+.account-page .account-card{max-width:480px;padding:32px;border-radius:16px;border-color:var(--line);background:var(--card)}
+.account-page .account-card>img{width:96px;height:64px;margin:0 0 20px;object-fit:contain}
+.account-page .account-card h1{font-size:36px;letter-spacing:-1.3px;line-height:1.15;margin:12px 0}
+.account-page .account-card>p{font-size:14px;line-height:1.7}
+.account-page .account-card .eyebrow{font-size:11px}
+.account-page .account-card h2{font-size:21px;margin-bottom:20px}
+.account-page .account-card label{font-size:13px;gap:2px}
+.account-page .account-card form{gap:18px}
+.account-page .account-card button{min-height:48px;font-size:14px}
+.account-page .account-card button[type=submit]{width:100%;margin:0}
+.account-page .account-card section>button{background:transparent;border:0;padding:8px 0;margin-right:20px;font-size:13px;color:var(--purple);text-align:left}
+.account-page .account-card .guest-access{margin-top:24px}
+.account-page .account-card .guest-access.guest-primary{background:var(--lime);color:var(--bg);border-color:var(--lime)}
+.account-page .account-card .account-local-note{font-size:12px;color:var(--muted);margin-top:12px}
+.ux-shell .arcade-intro{top:auto;bottom:24px;left:auto;right:24px;transform:none;width:350px;max-width:calc(100vw - 32px);padding:14px 38px 14px 14px;gap:12px;animation:none;background:var(--card);border-color:var(--line);box-shadow:0 8px 30px #0005}
+.ux-shell .arcade-intro>.pixel-athlete{width:55px}
+.ux-shell .arcade-intro strong{font-size:16px;line-height:1.3;letter-spacing:-.3px;margin:4px 0}
+.ux-shell .arcade-intro small{font-size:12px}
+.ux-shell .arcade-intro>div>span{font-size:10px;letter-spacing:.2px}
+.ux-shell .arcade-intro>button{width:44px;height:44px;top:0;right:0}
+@media(min-width:1300px){.ux-shell .stats-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.ux-shell .stat-card{padding:16px}.ux-shell .stat-label{font-size:11px}.ux-shell .stat-label>svg{width:14px}.ux-shell .stat-card>strong{font-size:30px}}
+@media(min-width:761px) and (max-width:1100px){.ux-shell .app-content{padding-inline:24px}.ux-shell .topbar{padding-inline:24px}.ux-shell .dashboard-grid{grid-template-columns:minmax(0,1fr)}.ux-shell .dashboard-aside{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}.ux-shell .summary-character{grid-column:2;grid-row:1 / span 2}.ux-shell .missions-card{grid-column:1;grid-row:2}.ux-shell .starter-card{min-height:160px}.ux-shell .topbar-location>.topbar-page{display:inline}.ux-shell .topbar-location>.topbar-divider{display:inline}}
+@media(max-width:760px){
+ .ux-shell .app-content,.ux-shell[class*=screen-] .app-content{padding:24px 20px 112px;max-width:760px}
+ .ux-shell .brand-rail{left:18px;top:calc(20px + var(--safe-area-top));padding:0;width:auto}
+ .ux-shell .brand{font-size:26px;gap:6px}
+ .ux-shell .brand-symbol{width:36px;height:30px}
+ .ux-shell .rail-caption,.ux-shell .rail-bottom{display:none}
+ .ux-shell .topbar{height:calc(72px + var(--safe-area-top));padding-inline:16px;gap:0}
+ .ux-shell .topbar-actions{gap:5px}
+ .ux-shell .topbar-location,.ux-shell .topbar-date,.ux-shell .topbar .sound-toggle{display:none}
+ .ux-shell .topbar :is(.credit-pill,.level-pill){font-size:12px;min-height:44px;padding:8px;gap:5px}
+ .ux-shell .topbar .credit-pill small,.ux-shell .topbar .level-caption{display:none}
+ .ux-shell .topbar .profile-button{width:40px;min-width:40px;height:44px}
+ .ux-shell .home-header{margin-bottom:20px}
+ .ux-shell .home-header h1{font-size:30px;letter-spacing:-1px;margin:6px 0}
+ .ux-shell .home-header .eyebrow{font-size:10px;letter-spacing:.6px;text-transform:uppercase}
+ .ux-shell .home-header p{font-size:14px}
+ .ux-shell .desktop-history{display:none}
+ .ux-shell .next-session{min-height:0;padding:24px;margin-bottom:24px;border-radius:12px}
+ .ux-shell .next-session h2{font-size:28px;margin:10px 0;max-width:260px}
+ .ux-shell .next-session p{font-size:14px;max-width:280px}
+ .ux-shell .next-session-copy{width:100%}
+ .ux-shell .next-session-art{display:none}
+ .ux-shell .next-session-actions{margin-top:20px;gap:10px}
+ .ux-shell .next-session .primary{width:100%;font-size:14px;min-height:50px;justify-content:center;padding-inline:12px}
+ .ux-shell .next-session-actions>.text-action{width:100%;justify-content:center;min-height:36px}
+ .ux-shell .dashboard-grid{display:flex;flex-direction:column;gap:28px}
+ .ux-shell .dashboard-main,.ux-shell .dashboard-aside{width:100%}
+ .ux-shell .dashboard-aside{display:flex;gap:20px}
+ .ux-shell .section-top h2,.ux-shell .section-heading h2{font-size:20px}
+ .ux-shell .section-top,.ux-shell .section-heading{margin-bottom:14px;gap:8px}
+ .ux-shell .segmented button{min-height:44px;font-size:12px;padding-inline:12px}
+ .ux-shell .period-row{gap:4px;margin-bottom:14px}
+ .ux-shell .period-row strong{font-size:12px}
+ .ux-shell .period-row small{display:none}
+ .ux-shell .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .ux-shell .stat-card{padding:16px;min-height:122px}
+ .ux-shell .stat-card>strong{font-size:32px;margin-top:14px}
+ .ux-shell .stat-label{font-size:12px;line-height:1.4}
+ .ux-shell .stat-label>svg{width:15px}
+ .ux-shell .stat-card>small{font-size:11px}
+ .ux-shell .comparison-caption{font-size:12px}
+ .ux-shell .starter-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .ux-shell .starter-card{padding:16px;min-height:174px}
+ .ux-shell .starter-card>strong{font-size:19px;margin-top:14px}
+ .ux-shell .starter-top>span{display:none}
+ .ux-shell .starter-top>svg:first-child{width:22px;height:22px}
+ .ux-shell .starter-top>svg:last-child{margin-left:auto;width:18px}
+ .ux-shell .starter-bottom{font-size:10px;letter-spacing:0;flex-wrap:wrap}
+ .ux-shell .starter-card>p{font-size:12px;max-width:none}
+ .ux-shell .section-heading .text-action.subtle{font-size:12px}
+ .ux-shell .summary-character{display:grid;grid-template-columns:minmax(0,1fr) 110px;grid-template-areas:'copy portrait' 'progress progress' 'actions actions';gap:12px 10px;padding:20px}
+ .ux-shell .summary-character-copy{grid-area:copy;align-self:center}
+ .ux-shell .summary-character-stage{grid-area:portrait;max-width:110px}
+ .ux-shell .character-progress{grid-area:progress}
+ .ux-shell .summary-character-actions{grid-area:actions}
+ .ux-shell .summary-character-stage .character-level-tag{font-size:10px}
+ .ux-shell .bottom-nav{position:fixed;top:auto;bottom:0;left:0;width:100%;height:calc(76px + env(safe-area-inset-bottom));padding:6px 8px calc(6px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;border-top:1px solid var(--line);background:#19131ff5;box-shadow:none}
+ .ux-shell .bottom-nav button{min-height:60px;width:100%;gap:5px;padding:6px 0;display:flex;flex-direction:column;font-size:11px;line-height:1.4;font-weight:600;order:initial;border-radius:8px}
+ .ux-shell .bottom-nav button>span{display:block}
+ .ux-shell .bottom-nav button>svg{width:21px;height:21px}
+ .ux-shell .bottom-nav :is(.nav-caption,.nav-add,.nav-settings){display:none}
+ .ux-shell .bottom-nav button.active{background:#d8ff3e0c;border:1px solid #d8ff3e15}
+ .ux-shell .page-header h1{font-size:23px}
+ .ux-shell :is(.form-card,.exercise-card,.calendar-card){padding:20px 16px}
+ .ux-shell .routine-card .routine-main{flex-basis:calc(100% - 96px);padding:16px 12px}
+ .ux-shell .routine-card>.routine-start{order:1;flex:1;margin:0 12px 12px}
+ .ux-shell .routine-card>.icon-button{min-width:40px;width:40px;margin-right:2px}
+ .ux-shell .routine-card .routine-icon{width:34px;flex-basis:34px}
+ .ux-shell .set-row,.ux-shell .sets-heading{grid-template-columns:22px minmax(40px,1fr) minmax(40px,1fr) minmax(90px,1.25fr) 26px;gap:6px}
+ .ux-shell .confirm-set{font-size:11px;gap:3px}
+ .ux-shell .confirm-set>svg{width:12px}
+ .ux-shell .remove-set{width:26px}
+ .ux-shell .sets-heading{font-size:11px}
+ .ux-shell .set-number{font-size:12px}
+ .ux-shell .rest-main{flex-wrap:wrap;gap:10px}
+ .ux-shell .rest-main strong{flex:1}
+ .ux-shell .rest-main .secondary{min-height:44px;font-size:12px}
+ .ux-shell .editor-save{margin-top:0;margin-bottom:20px}
+ .ux-shell .finish{bottom:calc(86px + env(safe-area-inset-bottom));min-height:50px}
+ .ux-shell .modal-shade{padding:0}
+ .ux-shell .modal{padding:24px 20px calc(24px + env(safe-area-inset-bottom));max-height:92dvh;border-radius:16px 16px 0 0}
+ .ux-shell .library-results{align-items:flex-start;gap:8px;flex-direction:column}
+ .ux-shell .library-results .check-label{min-height:32px;display:flex;align-items:center}
+ .ux-shell .catalog-list{max-height:40dvh}
+ .ux-shell .catalog-entry>.list-row{padding-block:12px}
+ .ux-shell .calendar-grid,.ux-shell .weekdays{gap:3px}
+ .ux-shell .day{min-height:48px}
+ .ux-shell .day-number{width:32px;height:32px;font-size:13px}
+ .ux-shell .calendar-title h2{font-size:18px}
+ .ux-shell .calendar-legend{font-size:12px;gap:14px}
+ .ux-shell .detail-hero h2{font-size:27px}
+ .ux-shell .history-sets>div{font-size:12px}
+ .ux-shell .arcade-tabs{gap:3px;padding:4px}
+ .ux-shell .arcade-tabs button{display:flex;flex-direction:column;justify-content:center;padding:10px 2px;min-height:62px;font-size:11px;gap:6px}
+ .ux-shell .arcade-tabs button>svg{width:19px;height:19px}
+ .ux-shell .game-hub .arcade-header h1{font-size:30px}
+ .ux-shell .arcade-wallet{padding:12px;min-width:0}
+ .ux-shell .arcade-wallet strong{font-size:21px}
+ .ux-shell .arcade-wallet small{font-size:10px}
+ .ux-shell .arcade-wallet>svg{display:none}
+ .ux-shell .arcade-section-head h2{font-size:21px}
+ .ux-shell .arcade-goal-editor{padding:20px 16px;gap:16px}
+ .ux-shell .arcade-crates{gap:20px}
+ .ux-shell .arcade-crate{padding:24px 20px}
+ .ux-shell .arcade-intro{bottom:calc(90px + env(safe-area-inset-bottom));right:16px;width:calc(100vw - 32px)}
+ .ux-shell .personal-profile-card .profile-cover{height:48px}
+ .ux-shell .profile-manifesto{display:none}
+ .ux-shell .profile-activity-layout{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:360px){
+ .ux-shell .app-content,.ux-shell[class*=screen-] .app-content{padding-inline:14px}
+ .ux-shell .brand-rail{left:12px}
+ .ux-shell .brand{font-size:24px}
+ .ux-shell .brand-symbol{width:30px}
+ .ux-shell .topbar{padding-right:10px}
+ .ux-shell .topbar-actions{gap:3px}
+ .ux-shell .topbar :is(.credit-pill,.level-pill){padding:7px;gap:3px;font-size:11px}
+ .ux-shell .next-session{padding:20px}
+ .ux-shell .next-session h2{font-size:26px}
+ .ux-shell .stat-card{padding:14px}
+ .ux-shell .stat-label{font-size:11px}
+ .ux-shell .stat-label>svg{display:none}
+ .ux-shell .starter-card{padding:14px}
+ .ux-shell .starter-card>strong{font-size:18px}
+ .ux-shell .set-row,.ux-shell .sets-heading{grid-template-columns:18px minmax(35px,1fr) minmax(35px,1fr) minmax(83px,1.3fr) 24px;gap:4px}
+ .ux-shell .confirm-set{font-size:10px}
+ .ux-shell .remove-set{width:24px}
+ .ux-shell .exercise-head strong{font-size:14px}
+ .ux-shell .arcade-tabs button{font-size:10px}
+ .account-page .account-card{padding:24px 20px}
+}
+@media(prefers-reduced-motion:reduce){.loading-track::after{animation:none;width:100%}}
+
+.ux-shell .finish:not([data-ready=true]){position:static;box-shadow:none}
+.ux-shell .session-cheesit-passive[data-empty=true]{padding:12px 16px;margin-block:12px;font-size:12px}
+.ux-shell .session-cheesit-passive[data-empty=true] strong{font-size:12px}
+.ux-shell .session-cheesit-passive[data-empty=true] p{font-size:12px;line-height:1.6;margin-top:4px}
+.ux-shell .previous{display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;gap:6px}
+.ux-shell .previous>span{flex:1 1 100px}
+.ux-shell .previous>button:not(:first-of-type){flex:1 1 75px;padding:8px 6px}
+.ux-shell .previous button small{display:block;font-size:10px}
+
+.ux-shell .mobile-train{display:none}
+@media(max-width:760px){
+ .ux-shell .topbar .level-pill{display:none}
+ .ux-shell .mobile-train{display:flex;align-items:center;justify-content:center;gap:4px;min-height:44px;padding:8px 10px;border:1px solid #b8a0ff50;border-radius:8px;background:var(--card);color:var(--purple);font-size:12px;font-weight:700}
+}
+@media(max-width:360px){.ux-shell .mobile-train{padding-inline:7px;font-size:11px}}

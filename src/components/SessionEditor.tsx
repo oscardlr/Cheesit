@@ -35,14 +35,14 @@ export default function SessionEditor({ workout, history, profile, game, histori
 
   return <>
     <header className="page-header"><button className="icon-button back" aria-label="Volver" onClick={onBack}>‹</button><h1>{historical ? 'Editar entrenamiento' : 'Entrenamiento'}</h1><span className="header-spacer" /></header>
-    <section className="session-compact" aria-label="Estado de la sesión"><div><strong>{confirmed} / {planned} series</strong><span>{historical&&(!workout.startedAt||!workout.finishedAt)?'Duración no registrada':`Duración · ${elapsed(duration)}`}</span></div><div className="progress-track"><span style={{ width: `${planned ? confirmed / planned * 100 : 0}%` }} /></div></section>
+    <section className="session-compact" aria-label="Estado de la sesión"><div><strong>{confirmed} / {planned} series</strong><span>{historical&&(!workout.startedAt||!workout.finishedAt)?'Duración no registrada':`Duración · ${elapsed(duration)}`}</span></div><div className="progress-track" role="progressbar" aria-label="Series completadas" aria-valuenow={confirmed} aria-valuemin={0} aria-valuemax={planned||1}><span style={{ width: `${planned ? confirmed / planned * 100 : 0}%` }} /></div></section>
     <SessionCheesitPassive workout={workout}/><SessionAbilityNote workout={workout} game={game} /><fieldset className="session-fields" disabled={busy}>
     {!historical && <section className="rest-timer rest-compact" aria-label="Descanso"><div className="rest-main"><Timer size={19} /><strong>{rest ? (remaining ? elapsed(remaining) : 'Descanso completado') : `Descanso · ${elapsed(workout.defaultRestSeconds ?? 90)}`}</strong><button className="secondary" onClick={() => startRest(workout.defaultRestSeconds ?? 90)}>Iniciar descanso</button></div>
       {rest && <div className="rest-running-actions">{remaining > 0 && <button className="text-action" onClick={() => change({ ...workout, restTimer: { ...rest, remainingSeconds: remaining, endsAt: rest.endsAt ? null : new Date(Date.now() + remaining * 1000).toISOString() } })}>{rest.endsAt ? 'Pausar' : 'Reanudar'}</button>}<button className="text-action" onClick={() => startRest(Math.min(3600, remaining + 30))}>+30 s</button></div>}
       <details><summary>Ajustar descanso</summary><label>Segundos de descanso<input type="number" min={0} max={3600} step={15} value={workout.defaultRestSeconds ?? 90} onChange={event => { const seconds = Number(event.target.value); if (Number.isInteger(seconds) && seconds >= 0 && seconds <= 3600) change({ ...workout, defaultRestSeconds: seconds }); }} /></label><label className="check-label"><input type="checkbox" checked={workout.autoRest === true} onChange={event => change({ ...workout, autoRest: event.target.checked })} /> Iniciar al confirmar una serie</label><p className="muted">El contador continúa al cambiar de pantalla o volver a la app.</p></details>
     </section>}
     <p className="storage-status editor-save" role="status"><span>●</span> {historical ? 'Cambios pendientes de guardar' : saveState}</p>
-    {!workout.exercises.length && <div className="empty-card"><h2>Tu primera serie empieza aquí.</h2><p>Añade un ejercicio, introduce la carga y las repeticiones y confirma la serie.</p></div>}
+    {!workout.exercises.length && <div className="empty-card"><h2>Añade tu primer ejercicio</h2><p>Después, registra el peso y las repeticiones de cada serie.</p><button className="primary session-next-step" onClick={onAdd}><Plus size={18}/>Añadir ejercicio</button></div>}
     {workout.exercises.map((ex, index) => {
       const previous = workoutExerciseSessions(history, ex.exerciseId).find(({ w, e }) => w.id !== workout.id && (w.date < workout.date || (w.date === workout.date && w.createdAt < workout.createdAt)) && e.mode === ex.mode);
       const convention = exerciseLoadConvention(ex, profile);
@@ -64,14 +64,14 @@ export default function SessionEditor({ workout, history, profile, game, histori
         <details className="exercise-options"><summary>Notas y descanso de {ex.name}</summary><label>Notas del ejercicio<textarea maxLength={2000} placeholder="Opcional" value={ex.notes ?? ''} onChange={event => changeExercise(ex.id, value => ({ ...value, notes: event.target.value }))} /></label><label>Descanso del ejercicio, en segundos · por defecto {workout.defaultRestSeconds ?? 90}<input type="number" min={0} max={3600} step={15} value={ex.restSeconds ?? ''} placeholder="Opcional" onChange={event => { const value = Number(event.target.value); if (!event.target.value || (Number.isInteger(value) && value >= 0 && value <= 3600)) changeExercise(ex.id, item => ({ ...item, restSeconds: event.target.value ? value : undefined })); }} /></label></details>
       </article>;
     })}
-    <button className="secondary wide" onClick={onAdd}>＋ Añadir ejercicio</button>
+    {workout.exercises.length>0&&<button className="secondary wide" onClick={onAdd}>＋ Añadir ejercicio</button>}
     <details className="editor-settings"><summary><Settings2 size={16} /> Detalles de la sesión</summary><div className="editor-meta">
       <label>Nombre<input maxLength={80} value={workout.name} onChange={event => change({ ...workout, name: event.target.value })} /></label>
       <label>Fecha<input type="date" max={today} value={workout.date} onChange={event => change({ ...workout, date: event.target.value })} /></label>
       <label>Notas de la sesión<textarea maxLength={2000} placeholder="Opcional" value={workout.notes ?? ''} onChange={event => change({ ...workout, notes: event.target.value })} /></label>
     </div></details>
     {message && <p className="error" role="alert">{message}</p>}
-    <button className="primary wide finish" onClick={onFinish}>{busy ? 'Guardando…' : historical ? 'Guardar cambios' : 'Finalizar entrenamiento'}</button>
+    <button className="primary wide finish" data-ready={confirmed>0} onClick={onFinish}>{busy ? 'Guardando…' : historical ? 'Guardar cambios' : 'Finalizar entrenamiento'}</button>
     {!historical && <button className="danger-link" onClick={onAbandon}>Abandonar borrador</button>}
     </fieldset>
   </>;

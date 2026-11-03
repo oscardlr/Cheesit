@@ -1,0 +1,750 @@
+{
+  "format": "entrenos-local",
+  "schema_version": 1,
+  "export_id": "810ce557-e18b-49fd-be6e-9ece4dc3892e",
+  "exported_at": "2026-11-03T11:01:51.046Z",
+  "origin": "browser",
+  "units": "kg",
+  "scope": "local-device-only",
+  "data": {
+    "routines": [
+      {
+        "id": "57fbdfe9-a2fe-4d98-b263-a0dfcfe6a0ce",
+        "name": "Demo · Tren superior",
+        "color": "#B8A0FF",
+        "icon": "dumbbell",
+        "archived": false,
+        "exercises": [
+          {
+            "id": "6a1b9c61-113e-4b0d-8bab-9feedecd9515",
+            "exerciseId": "press-banca-barra",
+            "sets": 3,
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90
+          },
+          {
+            "id": "ce045e90-2e7a-43e0-b4b7-7cfe6c3eb44d",
+            "exerciseId": "jalon-pecho",
+            "sets": 3,
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90
+          },
+          {
+            "id": "8f8b38fb-75a0-40aa-921b-352ca08d53b0",
+            "exerciseId": "press-hombros-mancuernas",
+            "sets": 3,
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90
+          }
+        ]
+      },
+      {
+        "id": "7fee8581-3890-472c-b42c-ef2b094bb9da",
+        "name": "Demo · Tren inferior",
+        "color": "#d8ff3e",
+        "icon": "flame",
+        "archived": false,
+        "exercises": [
+          {
+            "id": "9caf8d0e-68f6-4581-9fb7-51ff6601b410",
+            "exerciseId": "sentadilla-barra",
+            "sets": 3,
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90
+          },
+          {
+            "id": "b83afbb6-b88b-4c13-a216-b9d051bd8fec",
+            "exerciseId": "peso-muerto-rumano",
+            "sets": 3,
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90
+          },
+          {
+            "id": "01d1dbf3-417e-4932-a450-361f604df4cd",
+            "exerciseId": "hip-thrust",
+            "sets": 3,
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90
+          }
+        ]
+      }
+    ],
+    "customExercises": [],
+    "game": {
+      "transactions": [],
+      "inventory": [],
+      "quoteConversionVersion": 1,
+      "quoteConversions": [],
+      "weeklyWorkoutGoal": 3,
+      "weeklySetGoal": 30,
+      "equippedQuoteId": null,
+      "equippedGear": {},
+      "pendingOpening": null,
+      "cosmeticGear": {},
+      "equippedCompanionId": null,
+      "activeAbilityId": null,
+      "abilityUses": [],
+      "abilityChargeVersion": 1,
+      "missionRewards": []
+    },
+    "personalProfile": {
+      "displayName": "Demo Cheesit",
+      "bio": "Datos ficticios para probar el rediseño.",
+      "photo": null
+    },
+    "preferences": {
+      "effects": true,
+      "sound": false
+    },
+    "workouts": [
+      {
+        "id": "446427ba-3ee9-434d-8534-19b0d42f65e0",
+        "date": "2026-11-02",
+        "name": "Demo · Tren superior",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-11-02T17:00:00.000Z",
+        "updatedAt": "2026-11-02T17:00:00.000Z",
+        "startedAt": "2026-11-02T17:00:00.000Z",
+        "exercises": [
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "press-banca-barra",
+            "name": "Press de banca con barra",
+            "group": "Pecho",
+            "mode": "external_load_reps",
+            "loadConvention": "total",
+            "id": "477017f4-c674-4385-9406-87ff4ac6a497",
+            "sets": [
+              {
+                "id": "cd3198db-ea4b-4205-a31f-f0f9655a3718",
+                "weight": 50,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "6b7c3c04-7291-4100-8ee7-a061dda80fb0",
+                "weight": 50,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "f648f401-4d1d-492e-a544-35111533ad67",
+                "weight": 50,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          },
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "jalon-pecho",
+            "name": "Jalón al pecho",
+            "group": "Espalda",
+            "mode": "external_load_reps",
+            "loadConvention": "total",
+            "id": "401b58e3-a8d0-43dc-8a4b-141296e70bde",
+            "sets": [
+              {
+                "id": "9cb5006c-a6b8-4e96-bd04-d3df7df1980a",
+                "weight": 40,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "e1b25e17-fb37-4cad-a141-1f7925fba110",
+                "weight": 40,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "8049d307-a863-4d6e-9795-fb45822c07c9",
+                "weight": 40,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          },
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "press-hombros-mancuernas",
+            "name": "Press de hombros con mancuernas",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral",
+            "id": "1d7c356d-86a1-4679-8c1c-3ba92a00443d",
+            "sets": [
+              {
+                "id": "6a85002c-3a20-4989-a906-13736f475beb",
+                "weight": 30,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "e73bc4a7-6eea-44e8-8306-0ea91efce237",
+                "weight": 30,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "02a24779-434c-4b9b-83d2-467cf7d0b795",
+                "weight": 30,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          }
+        ],
+        "companionPassive": null,
+        "finishedAt": "2026-11-02T18:00:00.000Z"
+      },
+      {
+        "id": "41db76cb-f402-4f04-82b8-dcf623e6cc50",
+        "date": "2026-10-31",
+        "name": "Demo · Tren inferior",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-31T17:00:00.000Z",
+        "updatedAt": "2026-10-31T17:00:00.000Z",
+        "startedAt": "2026-10-31T17:00:00.000Z",
+        "exercises": [
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "sentadilla-barra",
+            "name": "Sentadilla con barra",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total",
+            "id": "a2dc91ad-1a1f-4985-953a-9a8739af7707",
+            "sets": [
+              {
+                "id": "2ace3014-4d6b-48d4-bedd-4dd20df41a75",
+                "weight": 48,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "43d82370-ad30-4a94-bb01-c0e2d6d72f4a",
+                "weight": 48,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "43d50cb9-3a9a-46da-b54a-e21090824a68",
+                "weight": 48,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          },
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "peso-muerto-rumano",
+            "name": "Peso muerto rumano",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total",
+            "id": "a748ad38-d876-48ab-9eba-19f10200dd10",
+            "sets": [
+              {
+                "id": "5a4bd393-8f67-44d8-9550-36ea97c8dce1",
+                "weight": 38,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "31edb07d-de4e-4481-b1b3-e6052c9a81fb",
+                "weight": 38,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "d7f98389-845a-46fa-a601-e6c3ceff8938",
+                "weight": 38,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          },
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "hip-thrust",
+            "name": "Hip thrust",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total",
+            "id": "fd974c9d-ef83-4f22-9292-d3a269039027",
+            "sets": [
+              {
+                "id": "56b64fbf-a9ad-408e-bc78-f7063944cc6a",
+                "weight": 28,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "7bda1c7f-fe17-4d6b-8cc1-abc0ed870500",
+                "weight": 28,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "b32b9324-7ffe-466f-8ba3-d5f123bdce22",
+                "weight": 28,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          }
+        ],
+        "companionPassive": null,
+        "finishedAt": "2026-10-31T18:00:00.000Z"
+      },
+      {
+        "id": "745a43d0-4a2a-4fb0-854f-5ccc748cf5f0",
+        "date": "2026-10-29",
+        "name": "Demo · Tren superior",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-29T17:00:00.000Z",
+        "updatedAt": "2026-10-29T17:00:00.000Z",
+        "startedAt": "2026-10-29T17:00:00.000Z",
+        "exercises": [
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "press-banca-barra",
+            "name": "Press de banca con barra",
+            "group": "Pecho",
+            "mode": "external_load_reps",
+            "loadConvention": "total",
+            "id": "4b554950-33c2-4523-8d1b-06abcefba837",
+            "sets": [
+              {
+                "id": "054da9b7-a772-4dca-8ab1-628ca805546f",
+                "weight": 46,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "daac7796-f8be-477d-aba7-dfde61b95a02",
+                "weight": 46,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "65bb2d85-08e2-4bd0-8dce-ae415fcfdd75",
+                "weight": 46,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          },
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "jalon-pecho",
+            "name": "Jalón al pecho",
+            "group": "Espalda",
+            "mode": "external_load_reps",
+            "loadConvention": "total",
+            "id": "52565e0e-6a68-4193-875f-d7cde6ea7ce3",
+            "sets": [
+              {
+                "id": "15149fb6-c2b9-4456-8172-84fc31f42117",
+                "weight": 36,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "29a86f77-b8c0-4e93-a124-8aa1a8d1f1cb",
+                "weight": 36,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "d2cac51c-0ecf-408f-89f7-bcefea0c0192",
+                "weight": 36,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          },
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "press-hombros-mancuernas",
+            "name": "Press de hombros con mancuernas",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral",
+            "id": "6c996c6f-f86f-4de8-8626-7a1bb8b9b2a8",
+            "sets": [
+              {
+                "id": "26c0825b-1f42-4b9b-9cca-9cedc5d2c353",
+                "weight": 26,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "2d417a2a-bba7-440b-b739-4ebce4628388",
+                "weight": 26,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "b59863f7-f511-4fd0-acca-32fdfab339c5",
+                "weight": 26,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          }
+        ],
+        "companionPassive": null,
+        "finishedAt": "2026-10-29T18:00:00.000Z"
+      },
+      {
+        "id": "c09a13d4-480a-42b1-9d30-3fc1809ba4b1",
+        "date": "2026-10-26",
+        "name": "Demo · Tren inferior",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-26T17:00:00.000Z",
+        "updatedAt": "2026-10-26T17:00:00.000Z",
+        "startedAt": "2026-10-26T17:00:00.000Z",
+        "exercises": [
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "sentadilla-barra",
+            "name": "Sentadilla con barra",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total",
+            "id": "41dbf426-7ee5-41af-89cd-624a7ef0dc7f",
+            "sets": [
+              {
+                "id": "0115d09b-e07f-42da-a7c5-fcfa797b1890",
+                "weight": 44,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "0daed932-c33e-4861-8894-3dc373700895",
+                "weight": 44,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "7f0f2ade-e8eb-4b5a-ae71-63561cd42417",
+                "weight": 44,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          },
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "peso-muerto-rumano",
+            "name": "Peso muerto rumano",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total",
+            "id": "6d57ea4b-7766-4bdc-bbd8-1ef5e70a3c6f",
+            "sets": [
+              {
+                "id": "74e1785c-dd3e-48f9-9cfa-c819d6161f05",
+                "weight": 34,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "e51191a3-b0ec-41ff-b41c-c00e212d848a",
+                "weight": 34,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "38567670-de03-46f9-8996-638427792ec2",
+                "weight": 34,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          },
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "hip-thrust",
+            "name": "Hip thrust",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total",
+            "id": "a29837a8-7bf2-47fb-a88a-3a04017ef697",
+            "sets": [
+              {
+                "id": "18a11fba-8df4-49ab-8a77-03a0ba9a9813",
+                "weight": 24,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "e5d49199-3e94-485d-85a6-7c0e32ddd836",
+                "weight": 24,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "fff4d760-4a03-452c-b51c-10ea30a2c769",
+                "weight": 24,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          }
+        ],
+        "companionPassive": null,
+        "finishedAt": "2026-10-26T18:00:00.000Z"
+      },
+      {
+        "id": "bdcb29f7-2de1-4924-ba52-9055520d5fb2",
+        "date": "2026-10-24",
+        "name": "Demo · Tren superior",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-24T17:00:00.000Z",
+        "updatedAt": "2026-10-24T17:00:00.000Z",
+        "startedAt": "2026-10-24T17:00:00.000Z",
+        "exercises": [
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "press-banca-barra",
+            "name": "Press de banca con barra",
+            "group": "Pecho",
+            "mode": "external_load_reps",
+            "loadConvention": "total",
+            "id": "e6545ac1-cf24-4db8-824c-1ac3cce196c4",
+            "sets": [
+              {
+                "id": "cca3bc6e-b3af-4323-8764-51860d9a4fa9",
+                "weight": 42,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "f07dd3ad-3aab-44c3-866f-075974831b42",
+                "weight": 42,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "662ded47-e803-4bc6-a650-6999c2b38679",
+                "weight": 42,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          },
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "jalon-pecho",
+            "name": "Jalón al pecho",
+            "group": "Espalda",
+            "mode": "external_load_reps",
+            "loadConvention": "total",
+            "id": "df68fbe0-7aa3-4bbd-8562-2c26ca4e0bd2",
+            "sets": [
+              {
+                "id": "c37e670b-14d4-43ca-8668-f9fa5333836e",
+                "weight": 32,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "a294606c-5bf8-4298-a8cd-14b8f78d0884",
+                "weight": 32,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "6e950b9a-d6dc-4ef8-8480-4c1e9aaa7e99",
+                "weight": 32,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          },
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "press-hombros-mancuernas",
+            "name": "Press de hombros con mancuernas",
+            "group": "Hombro",
+            "mode": "external_load_reps",
+            "loadConvention": "per_unit_bilateral",
+            "id": "3af30600-8e0b-4905-8fae-9dd1710bb0f5",
+            "sets": [
+              {
+                "id": "ecfbf9ba-aa29-43e1-a95c-13ec28d814c9",
+                "weight": 22,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "f6bf97d5-07bd-4e03-b0a7-47eedba85046",
+                "weight": 22,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "57ff35f4-b7e4-4312-ae43-8b0a6c140b44",
+                "weight": 22,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          }
+        ],
+        "companionPassive": null,
+        "finishedAt": "2026-10-24T18:00:00.000Z"
+      },
+      {
+        "id": "cd9d5740-68a8-4634-8a9e-4f5a643e41b4",
+        "date": "2026-10-22",
+        "name": "Demo · Tren inferior",
+        "color": "#d8ff3e",
+        "status": "finished",
+        "createdAt": "2026-10-22T17:00:00.000Z",
+        "updatedAt": "2026-10-22T17:00:00.000Z",
+        "startedAt": "2026-10-22T17:00:00.000Z",
+        "exercises": [
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "sentadilla-barra",
+            "name": "Sentadilla con barra",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total",
+            "id": "621ed135-8eeb-4753-ab8c-6fdf183aacd4",
+            "sets": [
+              {
+                "id": "ce3a4f1c-3ea5-4bea-9611-ce40daa13fe2",
+                "weight": 40,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "35fe6fb0-d116-4a88-9d72-656efd7d7925",
+                "weight": 40,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "481f9ecf-7564-48dc-bdb2-6c7cd169aa67",
+                "weight": 40,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          },
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "peso-muerto-rumano",
+            "name": "Peso muerto rumano",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total",
+            "id": "db9a115b-fae9-46fb-a975-7718ed89a6f2",
+            "sets": [
+              {
+                "id": "bd223c73-2954-4287-a9f2-414110f58081",
+                "weight": 30,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "e6c406bb-d781-43a1-9fd1-91897615412e",
+                "weight": 30,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "a08e4e3b-169a-4f9f-b676-779faa676b36",
+                "weight": 30,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          },
+          {
+            "repsMin": 8,
+            "repsMax": 12,
+            "restSeconds": 90,
+            "exerciseId": "hip-thrust",
+            "name": "Hip thrust",
+            "group": "Pierna y glúteo",
+            "mode": "external_load_reps",
+            "loadConvention": "total",
+            "id": "a9e1834b-43ff-4101-b47b-614af1b9406e",
+            "sets": [
+              {
+                "id": "c0349191-397b-477b-b61d-583142af08f3",
+                "weight": 20,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "405da635-d5f7-42fd-bde4-9b0ce01e9734",
+                "weight": 20,
+                "reps": 10,
+                "confirmed": true
+              },
+              {
+                "id": "a98f8733-dc2c-40f9-935d-dfeea82761c7",
+                "weight": 20,
+                "reps": 10,
+                "confirmed": true
+              }
+            ]
+          }
+        ],
+        "companionPassive": null,
+        "finishedAt": "2026-10-22T18:00:00.000Z"
+      }
+    ]
+  }
+}

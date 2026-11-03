@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { calendarMonth } from '../src/lib/dates';
+import { calendarMonth, nextWeeklyResetMadrid } from '../src/lib/dates';
 
 for (const [month, days, offset, rows] of [
   ['2021-02-01', 28, 0, 4],
@@ -22,4 +22,15 @@ for (const [month, days, offset, rows] of [
 
 test('calendar rejects invalid civil dates', () => {
   for (const date of ['2025-02-29', '2026-13-01', '2026-02', 'invalid']) assert.throws(() => calendarMonth(date), /Fecha no válida/);
+});
+
+for (const [now, reset] of [
+  ['2026-11-03T12:34:56Z', '2026-11-08T23:00:00.000Z'],
+  ['2026-11-08T22:59:59Z', '2026-11-08T23:00:00.000Z'],
+  ['2026-11-08T23:00:00Z', '2026-11-15T23:00:00.000Z'],
+  ['2026-03-28T12:00:00Z', '2026-03-29T22:00:00.000Z'],
+  ['2026-10-24T12:00:00Z', '2026-10-25T23:00:00.000Z'],
+  ['2026-12-31T12:00:00Z', '2027-01-03T23:00:00.000Z'],
+] as const) test(`weekly reset from ${now} follows Monday midnight in Madrid`, () => {
+  assert.equal(nextWeeklyResetMadrid(new Date(now)).toISOString(), reset);
 });

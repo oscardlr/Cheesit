@@ -26,9 +26,9 @@ export function SessionCheesitPassive({ workout }: { workout: Workout }) {
   const note = workout.companionReward ? 'La condición y la bonificación ya quedaron guardadas al finalizar. Editar la sesión o cambiar de cheesit no vuelve a concederla ni la recalcula.'
     : snapshot && workout.date !== snapshot.fixedDate ? 'La fecha registrada no coincide con el día de inicio. Esta sesión no recibe bonificación del cheesit.'
       : 'Esta sesión conserva este cheesit aunque cambies el equipo. La condición se comprueba una sola vez al finalizar. Si terminas después de medianoche, conserva la fecha con la que empezó.';
-  return <aside className="session-cheesit-passive" aria-label="Pasiva del cheesit de esta sesión">
+  return <aside className="session-cheesit-passive" data-empty={!companion} aria-label="Pasiva del cheesit de esta sesión">
     {companion ? <><strong>{companion.name} · Pasiva fijada al empezar</strong><CheesitPassive companionId={companion.id} compact/>{startDay && <p>Inicio: {startDay} · hora de Madrid.</p>}<p>{note}</p></>
-      : <><strong>Sesión sin pasiva de cheesit</strong><p>{snapshot === undefined ? 'Este registro se creó antes de las pasivas. Conserva sus recompensas habituales, sin bonificaciones retroactivas.' : 'No había ningún cheesit equipado al empezar. Equiparlo se aplicará a las próximas sesiones.'}</p></>}
+      : <><strong>Sesión sin pasiva de cheesit</strong><p>{snapshot === undefined ? 'Este registro se creó antes de las pasivas. Conserva sus recompensas habituales, sin bonificaciones retroactivas.' : 'Equipa un cheesit antes de la próxima sesión para activar su pasiva.'}</p></>}
   </aside>;
 }
 

@@ -1,0 +1,29 @@
+
+> mi-app-del-puto-gimnasio@1.0.0 build
+> next build && node scripts/generate-offline-manifest.mjs
+
+▲ Next.js 16.4.3 (Turbopack)
+✓ Running next.config.ts took 88ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 957ms
+  Running TypeScript ...
+  Finished TypeScript in 411ms ...
+  Collecting page data using 6 workers ...
+  Generating static pages using 6 workers (0/5) ...
+  Generating static pages using 6 workers (1/5)
+  Generating static pages using 6 workers (2/5)
+  Generating static pages using 6 workers (3/5)
+✓ Generating static pages using 6 workers (5/5) in 303ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /dev/character
+└ ○ /dev/cheesits
+
+
+○  (Static)  prerendered as static content
+
+Offline: 84 recursos preparados para ec17bb00b0d6deeec786865e.

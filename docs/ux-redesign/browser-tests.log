@@ -1,0 +1,22 @@
+
+> mi-app-del-puto-gimnasio@1.0.0 test:e2e
+> playwright test tests/ux-redesign.spec.ts --workers=1 --output=artifacts/ux-redesign/browser
+
+
+Running 11 tests using 1 worker
+
+(node:72961) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/ux-redesign.spec.ts:40:1 › guest access is explicit, survives reload in the tab and never sends account writes (2.3s)
+  ✓   2 tests/ux-redesign.spec.ts:50:1 › create routine, start, validate, confirm, rest, recover, finish, history and progress (2.4s)
+  ✓   3 tests/ux-redesign.spec.ts:83:3 › all destinations and Arcade tabs reflow at 320px (3.0s)
+  ✓   4 tests/ux-redesign.spec.ts:83:3 › all destinations and Arcade tabs reflow at 390px (2.9s)
+  ✓   5 tests/ux-redesign.spec.ts:83:3 › all destinations and Arcade tabs reflow at 768px (2.4s)
+  ✓   6 tests/ux-redesign.spec.ts:83:3 › all destinations and Arcade tabs reflow at 1440px (3.5s)
+  ✓   7 tests/ux-redesign.spec.ts:106:1 › keyboard skip, form submission and unsaved routine focus trap work (1.5s)
+  ✓   8 tests/ux-redesign.spec.ts:117:1 › library filters recover, custom exercise saves, preferences and backup survive reload (1.6s)
+  ✓   9 tests/ux-redesign.spec.ts:130:1 › Arcade tabs restore through browser history, crate reveal persists and collection stays usable (1.3s)
+  ✓  10 tests/ux-redesign.spec.ts:144:1 › routines can still duplicate, archive and restore (1.2s)
+  ✓  11 tests/ux-redesign.spec.ts:151:1 › verified offline shell opens the guest draft without a network connection (967ms)
+
+  11 passed (25.7s)

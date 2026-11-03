@@ -24,6 +24,16 @@ export function weekStart(value: string): string {
   return addDays(value, -((day + 6) % 7));
 }
 
+/** Next Monday at 00:00 in Madrid, using the offset on that Monday (including DST). */
+export function nextWeeklyResetMadrid(now = new Date()): Date {
+  const monday = addDays(weekStart(todayMadrid(now)), 7);
+  const midnightUtc = new Date(`${monday}T00:00:00Z`);
+  const madridHour = Number(new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Madrid', hour: '2-digit', hourCycle: 'h23',
+  }).format(midnightUtc));
+  return new Date(midnightUtc.getTime() - madridHour * 60 * 60 * 1000);
+}
+
 /** Monday–Sunday rows containing only this month's dates and inert alignment gaps. */
 export function calendarMonth(value: string): (string | null)[] {
   if (!isCivilDate(value)) throw new Error('Fecha no válida');
