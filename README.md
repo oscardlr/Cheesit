@@ -2,6 +2,8 @@
 
 Aplicación web móvil para registrar entrenamientos de fuerza, instalable como PWA. Incluye acceso con Supabase, sincronización por cuenta y caché sin conexión. Configuración, pruebas y límites: [Cuentas y sincronización](docs/CUENTAS-Y-SINCRONIZACION.md). La especificación completa está en [ESPECIFICACION-ENTRENOS.md](ESPECIFICACION-ENTRENOS.md).
 
+Funciones sociales, privacidad y pruebas: [Seguidores](docs/SEGUIDORES.md). El menú de perfil incluye **Buscar personas**; los perfiles y conexiones se consultan con sesión iniciada, mientras el documento de cuenta y la actividad permanecen privados.
+
 ## Ejecutar
 
 Con Node.js 24:

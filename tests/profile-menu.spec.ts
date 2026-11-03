@@ -24,7 +24,7 @@ test('profile disclosure replaces the toolbar and keeps account controls in Sett
   await expect(menu.locator('img')).toHaveCount(0);
   await expect(menu.locator('svg')).toBeVisible();
   await menu.click();
-  await expect(page.locator('.profile-nav-options > button')).toHaveText(['Mi perfil', 'Ajustes', 'Cerrar sesión']);
+  await expect(page.locator('.profile-nav-options > button')).toHaveText(['Mi perfil', 'Buscar personas', 'Ajustes', 'Cerrar sesión']);
   await expect(page).toHaveURL(/view=summary/);
   await expect(page.getByRole('group', { name: 'Opciones de perfil' })).toBeVisible();
   await page.getByRole('heading', { name: 'Resumen', exact: true }).click();
@@ -79,14 +79,17 @@ test('toolbar photo follows profile uploads, changes and removal', async ({ page
   await page.locator('.profile-nav-options').getByRole('button', { name: 'Mi perfil', exact: true }).click();
   for (const color of ['#b8a0ff', '#d8ff3e']) {
     await page.getByRole('button', { name: 'Editar perfil', exact: true }).click();
+    const preview = page.getByRole('dialog').locator('.personal-avatar img');
+    const previousPhoto = await preview.count() ? await preview.getAttribute('src') : null;
     const image = await page.evaluate(color => {
       const canvas = document.createElement('canvas'); canvas.width = canvas.height = 64;
       const context = canvas.getContext('2d')!; context.fillStyle = color; context.fillRect(0, 0, 64, 64);
       return canvas.toDataURL('image/png').split(',')[1];
     }, color);
     await page.getByLabel('Foto de perfil', { exact: true }).setInputFiles({ name: 'foto.png', mimeType: 'image/png', buffer: Buffer.from(image, 'base64') });
-    const preview = page.getByRole('dialog').locator('.personal-avatar img');
     await expect(preview).toBeVisible();
+    if (previousPhoto) await expect(preview).not.toHaveAttribute('src', previousPhoto);
+    await expect(page.getByRole('button', { name: 'Guardar cambios', exact: true })).toBeEnabled();
     const photo = await preview.getAttribute('src');
     await page.getByRole('button', { name: 'Guardar cambios', exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
