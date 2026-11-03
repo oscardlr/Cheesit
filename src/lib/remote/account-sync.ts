@@ -3,6 +3,7 @@ import { validateData } from '../backup';
 import { blankDocument, type CloudSnapshot } from './document';
 import { RemoteValidationError, type Transport } from './account-store';
 import { RemoteConnectionError } from './errors';
+import { socialActivitySummary } from '../social-activity';
 
 function snapshot(value: unknown): CloudSnapshot {
   const row = value as CloudSnapshot;
@@ -28,7 +29,15 @@ export function accountTransport(owner: string): Transport {
     },
     async apply(op) {
       const c = await client();
-      const { data, error, status } = await c.rpc('cheesit_commit_account', { p_expected_owner: owner, p_operation_id: op.operationId, p_base_revision: op.expectedRevision, p_document: op.document });
+      let response = await c.rpc('cheesit_commit_account', { p_expected_owner: owner, p_operation_id: op.operationId, p_base_revision: op.expectedRevision, p_document: { ...op.document, socialSummary: socialActivitySummary(op.document.data) } });
+      // A pre-upgrade outbox may have reached the server before its response was
+      // lost. Its receipt hashes the original envelope without the new summary.
+      // Retry that exact persisted envelope; the server still rejects any reuse
+      // of the operation ID with different account contents.
+      if (response.error?.code === 'P0001' && response.error.message === 'operation id reused') {
+        response = await c.rpc('cheesit_commit_account', { p_expected_owner: owner, p_operation_id: op.operationId, p_base_revision: op.expectedRevision, p_document: op.document });
+      }
+      const { data, error, status } = response;
       if (error && status === 0) throw new RemoteConnectionError();
       if (error && ['22023', 'P0001', '23514', '22P02'].includes(error.code)) throw new RemoteValidationError('La nube ha rechazado algunos campos o un premio histórico modificado. Revisa tus cambios; se conserva una copia recuperable y puedes corregirlos antes de reintentar.');
       if (error) throw new Error(error.code === '28000' || error.code === 'PGRST301' ? 'La sesión ha caducado. Vuelve a iniciar sesión.' : 'No se ha podido guardar en la nube. Tus cambios siguen pendientes en este dispositivo.');

@@ -1,0 +1,13 @@
+import type { ReactNode } from 'react';
+import type { Workout } from '@/lib/model';
+import type { AthleteProfile } from '@/lib/strength';
+import LoadConvention from './LoadConvention';
+import ExerciseThumbnail from './ExerciseThumbnail';
+
+const number = (n: number) => n.toLocaleString('es-ES', { maximumFractionDigits: 2 });
+const dateLabel = (date: string) => new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`));
+
+/** Shared history presentation; all owner actions live outside this component. */
+export default function WorkoutDetailContent({ workout, profile, onProgress, children }: { workout: Workout; profile?: AthleteProfile; onProgress?: (exercise: string) => void; children?: ReactNode }) {
+  return <><div className="detail-hero"><span className="detail-dot" style={{ background: workout.color }}/><span className="eyebrow">ENTRENAMIENTO COMPLETADO</span><h2>{workout.name}</h2><p>{dateLabel(workout.date)}</p>{workout.notes && <p>{workout.notes}</p>}{workout.startedAt && workout.finishedAt && <p>Duración · {Math.max(0, Math.round((Date.parse(workout.finishedAt) - Date.parse(workout.startedAt)) / 60000))} min</p>}</div><div className="detail-stats"><span><strong>{workout.exercises.length}</strong> ejercicios</span><span><strong>{workout.exercises.flatMap(e => e.sets).length}</strong> series</span></div>{children}<section className="section"><h2>Ejercicios</h2>{workout.exercises.map(ex => <article className="exercise-card" key={ex.id}><div className="exercise-head"><ExerciseThumbnail exerciseId={ex.exerciseId}/><div className="list-copy"><strong>{ex.name}</strong><small>{ex.group}</small></div>{onProgress && <button className="text-action" onClick={() => onProgress(ex.exerciseId)}>Ver progreso</button>}</div><LoadConvention exercise={ex} profile={profile}/>{ex.notes && <p className="workout-detail-note">{ex.notes}</p>}{(ex.restSeconds != null || ex.repsMin != null) && <p className="workout-detail-note">{ex.repsMin != null ? `Objetivo: ${ex.repsMin}${ex.repsMax != null && ex.repsMax !== ex.repsMin ? `–${ex.repsMax}` : ''} reps` : ''}{ex.restSeconds != null ? ` · Descanso: ${ex.restSeconds} s` : ''}</p>}<div className="history-sets">{ex.sets.map((s, i) => <div key={s.id}><span>Serie {i + 1}</span><strong>{ex.mode === 'bodyweight_reps' ? 'Peso corporal' : `${number(s.weight || 0)} kg`} × {s.reps} reps{s.rpe != null ? ` · RPE ${s.rpe}` : ''}{s.rir != null ? ` · RIR ${s.rir}` : ''}</strong><span className="done-text">{s.confirmed ? '✓ Realizada' : 'Sin confirmar'}</span></div>)}</div></article>)}</section></>;
+}

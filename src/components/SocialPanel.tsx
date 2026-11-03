@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, Search, Users, WifiOff } from 'lucide-react';
 import { readSocial, setFollow, SOCIAL_PAGE_SIZE, validSocialQuery, type SocialList, type SocialProfile, type SocialRoute } from '@/lib/remote/social';
+import SocialActivity from './SocialActivity';
 import { PersonalAvatar } from './PersonalAvatar';
 import './social.css';
 
@@ -31,7 +32,6 @@ export function OwnSocialSummary({ owner, onOpen }: { owner: string; onOpen: (li
   }, [owner, revision]);
   return <section className="own-social-summary" aria-label="Tu perfil social">
     {profile ? <SocialCounts profile={profile} onOpen={onOpen}/> : error ? <div role="alert"><p>{error}</p><button className="text-action" onClick={() => setRevision(n => n + 1)}>Reintentar</button></div> : <p role="status">Cargando seguidores…</p>}
-    <button className="text-action" onClick={() => onOpen(null)}>Ver mi perfil social<ArrowUpRight size={16}/></button>
   </section>;
 }
 
@@ -92,9 +92,9 @@ export default function SocialPanel({ owner, guest, route, onNavigate, onBack, o
     } catch (e) { setMutationError(e instanceof Error ? e.message : 'No se pudo confirmar el cambio.'); }
     finally { lock.current = false; setPending(false); }
   }
-  const title = guest || searching ? 'Buscar personas' : route.list ? listLabel(route.list) : 'Perfil social';
+  const title = route.workout ? 'Entrenamiento' : guest || searching ? 'Buscar personas' : route.list ? listLabel(route.list) : 'Perfil social';
   return <div className="social-page">
-    <header className="profile-page-heading"><button className="icon-button" aria-label="Volver" onClick={onBack}><ArrowLeft size={21}/></button><h1 ref={heading} tabIndex={-1}>{title}</h1><Users size={22} aria-hidden="true"/></header>
+    <header className="profile-page-heading"><button className="icon-button" aria-label="Volver" onClick={() => route.workout && !route.source ? onNavigate({ ...route, workout: null }) : onBack()}><ArrowLeft size={21}/></button><h1 ref={heading} tabIndex={-1}>{title}</h1><Users size={22} aria-hidden="true"/></header>
     {guest || !owner ? <section className="social-empty"><Users size={36}/><h2>Conecta con tu gente.</h2><p>Necesitas una cuenta para buscar personas, ver perfiles y seguirlas. Puedes continuar entrenando como invitado.</p><button className="primary" onClick={onAccount}>Ir a mi cuenta<ArrowUpRight size={17}/></button></section> : <>
       {!online && <p className="social-offline" role="status"><WifiOff size={18}/>Sin conexión. Conéctate para consultar perfiles y confirmar seguimientos.</p>}
       {searching && <section className="social-search"><span className="eyebrow">CADA REP, EN BUENA COMPAÑÍA</span><h2>Encuentra a tu gente<span>.</span></h2><p>Busca por el comienzo de su @usuario.</p><label htmlFor="social-search">Nombre de usuario</label><div><Search size={20}/><input id="social-search" type="search" autoComplete="off" autoCapitalize="none" spellCheck={false} maxLength={31} placeholder="@usuario" value={route.query} onChange={e => onNavigate({ owner: null, list: null, query: e.target.value })}/></div></section>}
@@ -102,18 +102,18 @@ export default function SocialPanel({ owner, guest, route, onNavigate, onBack, o
       {loading && <p role="status" className="social-status">{offset ? 'Cargando más personas…' : 'Consultando perfiles…'}</p>}
       {error && <div className="social-error" role="alert"><p>{error}</p><button className="secondary" onClick={() => setRevision(n => n + 1)}>Reintentar</button></div>}
       {!valid && <p className="social-status">{route.query.trim() ? 'Usa letras, números, puntos y guiones bajos, con o sin @.' : 'Escribe un @usuario para empezar.'}</p>}
-      {!error && profile && <section className="personal-profile-card social-profile" aria-label="Perfil social">
+      {!error && profile && !route.workout && <section className="personal-profile-card social-profile" aria-label="Perfil social">
         <div className="profile-cover" aria-hidden="true"><span>EVERY REP CONNECTS.</span><ArrowUpRight/></div>
-        <div className="profile-identity"><PersonalAvatar photo={profile.photo} name={profile.display_name || profile.username}/><div className="profile-name"><span className="eyebrow">COMUNIDAD CHEESIT</span><h2>{profile.display_name || profile.username}</h2><p className="profile-username">@{profile.username}</p>{profile.follows_you && <span className="social-follows-you">Te sigue</span>}</div></div>
+        <div className="profile-identity"><PersonalAvatar photo={profile.photo} name={profile.display_name || profile.username}/><div className="profile-name"><span className="eyebrow">COMUNIDAD CHEESIT</span><h2>{profile.display_name || profile.username}</h2><p className="profile-username">@{profile.username}</p>{profile.follows_you && <span className="social-follows-you">Te sigue</span>}<SocialCounts profile={profile} onOpen={list => onNavigate({ ...route, list })}/></div></div>
         <p className="profile-bio">{profile.bio || 'Todavía no ha añadido una biografía.'}</p>
         {profile.owner_id !== owner && <div className="social-follow"><button className={profile.is_following ? 'secondary' : 'primary'} disabled={pending || loading || !online} aria-pressed={profile.is_following} onClick={() => void follow()}>{pending ? 'Confirmando…' : profile.is_following ? 'Dejar de seguir' : 'Seguir'}</button></div>}
         {mutationError && <p className="social-error" role="alert">{mutationError}</p>}{notice && <p className="social-confirmed" role="status">{notice}</p>}
-        <SocialCounts profile={profile} onOpen={list => onNavigate({ ...route, list })}/>
       </section>}
+      {!error && profile && <SocialActivity key={`${profile.owner_id}:${route.workout || ""}`} owner={profile.owner_id} own={profile.owner_id === owner} workout={route.workout} onWorkout={id => onNavigate({ ...route, workout: id })}/>}
       {!error && (!route.owner || route.list) && profiles.length > 0 && <ul className="social-people" aria-label={searching ? 'Resultados de personas' : title}>{profiles.map(p => <SocialRow key={p.owner_id} profile={p} onOpen={() => onNavigate({ owner: p.owner_id, list: null, query: route.query })}/>)}</ul>}
-      {!loading && !error && valid && profiles.length === 0 && <section className="social-empty"><Users size={32}/><h2>{searching ? 'No encontramos a nadie.' : route.list === 'followers' ? 'Todavía no hay seguidores.' : route.list === 'following' ? 'Todavía no sigue a nadie.' : 'Perfil no disponible.'}</h2><p>{searching ? 'Prueba con otro @usuario. Solo aparecen perfiles completados.' : route.list ? 'Las conexiones aparecerán aquí cuando se confirmen.' : 'Puede que esta cuenta ya no exista o no haya completado su perfil.'}</p></section>}
+      {!loading && !error && valid && profiles.length === 0 && <section className="social-empty"><Users size={32}/><h2>{searching ? 'No encontramos a nadie.' : route.list === 'followers' ? 'Todavía no hay seguidores.' : route.list === 'following' ? 'Todavía no sigue a nadie.' : route.workout ? 'Entrenamiento no disponible.' : 'Perfil no disponible.'}</h2><p>{searching ? 'Prueba con otro @usuario. Solo aparecen perfiles completados.' : route.list ? 'Las conexiones aparecerán aquí cuando se confirmen.' : 'Puede que esta cuenta ya no exista o no haya completado su perfil.'}</p></section>}
       {result.key === key && result.more && !error && <button className="secondary social-more" disabled={loading} onClick={() => setPaging({ key, offset: profiles.length })}>Cargar más personas</button>}
-      <p className="social-privacy">Solo las personas con sesión iniciada pueden ver tu nombre, @usuario, foto, biografía y conexiones. El correo, tus datos físicos y tus entrenamientos siguen siendo privados.</p>
+      <p className="social-privacy">Solo las personas con sesión iniciada pueden ver tu nombre, @usuario, foto, biografía y conexiones. El correo y tus datos físicos son privados. Cada persona decide si comparte sus entrenamientos.</p>
     </>}
   </div>;
 }

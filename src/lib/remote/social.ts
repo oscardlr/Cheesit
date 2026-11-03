@@ -1,11 +1,16 @@
 import { normalizeUsername } from '../account-profile';
 import { remoteClient, verifiedUser } from './auth';
+import type { Workout } from '../model';
+import type { ActivitySummary } from '../social-activity';
+import { socialActivitySummary } from '../social-activity';
+import { accountTransport } from './account-sync';
 
 export type SocialList = 'followers' | 'following';
-export type SocialRoute = { owner: string | null; list: SocialList | null; query: string };
+export type SocialRoute = { owner: string | null; list: SocialList | null; query: string; workout?: string | null; source?: 'notifications' };
 export type SocialProfile = {
   owner_id: string; username: string; display_name: string; photo: string | null; bio: string;
   followers: number; following: number; is_following: boolean; follows_you: boolean;
+  activity_shared?: boolean;
 };
 export const SOCIAL_PAGE_SIZE = 20;
 export const validSocialQuery = (value: string) => /^[a-z0-9_][a-z0-9._]{0,29}$/.test(normalizeUsername(value));
@@ -25,6 +30,32 @@ export async function readSocial(route: SocialRoute, offset = 0, signal?: AbortS
     if (error || !Array.isArray(data)) throw new Error(failure);
     return data as SocialProfile[];
   } finally { clearTimeout(timer); signal?.removeEventListener('abort', abort); }
+}
+
+export type SocialActivity = { shared: boolean; summary: ActivitySummary | null; workouts: Workout[] };
+
+export async function readActivity(owner: string, workout: string | null = null, offset = 0, signal?: AbortSignal): Promise<SocialActivity | null> {
+  const client = remoteClient();
+  if (!client) throw new Error('Necesitas una cuenta para consultar la actividad.');
+  const { data, error } = await client.rpc('cheesit_read_activity', { p_owner: owner, p_workout: workout, p_offset: offset }).abortSignal(signal ? AbortSignal.any([signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000));
+  if (error) throw new Error('No se ha podido cargar la actividad. Comprueba la conexión y reintenta.');
+  return data as SocialActivity | null;
+}
+
+export async function shareActivity(owner: string, shared: boolean) {
+  if ((await verifiedUser()).id !== owner) throw new Error('La cuenta activa ha cambiado.');
+  const client = remoteClient()!;
+  if (shared) {
+    // Seed derived XP for existing accounts without exposing their physical data.
+    const transport = accountTransport(owner);
+    const snapshot = await transport.download();
+    const { data, revision, tombstones, migrations } = snapshot;
+    const { data: result, error } = await client.rpc('cheesit_commit_account', { p_expected_owner: owner, p_operation_id: crypto.randomUUID(), p_base_revision: revision, p_document: { data, tombstones, migrations, socialSummary: socialActivitySummary(data) } }).abortSignal(AbortSignal.timeout(15000));
+    if (error || result?.status !== 'applied') throw new Error('La cuenta ha cambiado o no hay conexión. Reintenta para compartir la actividad sincronizada.');
+  }
+  const { data, error } = await client.from('cheesit_social_profiles').update({ activity_shared: shared }).eq('owner_id', owner).select('activity_shared').abortSignal(AbortSignal.timeout(15000)).single();
+  if (error || data?.activity_shared !== shared) throw new Error('No se ha confirmado el cambio de privacidad. Comprueba la conexión y reintenta.');
+  return shared;
 }
 
 /** Idempotent desired state, with owner verified over Auth before writing.
