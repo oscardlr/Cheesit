@@ -1,5 +1,7 @@
 import { createServer, type IncomingMessage } from 'node:http';
 import { readFileSync } from 'node:fs';
+import { socialActivitySummary } from '../src/lib/social-activity';
+import type { AppData } from '../src/lib/model';
 import { PGlite } from '@electric-sql/pglite';
 
 /** Local-only Auth/PostgREST fixture. Uses actual PostgreSQL RLS/RPCs, but does
@@ -12,6 +14,7 @@ export async function accountsHarness(port = Number(process.env.CHEESIT_ACCOUNTS
   await db.exec(readFileSync('supabase/migrations/20261103000502_account_onboarding.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/20261103102339_onboarding_google_compatibility.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/20261103140756_social_follows.sql','utf8'));
+  await db.exec(readFileSync('supabase/migrations/20261103194247_social_activity_notifications.sql','utf8'));
   const users = new Map<string, { id: string; email: string; password: string; confirmed: boolean }>();
   const authUser = (u: { id: string; email: string }) => ({ id:u.id,email:u.email,aud:'authenticated',role:'authenticated',created_at:new Date().toISOString(),app_metadata:{provider:'email'},user_metadata:{},identities:[] });
   const token = (u: {id:string}) => `${Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url')}.${Buffer.from(JSON.stringify({sub:u.id,exp:Math.floor(Date.now()/1000)+3600,role:'authenticated',aud:'authenticated'})).toString('base64url')}.local-test-signature`;
@@ -48,6 +51,10 @@ export async function accountsHarness(port = Number(process.env.CHEESIT_ACCOUNTS
       // SET LOCAL confines JWT claims and role to this request's transaction.
       const result=await db.transaction(async tx=>{
         await tx.exec('set local role authenticated');await tx.query("select set_config('request.jwt.claim.sub',$1,true)",[owner]);
+        if(url.pathname==='/rest/v1/rpc/cheesit_read_activity') return (await tx.query<{result:unknown}>('select public.cheesit_read_activity($1,$2,$3) result',[input.p_owner,input.p_workout,input.p_offset])).rows[0].result;
+        if(url.pathname==='/rest/v1/rpc/cheesit_read_notifications') return (await tx.query<{result:unknown}>('select public.cheesit_read_notifications($1,$2) result',[input.p_before,input.p_before_id])).rows[0].result;
+        if(url.pathname==='/rest/v1/rpc/cheesit_mark_notifications') { await tx.query('select public.cheesit_mark_notifications($1)',[input.p_id]); return null; }
+        if(url.pathname==='/rest/v1/cheesit_social_profiles' && req.method==='PATCH') return (await tx.query('update public.cheesit_social_profiles set activity_shared=$1 where owner_id=$2 returning activity_shared',[input.activity_shared,url.searchParams.get('owner_id')?.replace('eq.','')])).rows[0]??null;
         if(url.pathname==='/rest/v1/rpc/cheesit_read_social') return (await tx.query<{result:unknown}>('select public.cheesit_read_social($1,$2,$3,$4) result',[input.p_query,input.p_owner,input.p_list,input.p_offset])).rows[0].result;
         if(url.pathname==='/rest/v1/cheesit_follows'){
           if(req.method==='POST')return (await tx.query('insert into public.cheesit_follows(follower_id,followed_id) values($1,$2) returning *',[input.follower_id,input.followed_id])).rows;
@@ -66,11 +73,12 @@ export async function accountsHarness(port = Number(process.env.CHEESIT_ACCOUNTS
   });
   await new Promise<void>(resolve=>server.listen(port,'127.0.0.1',resolve));
   return {
-    async seed(email:string,password='test-password-123',data?:unknown){const u={id:crypto.randomUUID(),email,password,confirmed:true};users.set(email,u);await db.query('insert into auth.users(id,email,raw_user_meta_data) values ($1,$2,$3)',[u.id,email,{username:'u'+u.id.replaceAll('-','').slice(0,20),display_name:'Tu perfil'}]);if(data)await db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('request.jwt.claim.sub',$1,true)",[u.id]);await tx.query('select public.cheesit_commit_account($1,$2,1,$3::jsonb)',[u.id,crypto.randomUUID(),JSON.stringify({data,tombstones:((data as {workouts?:{id:string;status:string}[]}).workouts??[]).filter(w=>w.status==='deleted').map(w=>`workouts:${w.id}`),migrations:[]})]);});await db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('request.jwt.claim.sub',$1,true)",[u.id]);await tx.query('select public.cheesit_complete_profile($1,$2,$3,$4)',[u.id,(data as {personalProfile?:{displayName:string}})?.personalProfile?.displayName||'Tu perfil','u'+u.id.replaceAll('-','').slice(0,20),{weightKg:70,heightCm:180,age:20,sex:'male',dumbbellLoad:'per_hand'}]);});return u;},
+    async seed(email:string,password='test-password-123',data?:unknown){const u={id:crypto.randomUUID(),email,password,confirmed:true};users.set(email,u);await db.query('insert into auth.users(id,email,raw_user_meta_data) values ($1,$2,$3)',[u.id,email,{username:'u'+u.id.replaceAll('-','').slice(0,20),display_name:'Tu perfil'}]);if(data)await db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('request.jwt.claim.sub',$1,true)",[u.id]);await tx.query('select public.cheesit_commit_account($1,$2,1,$3::jsonb)',[u.id,crypto.randomUUID(),JSON.stringify({data,socialSummary:socialActivitySummary(data as AppData),tombstones:((data as {workouts?:{id:string;status:string}[]}).workouts??[]).filter(w=>w.status==='deleted').map(w=>`workouts:${w.id}`),migrations:[]})]);});await db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('request.jwt.claim.sub',$1,true)",[u.id]);await tx.query('select public.cheesit_complete_profile($1,$2,$3,$4)',[u.id,(data as {personalProfile?:{displayName:string}})?.personalProfile?.displayName||'Tu perfil','u'+u.id.replaceAll('-','').slice(0,20),{weightKg:70,heightCm:180,age:20,sex:'male',dumbbellLoad:'per_hand'}]);});return u;},
     confirm(email:string){const u=users.get(email)!;u.confirmed=true;return session(u);},
     recovery(email:string){const u=users.get(email)!;const s=session(u);return `?recovery=1#access_token=${s.access_token}&refresh_token=${s.refresh_token}&token_type=bearer&expires_in=3600&type=recovery`;},
     async social(email:string){const u=users.get(email)!;return (await db.query<{username:string}>('select username from public.cheesit_social_profiles where owner_id=$1',[u.id])).rows[0];},
     async account(email:string){const u=users.get(email)!;return (await db.query<{data:unknown;revision:number}>('select data,revision from public.cheesit_accounts where owner_id=$1',[u.id])).rows[0];},
+    async commit(email:string,data:unknown){const u=users.get(email)!;return db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('request.jwt.claim.sub',$1,true)",[u.id]);const account=(await tx.query<{revision:number}>('select revision from public.cheesit_accounts where owner_id=$1',[u.id])).rows[0];return (await tx.query('select public.cheesit_commit_account($1,$2,$3,$4::jsonb)',[u.id,crypto.randomUUID(),account.revision,JSON.stringify({data,socialSummary:socialActivitySummary(data as AppData),tombstones:((data as {workouts?:{id:string;status:string}[]}).workouts??[]).filter(w=>w.status==='deleted').map(w=>`workouts:${w.id}`),migrations:[]})])).rows;});},
     async close(){await new Promise<void>(resolve=>server.close(()=>resolve()));await db.close();},
   };
 }

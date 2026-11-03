@@ -1,56 +1,77 @@
-# Seguidores en Cheesit
+# Perfiles, seguidores y notificaciones en Cheesit
 
 ## Uso
 
-En el menú de perfil, **Buscar personas** busca por el comienzo del @usuario existente. Acepta `@Usuario`, `usuario`, espacios exteriores y mayúsculas. Los puntos y guiones bajos son literales; no son comodines. Las búsquedas y listas tienen páginas de veinte personas.
+El menú de perfil permite buscar por el comienzo del @usuario. Acepta `@Usuario`, espacios exteriores y mayúsculas; puntos y guiones bajos son literales. Los resultados y las listas de conexiones tienen páginas de veinte personas.
 
-Los resultados muestran foto, nombre y @. Cada ficha social incluye la biografía, seguidores y seguidos, listas navegables, «Te sigue» y seguir/dejar de seguir. Las relaciones son independientes. Mi perfil conserva el resumen de actividad privado y añade los contadores y el enlace a la ficha social.
+Ambos perfiles integran seguidores y seguidos en la cabecera, con números y etiquetas compactos. Cada contador abre su lista. La ficha social conserva biografía, foto, nombre, @, «Te sigue» y seguir/dejar de seguir. Las relaciones son independientes.
 
-El modo invitado conserva su almacenamiento separado y explica que necesita una cuenta para las funciones sociales. Los estados de carga, resultados/listas vacíos, errores, falta de conexión y reintento tienen mensajes explícitos. Las lecturas y escrituras sociales tienen límite de espera. La interfaz cancela búsquedas anteriores, bloquea pulsaciones repetidas y solo confirma una acción después de releer el estado del servidor. Una respuesta perdida se reconcilia al reintentar sin duplicar follows.
+En **Mi perfil → Compartir actividad**, cada propietario decide si comparte nivel, XP, estadísticas y sesiones completadas, incluidas sus notas. Las cuentas existentes mantienen su actividad privada por defecto. El correo y los datos físicos siempre permanecen privados.
 
-## Privacidad y permisos
+El corazón de la cabecera abre las notificaciones y muestra un punto si hay novedades. También se incluye acceso directo a entrenar. En móvil, el control de sonido sigue disponible en Ajustes.
 
-- `cheesit_accounts`, sus recibos y `cheesit_identities` conservan sus políticas privadas. No se modifica su contenido ni se amplía su acceso.
-- `cheesit_social_profiles` es una proyección de cinco campos: identificador del propietario, @usuario, nombre visible, foto y biografía. Solo contiene cuentas con onboarding completado; solo los usuarios con sesión pueden leerla. La foto sigue siendo el JPEG preparado por la app, sin URLs remotas.
-- Los triggers privados sincronizan exclusivamente esos campos al completar el perfil o confirmar un cambio en el documento de cuenta. No se depende de otra petición del navegador que pudiera fallar después del guardado. Los clientes no pueden escribir directamente en la proyección ni ejecutar los triggers.
-- El correo permanece en Auth. Peso, altura, edad, sexo, entrenamientos, juego, preferencias y el resto del documento privado no se devuelven en ninguna consulta social.
-- `cheesit_follows` tiene RLS, claves externas a perfiles completados, clave primaria compuesta y restricción contra seguirse a uno mismo. Solo se permite insertar/eliminar filas cuyo `follower_id` sea el UID autenticado. No se concede UPDATE.
-- La lectura social y sus contadores usan un RPC `SECURITY INVOKER`, respetando RLS. No acceden a documentos privados ni a metadatos de Auth.
-- Las conexiones son visibles entre personas con sesión, tal como indican los textos de privacidad. No hay feed, mensajes, notificaciones, solicitudes ni seguimientos recíprocos automáticos.
+## Perfiles e historial
+
+`ProfileStats`, `ProfileWorkouts` y `WorkoutDetailContent` se reutilizan en los perfiles propios y ajenos. La actividad compartida incluye ejercicios, series, repeticiones, pesos, convenciones de carga, RPE/RIR, notas, duración y prescripciones. Se ordena por fecha, creación e ID descendentes y se pagina de veinte en veinte.
+
+Las acciones de edición y borrado permanecen fuera del detalle compartido. Solo el propietario puede modificar su documento mediante el guardado autenticado existente. Borradores, temporizadores, perfil físico, preferencias y ledger del juego nunca se proyectan.
+
+El resumen usa `totals` y `gameProgress`, las mismas funciones que el perfil propio, con el documento exacto confirmado por el protocolo CAS de sincronización. Solo publica números derivados, validados por la base de datos. El XP se guarda por temporada para resolver el cambio de año sin mostrar el nivel del año anterior. Los clientes antiguos invalidan el resumen para evitar cifras desfasadas; sus datos siguen siendo compatibles.
+
+Desactivar compartir oculta sesiones y estadísticas inmediatamente en las siguientes consultas, también mediante enlaces directos. Los detalles abiertos vuelven a comprobar permisos al recuperar foco, reconectar y cada treinta segundos. Una sesión eliminada o sin permiso muestra «Entrenamiento no disponible».
+
+## Notificaciones
+
+- **Nuevo seguidor:** avatar, nombre, descripción y tiempo relativo. Abre el perfil del actor.
+- **Entrenamiento completado compartido:** describe los grupos musculares y abre directamente la sesión mediante `#view=social&person=…&workout=…`.
+- La lectura individual se confirma antes de navegar. «Marcar todas como leídas» actualiza en el servidor únicamente los avisos del destinatario autenticado.
+- Los avisos se ordenan por fecha e ID descendentes. La paginación usa ambos campos para no perder elementos con la misma marca temporal.
+- Se consulta al abrir, recuperar foco, reconectar y cada treinta segundos con la pestaña visible. Hay estados de carga, error, reintento y lista vacía, además del acceso para invitados.
+
+El trigger de follows emite un aviso con clave única por relación. El trigger de cuentas detecta la primera finalización de una sesión y elige los seguidores del autor en ese momento, siempre que comparta su actividad. No hay autoavisos, duplicados por reintentos, avisos por ediciones posteriores ni avisos retroactivos al compartir un historial existente. El ledger privado conserva los IDs ya publicados incluso tras una retirada del historial.
+
+El almacenamiento de notificaciones no incluye el título del entrenamiento. La descripción se resuelve con permisos actuales; al revocar la actividad o retirar la sesión, su contenido deja de aparecer en los avisos.
+
+## Privacidad y persistencia
+
+- `cheesit_accounts`, `cheesit_identities` y los recibos mantienen su acceso privado mediante RLS. El correo permanece en Auth.
+- `cheesit_social_profiles` proyecta identificador, @, nombre, foto, biografía y `activity_shared`. Solo contiene perfiles completados y solo los usuarios con sesión pueden leerlos. La foto sigue siendo el JPEG preparado por la app, sin URLs remotas.
+- Los clientes solo pueden cambiar la columna de privacidad de su propio perfil. No pueden editar identidades ajenas ni escribir en las proyecciones de entrenamientos.
+- Las tablas nuevas de actividad y notificaciones tienen RLS y privilegios mínimos. Cada persona solo puede leer sus avisos y actualizar su columna de lectura. No puede crear, borrar ni atribuir avisos a otra persona.
+- Los triggers privilegiados están en `cheesit_private`, con `search_path` vacío y sin permiso de ejecución para clientes. Las consultas y la actualización de lectura son `SECURITY INVOKER`.
+- La tabla privada de publicaciones tiene RLS sin políticas y sin privilegios de cliente: denegación por defecto. El asesor la señala de forma informativa; únicamente la usan los triggers internos. [Referencia del asesor](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy).
+
+Las proyecciones no disponibles se conservan con una marca. La migración no elimina ni resetea cuentas, documentos privados, historiales, usuarios, recibos previos ni conexiones existentes.
 
 ## Migraciones y proyecto conectado
 
-La migración se creó con `supabase migration new social_follows` y se aplicó al proyecto autorizado Cheesit (`fwfmwyyufafaxckkdwrx`) mediante `apply_migration`. El archivo local usa la versión registrada por Supabase: `20261103140756_social_follows.sql`. Su huella coincide con la sentencia del historial remoto.
+Están aplicadas en Cheesit (`fwfmwyyufafaxckkdwrx`):
 
-La migración solo añade las tablas, índices, políticas, RPC y triggers sociales y rellena la tabla nueva con los campos visibles de perfiles completados. No actualiza ni elimina cuentas o sus documentos. Antes y después de aplicarla, los tres documentos privados dieron el mismo recuento y la misma huella completa: `08aab5391239db61e5661b196a39b66f`.
+- `20261103140756_social_follows.sql`: perfiles visibles y seguidores.
+- `20261103194247_social_activity_notifications.sql`: privacidad de actividad, proyecciones, notificaciones y resumen numérico confirmado con el guardado de cuenta.
 
-Se recuperó también `20261103102339_onboarding_google_compatibility.sql` del historial remoto, donde ya estaba aplicada antes de este trabajo. Se conserva literalmente, con la misma huella, para que el historial local coincida con Supabase y se preserve el onboarding de Google. No se volvió a aplicar.
+La nueva migración se creó con `supabase migration new social_activity_notifications` y se renombró a la versión registrada por Supabase tras `apply_migration`. No se ejecutaron resets ni se reaplicaron migraciones anteriores. En otra base, aplicar los archivos en orden mediante el flujo habitual del proyecto.
 
-No hace falta aplicar ninguna migración social adicional al proyecto conectado. En otra base, aplicar las migraciones en orden con el flujo habitual del proyecto. No ejecutar resets ni volver a aplicar archivos que ya constan en el historial.
+Antes y después de la nueva migración se comprobaron las **4 cuentas existentes**. La huella de sus documentos, revisiones, tombstones y marcadores de migración permaneció idéntica: `0e1a4c5cd87478a396964bbe532d9ad5`. No se escribieron ni borraron datos de cuentas reales durante las pruebas.
+
+El asesor remoto conserva las advertencias previas de dos RPC privilegiados y protección de contraseñas filtradas desactivada. No se modifican esos controles desde esta ampliación. Referencias: [RPC privilegiados](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable), [contraseñas](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
 
 ## Verificación
 
-Resultado final: **216 pruebas unitarias/integración aprobadas y una LIVE omitida**, **27 casos de Chrome comprobados sobre el rediseño de producción**, `npm run typecheck`, `npm run build` con la configuración real y `git diff --check` correctos. Las capturas se revisaron visualmente después de esperar a que terminaran de cargar las listas. La ejecución inicial de Chrome aprobó 23 casos; tres esperas interrumpidas pasaron al repetirlas. La prueba de cambio de foto leía prematuramente la imagen anterior: se corrigió para esperar a la nueva foto y pasó la comprobación específica.
+Resultado final: **219 pruebas unitarias/de integración aprobadas**, una prueba LIVE optativa omitida por falta de credenciales, **12 pruebas Chrome aprobadas**, TypeScript y build de producción correctos.
 
-`npm test` prueba las políticas reales de PostgreSQL en PGlite, con dos usuarios distintos y un perfil incompleto: privacidad, denegación anónima, suplantación del seguidor, duplicados, autosseguimiento, UPDATE denegado, borrado ajeno sin efecto, direccionalidad, contadores/listas, búsqueda literal, paginación, sincronización de nombre/foto/biografía y cascadas. Las escrituras y borrados de prueba se ejecutan exclusivamente en bases locales aisladas, nunca en las cuentas existentes del proyecto conectado.
+- `tests/account-transport-upgrade.test.ts`: recupera recibos de operaciones anteriores a la actualización, sin repetir escrituras ni aceptar documentos alterados.
+- `tests/social-activity-database.test.ts`: resumen idéntico al del propietario, privacidad y permisos entre cuentas, eventos de finalización, borradores, edición, lectura persistente individual/global, seguidores posteriores, retirada de sesiones, paginación y compatibilidad de clientes antiguos.
+- `tests/social-activity.spec.ts`: dos contextos Chrome, finalizar desde el editor real y sincronizar, recibir el aviso, abrir su detalle, recargar, conservar lectura, revocar permisos, errores HTTP, desconexión, modo invitado y acceso a entrenar.
+- Regresión de `social.spec.ts`, `personal-profile.spec.ts` y `profile-menu.spec.ts`: conexiones, búsqueda, edición de perfiles, navegación, avatar, cambios entre dispositivos y modo sin conexión.
+- `supabase/tests/social_activity_readonly.sql`: comprobación remota en transacción de solo lectura con claims de dos cuentas existentes. No crea usuarios ni muta historiales o follows.
+- `npm test`, `npm run typecheck` y `npm run build`.
 
-`supabase/tests/social_permissions.sql` es parte de esa prueba **local**. Crea registros sintéticos dentro de una transacción que se revierte y comprueba que las cuentas anteriores del fixture permanecen idénticas. No ejecutarlo en el proyecto conectado. El intento inicial de prueba remota con registros temporales fue cancelado sin ejecutarse; se sustituyó por la comprobación de solo lectura descrita a continuación.
+Las pruebas de escritura utilizan exclusivamente cuentas sintéticas en PostgreSQL local (PGlite). El servicio Auth/PostgREST de pruebas utiliza RLS/RPC reales de PostgreSQL, pero no pretende demostrar entrega de correo, validación JWT de Supabase ni funcionamiento en dispositivos físicos.
 
-En Supabase se ejecutó `supabase/tests/social_readonly.sql`, dentro de `BEGIN READ ONLY`: con claims de dos cuentas existentes, cada una ve la ficha social de la otra y solo su propio documento privado; no puede consultar la identidad ni los recibos ajenos. Comprueba también la búsqueda canónica, la ausencia de campos privados y los privilegios de tablas/funciones. No escribe cuentas ni follows. Por HTTP real, las dos tablas sociales y el RPC rechazan peticiones anónimas con `401 / 42501`.
+Capturas en `artifacts/social-activity/profile-{320,390,768,1440}.png` y `artifacts/social-activity/notifications.png`. Se comprueba que no haya desbordamientos y que los contadores permanezcan compactos.
 
-El asesor remoto no añade avisos de seguridad para las funciones sociales. Persisten avisos anteriores sobre dos RPC privilegiados y protección de contraseñas filtradas desactivada. El índice nuevo de búsqueda figura como todavía sin uso en una base de tres cuentas; se conserva para las búsquedas al crecer el directorio. Referencias: [funciones privilegiadas](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable), [contraseñas](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection), [índices sin uso](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index).
-
-Las pruebas de Chrome usan el SDK y un servicio Auth/PostgREST de prueba conectado a PostgreSQL local. Cubren dos contextos de navegador, modo invitado, búsqueda sin @/con mayúsculas, navegación y recarga, listas, independencia de follows, edición sincronizada, carga de más resultados, errores 503, búsquedas desfasadas, desconexión y pérdida de respuesta después de guardar. Se comprueba que no haya desbordamiento a 320, 390, 768 y 1440 px; las capturas están en `artifacts/social/`. No se presenta el servicio Auth de prueba como dos sesiones reales de Supabase ni como dispositivos físicos.
-
-Comandos reproducibles:
-
-```sh
-npm test
-npm run typecheck
-npm run build
-```
-
-Para Chrome, compilar y arrancar una instancia local de prueba:
+Para Chrome, compilar y arrancar una instancia **aislada** con configuración de pruebas:
 
 ```sh
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:55440 \
@@ -62,14 +83,8 @@ En otra terminal:
 
 ```sh
 CHEESIT_ACCOUNTS_FIXTURE=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 \
-npx playwright test tests/social.spec.ts tests/personal-profile.spec.ts \
-  tests/profile-menu.spec.ts tests/onboarding.spec.ts tests/ux-redesign.spec.ts --workers=1
+npx playwright test tests/social-activity.spec.ts tests/social.spec.ts \
+  tests/personal-profile.spec.ts tests/profile-menu.spec.ts --workers=1
 ```
 
-Después, detener esa instancia y ejecutar `npm run build` con la configuración normal. No publicar el build del fixture.
-
-La carpeta original conserva su copia previa `EntrenosApp 2.tsx`. La publicación no la incluye ni cambia la configuración de TypeScript del rediseño ya publicado, que conserva esa referencia histórica fuera de la compilación.
-
-## Límites
-
-La publicación integra únicamente los cambios sociales sobre el rediseño ya publicado, conservando navegación, Arcade y acceso con Google. La migración remota está aplicada. Las comprobaciones de escritura entre usuarios se han completado en PostgreSQL local; en remoto se verifica lectura, RLS y privilegios sin modificar cuentas existentes. La prueba LIVE optativa de cuentas sigue necesitando credenciales introducidas por el usuario. Safari/iPhone y Android físicos quedan fuera de las pruebas de Chromium con tamaños móviles.
+Las pruebas de modo sin conexión necesitan un build de producción, no `next dev`. No publicar el build del fixture. El build principal se ha realizado con la configuración normal. La base conectada está preparada. El frontend se publica mediante la integración GitHub–Vercel, conservando la configuración de producción.
