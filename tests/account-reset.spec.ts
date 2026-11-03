@@ -43,6 +43,7 @@ test('red reset button confirms, cancels without deleting, and resets the cloud 
   await nav.getByRole('button', { name: 'Resumen', exact: true }).click();
   await expect(page.locator('.quick-guide, .arcade-preview')).toHaveCount(0);
   await nav.getByRole('button', { name: 'Arcade', exact: true }).click();
+  await page.locator('.arcade-goal-tile').click();
   const filters = page.getByRole('group', { name: 'Mostrar objetivos' });
   await expect(filters.getByRole('combobox')).toHaveCount(0);
   await expect(filters.getByRole('button')).toHaveCount(3);

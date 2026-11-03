@@ -1,0 +1,20 @@
+
+> mi-app-del-puto-gimnasio@1.0.0 test:e2e
+> playwright test tests/onboarding.spec.ts tests/profile-menu.spec.ts tests/personal-profile.spec.ts tests/account-reset.spec.ts --workers=1 --output=artifacts/ux-redesign/v2-accounts
+
+
+Running 9 tests using 1 worker
+
+(node:74894) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/account-reset.spec.ts:37:1 › red reset button confirms, cancels without deleting, and resets the cloud account across devices (4.4s)
+  ✓  2 tests/account-reset.spec.ts:72:1 › offline reset reports pending cloud deletion and uploads when reconnected (2.2s)
+  ✓  3 tests/onboarding.spec.ts:20:1 › registration reserves lowercase @username, onboarding, duplicate feedback, persistent session and weight sync (17.9s)
+  ✓  4 tests/onboarding.spec.ts:51:1 › guest enters without Auth requests or personal questions and persists separately (734ms)
+  ✓  5 tests/personal-profile.spec.ts:36:1 › new private profile: edit, upload/change/remove photo, offline reload, second device and account isolation (20.9s)
+  ✓  6 tests/personal-profile.spec.ts:84:1 › real recent activity, details and responsive layout with accessible editing and cancellation (3.2s)
+  ✓  7 tests/personal-profile.spec.ts:113:1 › two different personal profile edits require review and display both private versions (3.5s)
+  ✓  8 tests/profile-menu.spec.ts:10:1 › profile disclosure replaces the toolbar and keeps account controls in Settings (2.2s)
+  ✓  9 tests/profile-menu.spec.ts:67:1 › toolbar photo follows profile uploads, changes and removal (1.3s)
+
+  9 passed (1.0m)

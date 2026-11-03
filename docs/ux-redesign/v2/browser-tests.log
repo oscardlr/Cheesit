@@ -1,0 +1,26 @@
+
+> mi-app-del-puto-gimnasio@1.0.0 test:e2e
+> playwright test tests/ux-redesign.spec.ts --workers=1 --output=artifacts/ux-redesign/v2-final
+
+
+Running 15 tests using 1 worker
+
+(node:74893) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/ux-redesign.spec.ts:42:1 › guest access is explicit, survives reload in the tab and never sends account writes (2.1s)
+  ✓   2 tests/ux-redesign.spec.ts:52:1 › create routine, start, validate, confirm, rest, recover, finish, history and progress (1.7s)
+  ✓   3 tests/ux-redesign.spec.ts:85:3 › all destinations and Arcade tabs reflow at 320px (2.8s)
+  ✓   4 tests/ux-redesign.spec.ts:85:3 › all destinations and Arcade tabs reflow at 390px (2.5s)
+  ✓   5 tests/ux-redesign.spec.ts:85:3 › all destinations and Arcade tabs reflow at 768px (3.1s)
+  ✓   6 tests/ux-redesign.spec.ts:85:3 › all destinations and Arcade tabs reflow at 1440px (2.6s)
+  ✓   7 tests/ux-redesign.spec.ts:112:1 › keyboard skip, form submission and unsaved routine focus trap work (640ms)
+  ✓   8 tests/ux-redesign.spec.ts:123:1 › library filters recover, custom exercise saves, preferences and backup survive reload (1.3s)
+  ✓   9 tests/ux-redesign.spec.ts:136:1 › Arcade tabs restore through browser history, crate reveal persists and collection stays usable (1.1s)
+  ✓  10 tests/ux-redesign.spec.ts:150:1 › routines can still duplicate, archive and restore (662ms)
+  ✓  11 tests/ux-redesign.spec.ts:157:1 › verified offline shell opens the guest draft without a network connection (782ms)
+  ✓  12 tests/ux-redesign.spec.ts:167:1 › Arcade home routes to task-specific collection spaces and restores their URLs (688ms)
+  ✓  13 tests/ux-redesign.spec.ts:181:1 › muscle selection changes the visible anatomical view without changing activity (569ms)
+  ✓  14 tests/ux-redesign.spec.ts:194:1 › empty Arcade explains the next reward and never offers unavailable free chests (452ms)
+  ✓  15 tests/ux-redesign.spec.ts:202:1 › inventory, cosmetic equipment, cheesit and active ability remain separate and persist (1.8s)
+
+  15 passed (24.9s)

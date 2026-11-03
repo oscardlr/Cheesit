@@ -33,7 +33,7 @@ export function AccountPanel({ ownerId, email: accountEmail, hasPending, recover
     return () => { data.subscription.unsubscribe(); window.removeEventListener('pageshow', resumed); };
   }, []);
   async function submit(event: FormEvent) {
-    event.preventDefault();
+    event.preventDefault(); if (busy) return;
     if ((mode === 'sign-up' || mode === 'recovery') && password !== confirmation) { setMismatch(true); setMessage('Las contraseñas no coinciden. Vuelve a escribirlas.'); return; }
     setMismatch(false); setBusy(true); setMessage('');
     try {
@@ -67,12 +67,12 @@ export function AccountPanel({ ownerId, email: accountEmail, hasPending, recover
   if (ownerId && mode !== 'recovery' && !recovery) return <section aria-label="Cuenta"><p>{accountEmail || 'Sesión iniciada'}</p>{hasPending && <p>Hay cambios pendientes de sincronizar.</p>}<button type="button" disabled={busy} onClick={leave}>Cerrar sesión</button><p role="status">{message}</p></section>;
   return <section aria-label="Acceso a la cuenta">
     <h2>{mode === 'sign-in' ? 'Iniciar sesión' : mode === 'sign-up' ? 'Crear cuenta' : mode === 'forgot' ? 'Recuperar acceso' : 'Nueva contraseña'}</h2>
-    <form onSubmit={submit}>
+    <form onSubmit={submit} aria-busy={busy}><fieldset disabled={busy}>
       {mode === 'sign-up' && <><label>Nombre visible<input autoComplete="name" maxLength={80} required value={displayName} onChange={e => setDisplayName(e.target.value)}/></label><label>Nombre de usuario<input autoComplete="username" autoCapitalize="none" spellCheck={false} required maxLength={31} value={username ? `@${username}` : ''} placeholder="@usuario" onChange={e => setUsername(normalizeUsername(e.target.value))} aria-describedby="signup-username-hint"/></label><small id="signup-username-hint">{USERNAME_HINT}</small></>}
       {mode !== 'recovery' && <label>Correo electrónico<input type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} /></label>}
       {mode !== 'forgot' && <PasswordField key={mode} value={password} onChange={setPassword} autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}/>}
       {(mode === 'sign-up' || mode === 'recovery') && <PasswordField label="Repetir contraseña" value={confirmation} onChange={value => { setConfirmation(value); if (mismatch) setMessage(''); setMismatch(false); }} autoComplete="new-password" invalid={mismatch} describedBy={messageId}/>}
-      <button type="submit" disabled={busy}>{mode === 'sign-in' ? 'Entrar' : mode === 'sign-up' ? 'Crear cuenta' : mode === 'forgot' ? 'Enviar correo' : 'Guardar contraseña'}</button>
+      </fieldset><button type="submit" disabled={busy}>{busy ? 'Espera un momento…' : mode === 'sign-in' ? 'Entrar' : mode === 'sign-up' ? 'Crear cuenta' : mode === 'forgot' ? 'Enviar correo' : 'Guardar contraseña'}</button>
     </form>
     {(mode === 'sign-in' || mode === 'sign-up') && <><div className="account-divider"><span>o</span></div><button type="button" className="account-google" disabled={busy} onClick={() => void google()}><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#4285f4" d="M21.6 12.23c0-.71-.06-1.39-.18-2.05H12v3.88h5.38a4.6 4.6 0 0 1-2 3.02v2.51h3.24c1.89-1.74 2.98-4.3 2.98-7.36Z"/><path fill="#34a853" d="M12 22c2.7 0 4.96-.9 6.62-2.41l-3.24-2.51c-.9.6-2.04.96-3.38.96-2.6 0-4.81-1.76-5.6-4.12H3.05v2.59A10 10 0 0 0 12 22Z"/><path fill="#fbbc05" d="M6.4 13.92a6 6 0 0 1 0-3.84V7.49H3.05a10 10 0 0 0 0 9.02l3.35-2.59Z"/><path fill="#ea4335" d="M12 5.96c1.47 0 2.79.5 3.82 1.5l2.87-2.87A9.6 9.6 0 0 0 12 2a10 10 0 0 0-8.95 5.49l3.35 2.59A5.99 5.99 0 0 1 12 5.96Z"/></svg>Continuar con Google</button></>}
     {mode !== 'sign-in' && mode !== 'recovery' && <button type="button" disabled={busy} onClick={() => changeMode('sign-in')}>Volver a iniciar sesión</button>}

@@ -16,3 +16,10 @@ artifacts/arcade-visual/
 artifacts/iphone-fix/
 artifacts/v2-*/
 artifacts/v3-*/
+
+# Isolated UX review output (curated previews live in docs/ux-redesign).
+artifacts/ux-redesign/
+artifacts/account-reset/
+artifacts/onboarding/
+artifacts/personal-profile/
+artifacts/profile-menu/
