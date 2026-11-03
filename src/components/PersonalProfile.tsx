@@ -1,23 +1,21 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { ArrowLeft, ArrowUpRight, Camera, Check, ChevronRight, Dumbbell, Layers, LockKeyhole, Pencil, Trash2, UserRound, X, Zap } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Camera, Check, ChevronRight, Dumbbell, Layers, LockKeyhole, Pencil, Trash2, X, Zap } from 'lucide-react';
 import type { AppData } from '@/lib/model';
 import { totals } from '@/lib/metrics';
 import { levelRank } from '@/lib/rewards';
-import { EMPTY_PERSONAL_PROFILE, isPersonalProfile, isProfilePhoto, prepareProfilePhoto, recentProfileWorkouts, type PersonalProfile as Profile } from '@/lib/personal-profile';
+import { EMPTY_PERSONAL_PROFILE, isPersonalProfile, prepareProfilePhoto, recentProfileWorkouts, type PersonalProfile as Profile } from '@/lib/personal-profile';
 import ExerciseThumbnail from './ExerciseThumbnail';
+import { OwnSocialSummary } from './SocialPanel';
+import { PersonalAvatar } from './PersonalAvatar';
+export { PersonalAvatar } from './PersonalAvatar';
+import type { SocialList } from '@/lib/remote/social';
 import './personal-profile.css';
 
 const number = (n: number) => new Intl.NumberFormat('es-ES').format(n);
 const dateLabel = (date: string) => new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`));
 
-export function PersonalAvatar({ photo, name }: { photo?: string | null; name: string }) {
-  const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
-  return <span className="personal-avatar">{photo && photo !== failedPhoto && isProfilePhoto(photo)
-    ? <img src={photo} alt={`Foto de perfil de ${name}`} width={384} height={384} onError={() => setFailedPhoto(photo)}/>
-    : <UserRound aria-label="Avatar predeterminado" role="img" strokeWidth={1.4}/>}</span>;
-}
 
 function EditProfile({ profile, onSave, onClose }: { profile: Profile; onSave: (profile: Profile) => Promise<void>; onClose: () => void }) {
   const [draft, setDraft] = useState<Profile>(() => ({ ...profile }));
@@ -80,7 +78,7 @@ function EditProfile({ profile, onSave, onClose }: { profile: Profile; onSave: (
   </dialog>;
 }
 
-export default function PersonalProfile({ data, level, onSave, onWorkout, onStart, onBack, username, guest }: { username?: string; guest?: boolean; data: AppData; level: number; onSave: (profile: Profile) => Promise<void>; onWorkout: (id: string) => void; onStart: () => void; onBack: () => void }) {
+export default function PersonalProfile({ data, level, onSave, onWorkout, onStart, onBack, username, guest, accountOwner, onSocial }: { accountOwner?: string; onSocial?: (list: SocialList | null) => void; username?: string; guest?: boolean; data: AppData; level: number; onSave: (profile: Profile) => Promise<void>; onWorkout: (id: string) => void; onStart: () => void; onBack: () => void }) {
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
   const profile = data.personalProfile ?? EMPTY_PERSONAL_PROFILE;
@@ -88,18 +86,20 @@ export default function PersonalProfile({ data, level, onSave, onWorkout, onStar
   const recent = recentProfileWorkouts(data.workouts);
   const name = profile.displayName || 'Tu perfil';
   return <div className="personal-profile-page">
-    <header className="profile-page-heading"><button className="icon-button" aria-label="Volver al resumen" onClick={onBack}><ArrowLeft size={21}/></button><h1>Mi perfil</h1><span><LockKeyhole size={13}/>Solo tú</span></header>
+    <header className="profile-page-heading"><button className="icon-button" aria-label="Volver al resumen" onClick={onBack}><ArrowLeft size={21}/></button><h1>Mi perfil</h1><span><LockKeyhole size={13}/>Actividad privada</span></header>
     <section className="personal-profile-card" aria-label="Tu perfil personal">
       <div className="profile-cover" aria-hidden="true"><span>BUILT BY YOU.</span><ArrowUpRight/></div>
       <div className="profile-identity"><PersonalAvatar photo={profile.photo} name={name}/><div className="profile-name"><span className="eyebrow">CADA REP CUENTA</span><h2>{name}</h2>{username && <p className="profile-username">@{username}</p>}<span className="profile-rank"><Zap size={13}/>Nivel {number(level)} · {levelRank(level)}</span></div><button className="secondary profile-edit-button" onClick={() => { setSaved(false); setEditing(true); }}><Pencil size={15}/>Editar perfil</button></div>
       <p className={`profile-bio ${profile.bio ? '' : 'profile-bio-empty'}`}>{profile.bio || 'Este es tu espacio. Añade tu nombre, una foto y eso que te mueve a entrenar.'}</p>
       {saved && <p role="status" className="profile-saved"><Check size={15}/>{guest ? 'Perfil guardado en este navegador.' : 'Perfil guardado en tu cuenta.'}</p>}
+      {accountOwner && onSocial && <OwnSocialSummary owner={accountOwner} onOpen={onSocial}/>}
       <dl className="profile-stats" aria-label="Resumen de actividad"><div><dt><Dumbbell size={16}/>Entrenamientos</dt><dd>{number(stats.workouts)}</dd><span>completados</span></div><div><dt><Layers size={16}/>Series</dt><dd>{number(stats.sets)}</dd><span>realizadas</span></div><div><dt><Zap size={16}/>Nivel actual</dt><dd>{number(level)}</dd><span>{levelRank(level)}</span></div></dl>
     </section>
+    <p className="profile-social-privacy">{guest ? 'Tu perfil de invitado se guarda en este navegador. Necesitas una cuenta para buscar personas y seguirlas.' : 'Las personas con sesión iniciada pueden ver tu nombre, @usuario, foto, biografía y conexiones. Tu correo, datos físicos y entrenamientos siguen siendo privados.'}</p>
     <div className="profile-activity-layout"><section className="profile-recent" aria-labelledby="profile-recent-title"><div className="profile-section-title"><div><span className="eyebrow">TU ESFUERZO, EN EL TIEMPO</span><h2 id="profile-recent-title">Últimos entrenamientos<span> ({stats.workouts})</span></h2></div></div>
       {recent.length ? <div className="profile-workout-list">{recent.map(workout => { const summary = totals([workout], data.profile); return <button className="profile-workout" key={workout.id} onClick={() => onWorkout(workout.id)}><ExerciseThumbnail exerciseId={workout.exercises[0]?.exerciseId || ''}/><span className="profile-workout-copy"><time dateTime={workout.date}>{dateLabel(workout.date)}</time><strong>{workout.name}</strong><span>{workout.exercises.length} {workout.exercises.length === 1 ? 'ejercicio' : 'ejercicios'} · {summary.sets} {summary.sets === 1 ? 'serie' : 'series'} · {number(summary.reps)} reps</span></span><ChevronRight size={18}/></button>; })}</div>
         : <div className="profile-empty"><span className="profile-empty-icon"><Dumbbell size={28}/></span><h3>Tu primera sesión empieza contigo.</h3><p>Aquí aparecerán tus entrenamientos completados, con cada serie que hayas realizado.</p><button className="primary" onClick={onStart}>Empezar entrenamiento<ArrowUpRight size={18}/></button></div>}
-    </section><aside className="profile-manifesto"><span className="eyebrow">TU ÚNICA COMPETENCIA</span><p>ERES<br/><em>TÚ.</em></p><span>Cada sesión forma parte de tu historia. Sigue construyéndola, a tu ritmo.</span>{recent.length > 0 && <button className="text-action" onClick={onStart}>Nueva sesión<ArrowUpRight size={17}/></button>}<div><LockKeyhole size={14}/>Tu perfil es privado.</div></aside></div>
+    </section><aside className="profile-manifesto"><span className="eyebrow">TU ÚNICA COMPETENCIA</span><p>ERES<br/><em>TÚ.</em></p><span>Cada sesión forma parte de tu historia. Sigue construyéndola, a tu ritmo.</span>{recent.length > 0 && <button className="text-action" onClick={onStart}>Nueva sesión<ArrowUpRight size={17}/></button>}<div><LockKeyhole size={14}/>Tu actividad y tus datos físicos son privados.</div></aside></div>
     {editing && <EditProfile profile={profile} onSave={async next => { await onSave(next); setSaved(true); }} onClose={() => { setEditing(false); document.querySelector<HTMLButtonElement>('.profile-edit-button')?.focus(); }}/>}
   </div>;
 }
