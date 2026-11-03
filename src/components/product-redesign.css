@@ -16,6 +16,7 @@
 .ux-shell.product-redesign .bottom-nav button.active { background: #b8a0ff12; border-color: #b8a0ff1c; color: var(--lime); }
 .ux-shell.product-redesign .bottom-nav .nav-add { background: var(--lime); color: var(--bg); font-weight: 700; border-radius: 999px; }
 .ux-shell.product-redesign .topbar :is(.credit-pill,.level-pill,.profile-button,.sound-toggle,.mobile-train) { border-radius: 999px; background: #ffffff04; border-color: #b8a0ff25; }
+.ux-shell.product-redesign .topbar .mobile-train { background: var(--lime); border-color: var(--lime); color: var(--bg); }
 .ux-shell.product-redesign .home-header { margin-bottom: 30px; }
 .ux-shell.product-redesign .home-header h1 { font-size: clamp(36px, 4.2vw, 54px); letter-spacing: -2.6px; line-height: 1.08; font-weight: 600; margin-block: 10px; }
 .ux-shell.product-redesign .home-header .eyebrow { font-size: 10px; letter-spacing: 1.8px; }
