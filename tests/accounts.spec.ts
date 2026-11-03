@@ -25,13 +25,13 @@ async function routine(page:Page,name:string) {
   await synced(page);
 }
 
-test('requires an account, registration confirmation, recovery and persistent session',async({page})=>{
+test('account registration confirmation, onboarding, recovery and persistent session',async({page})=>{
   await page.goto('/'); await expect(page.getByRole('button',{name:'Empezar entrenamiento',exact:true})).toHaveCount(0);
   await page.getByRole('button',{name:'Crear cuenta',exact:true}).click();
-  await page.getByLabel('Correo electrónico').fill('register@example.test');await page.getByLabel('Contraseña',{exact:true}).fill('test-password-123');await page.getByLabel('Repetir contraseña',{exact:true}).fill('test-password-123');await page.getByRole('button',{name:'Crear cuenta',exact:true}).click();
-  await expect(page.getByRole('status')).toContainText('correo para confirmar');
-  harness.confirm('register@example.test');await page.getByRole('button',{name:'Volver a iniciar sesión'}).click();
-  await page.getByLabel('Contraseña',{exact:true}).fill('test-password-123');await page.getByRole('button',{name:'Entrar',exact:true}).click();await expect(page.getByRole('heading',{name:'Resumen',exact:true})).toBeVisible();await synced(page);
+  await page.getByLabel('Nombre visible',{exact:true}).fill('Registro de prueba');await page.getByLabel('Nombre de usuario',{exact:true}).fill('register.test');await page.getByLabel('Correo electrónico').fill('register@example.test');await page.getByLabel('Contraseña',{exact:true}).fill('test-password-123');await page.getByLabel('Repetir contraseña',{exact:true}).fill('test-password-123');await page.getByRole('button',{name:'Crear cuenta',exact:true}).click();
+  await expect(page.getByRole('status')).toContainText('Confirma tu correo');
+  harness.confirm('register@example.test');await page.getByRole('button',{name:'Volver a iniciar sesión'}).click();await page.getByLabel('Contraseña',{exact:true}).fill('test-password-123');
+  await page.getByRole('button',{name:'Entrar',exact:true}).click();await expect(page.getByRole('heading',{name:'Completa tu perfil',exact:true})).toBeVisible();await page.getByLabel('Peso (kg)',{exact:true}).fill('70');await page.getByLabel('Altura (cm)',{exact:true}).fill('180');await page.getByLabel('Edad (años)',{exact:true}).fill('20');await page.getByLabel('Sexo',{exact:true}).selectOption('male');await page.getByRole('button',{name:'Guardar y entrar'}).click();await expect(page.getByRole('heading',{name:'Resumen',exact:true})).toBeVisible();await synced(page);
   await page.reload();await expect(page.getByRole('heading',{name:'Resumen',exact:true})).toBeVisible();
   await page.goto('/'+harness.recovery('register@example.test'));
   await expect(page.getByRole('heading',{name:'Nueva contraseña'})).toBeVisible();await page.getByLabel('Contraseña',{exact:true}).fill('new-password-456');await page.getByLabel('Repetir contraseña',{exact:true}).fill('new-password-456');await page.getByRole('button',{name:'Guardar contraseña'}).click();
@@ -70,7 +70,7 @@ test('offline training draft persists, reconnect uploads, and pending logout pre
 test('legacy data migrates through the interface, preserves the original and reloading cannot duplicate it',async({page})=>{
   await harness.seed('migration@example.test');const raw=JSON.parse(readFileSync('tests/fixtures/legacy-account.json','utf8'));
   await page.goto('/');await page.evaluate(data=>new Promise<void>((resolve,reject)=>{const r=indexedDB.open('entrenos-local',1);r.onupgradeneeded=()=>r.result.createObjectStore('state');r.onsuccess=()=>{const db=r.result,tx=db.transaction('state','readwrite');tx.objectStore('state').put(data,'local');tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>reject(tx.error)};}),raw.data);
-  await login(page,'migration@example.test');await expect(page.getByRole('heading',{name:'Tu historial anterior sigue aquí'})).toBeVisible();await page.getByRole('button',{name:'Revisar incorporación'}).click();await page.getByRole('button',{name:'Incorporar a mi cuenta'}).click();
+  await login(page,'migration@example.test');await expect(page.getByRole('heading',{name:'Tu historial anterior sigue aquí'})).toBeVisible();await page.getByRole('button',{name:'Revisar incorporación'}).click();for(const choice of await page.getByRole('radio',{name:'Usar historial anterior',exact:true}).all())await choice.check();await page.getByRole('button',{name:'Incorporar a mi cuenta'}).click();
   await synced(page);await expect(page.getByRole('heading',{name:'Tu historial anterior sigue aquí'})).toHaveCount(0);
   const before=await harness.account('migration@example.test');expect((before.data as AppData).workouts).toHaveLength(raw.data.workouts.length);
   await page.reload();await synced(page);const after=await harness.account('migration@example.test');expect(after.data).toEqual(before.data);
@@ -93,8 +93,8 @@ test('legacy data migrates through the interface, preserves the original and rel
 test('concurrent devices require an explicit economic/profile choice and preserve a recovery copy',async({page,browser})=>{
   await harness.seed('concurrent@example.test');await login(page,'concurrent@example.test');await synced(page);
   const context=await browser.newContext();const other=await context.newPage();await login(other,'concurrent@example.test');await synced(other);await context.setOffline(true);
-  await settings(page);await page.getByLabel('Peso corporal (kg)').fill('85');await page.getByRole('button',{name:'Guardar perfil'}).click();await synced(page);
-  await settings(other);await other.getByLabel('Peso corporal (kg)').fill('75');await other.getByRole('button',{name:'Guardar perfil'}).click();
+  await settings(page);await page.getByLabel('Peso corporal (kg)').fill('85');await page.getByRole('button',{name:'Guardar peso'}).click();await synced(page);
+  await settings(other);await other.getByLabel('Peso corporal (kg)').fill('75');await other.getByRole('button',{name:'Guardar peso'}).click();
   await expect(other.locator('.account-sync-copy')).toContainText('Pendiente de conexión');await context.setOffline(false);
   await expect(other.getByRole('heading',{name:'Revisa los cambios de tus dispositivos'})).toBeVisible();
   await other.getByLabel('Usar versión de la cuenta',{exact:true}).check();await other.getByRole('button',{name:'Confirmar resolución'}).click();await synced(other);

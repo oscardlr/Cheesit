@@ -14,9 +14,9 @@ export class StorageConflictError extends Error {
   }
 }
 
-function openDatabase(): Promise<IDBDatabase> {
+function openDatabase(databaseName = DB): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB, 1);
+    const request = indexedDB.open(databaseName, 1);
     request.onupgradeneeded = () => { if (!request.result.objectStoreNames.contains(STORE)) request.result.createObjectStore(STORE); };
     request.onsuccess = () => { request.result.onversionchange = () => request.result.close(); resolve(request.result); };
     request.onerror = () => reject(request.error ?? new Error('No se puede abrir el almacenamiento local'));
@@ -25,14 +25,14 @@ function openDatabase(): Promise<IDBDatabase> {
 }
 
 /** Each browser tab has its own expected revision; IDB serializes the atomic compare-and-write. */
-export function createStorageClient(onCommit?: (revision: number) => void) {
+export function createStorageClient(onCommit?: (revision: number) => void, databaseName = DB) {
   let revision: number | undefined;
   let pending: AppData | null = null;
   let lastSave: Promise<void> = Promise.resolve();
   const inflight = new WeakMap<AppData, Promise<void>>();
 
   async function loadData(): Promise<AppData> {
-    const db = await openDatabase();
+    const db = await openDatabase(databaseName);
     try {
       const stored = await new Promise<{ data: AppData; revision: number }>((resolve, reject) => {
         // Serialize migration with other tabs in the same atomic transaction.
@@ -73,7 +73,7 @@ export function createStorageClient(onCommit?: (revision: number) => void) {
 
   async function commitData(data: AppData): Promise<void> {
     if (revision === undefined) throw new Error('Carga los datos locales antes de guardar.');
-    const db = await openDatabase();
+    const db = await openDatabase(databaseName);
     try {
       const nextRevision = await new Promise<number>((resolve, reject) => {
         const tx = db.transaction(STORE, 'readwrite', { durability: 'strict' });
