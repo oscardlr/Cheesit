@@ -25,6 +25,20 @@ export function documentAfter(previous: AccountDocument, data: AppData): Account
  * unit: independently spent charges/rewards can never be combined by accident. */
 export function mergeDocuments(base: AccountDocument, local: AccountDocument, server: AccountDocument, choices: Record<string, 'local' | 'server'> = {}) {
   const conflicts: MergeConflict[] = [];
+  // A reset starts a new history. Offline devices must not merge an old ledger,
+  // draft or newly-created old-history records back into that history.
+  const resets = (doc: AccountDocument) => doc.migrations.filter(id => id.startsWith('account-reset:'));
+  const localResets = resets(local), serverResets = resets(server);
+  if (!same(localResets.slice().sort(), serverResets.slice().sort())) {
+    const selected = serverResets.some(id => !localResets.includes(id)) ? server : local;
+    const discarded = selected === server ? local : server;
+    const deleted = documentAfter(discarded, selected.data);
+    return { document: {
+      data: structuredClone(selected.data),
+      tombstones: union(base.tombstones, local.tombstones, server.tombstones, deleted.tombstones),
+      migrations: union(base.migrations, local.migrations, server.migrations),
+    }, conflicts, unresolved: [] };
+  }
   function choose<T>(key: string, label: string, b: T, l: T, r: T): T {
     if (same(l, r) || same(l, b)) return r;
     if (same(r, b)) return l;

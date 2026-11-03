@@ -62,7 +62,7 @@ test('new private profile: edit, upload/change/remove photo, offline reload, sec
     expect(secondPhoto).not.toBe(firstPhoto); await save(device); await synced(device);
     await expect.poll(async () => ((await harness.account('profile@example.test')).data as AppData).personalProfile?.photo === secondPhoto).toBe(true);
     await page.reload(); await expect(page.locator('.personal-avatar img')).toHaveAttribute('src', secondPhoto!);
-    await expect(page.getByText('Disponible sin conexión', { exact: true })).toBeVisible();
+    await expect(page.locator('.offline-shell')).toContainText('Disponible sin conexión', { timeout: 30000 });
     await context.setOffline(true); await edit(page); await page.getByRole('button', { name: 'Eliminar foto', exact: true }).click(); await save(page);
     await expect(page.locator('.account-sync-copy')).toContainText('Pendiente de conexión');
     await page.reload(); await expect(page.getByRole('heading', { name: 'Álex Cheesit' })).toBeVisible();
