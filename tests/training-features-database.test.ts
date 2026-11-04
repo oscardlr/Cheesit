@@ -13,7 +13,7 @@ test('PostgreSQL accepts legacy and new optional metadata, rejects malformed fie
     await db.exec(`create role anon; create role authenticated; create schema auth; create table auth.users(id uuid primary key,email text,raw_user_meta_data jsonb); create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$; grant usage on schema auth to authenticated,anon; grant execute on function auth.uid() to authenticated,anon;`);
     for (const file of ['202611020001_accounts.sql','20261102233213_personal_profiles.sql','20261103000502_account_onboarding.sql','20261103140756_social_follows.sql','20261103194247_social_activity_notifications.sql']) await db.exec(readFileSync(`supabase/migrations/${file}`, 'utf8'));
     const grants = (await db.query("select proacl from pg_proc where oid='public.cheesit_validate_data(jsonb)'::regprocedure")).rows;
-    await db.exec(readFileSync('supabase/migrations/20261104150621_training_moments_cycles.sql', 'utf8'));
+    await db.exec(readFileSync('supabase/migrations/20261104154031_training_moments_cycles.sql', 'utf8'));
     assert.deepEqual((await db.query("select proacl from pg_proc where oid='public.cheesit_validate_data(jsonb)'::regprocedure")).rows, grants);
     await db.query('select public.cheesit_validate_data($1::jsonb)', [emptyData()]);
     const w = { ...newWorkout(), status: 'finished' as const, date: '2026-11-02', exercises: [{ id: newId(), ...exerciseSnapshot(CATALOG[0]), supersetId: newId(), sets: [{ ...newSet(), kind: 'warmup' as const, weight: 20, reps: 12, confirmed: true }] }] };

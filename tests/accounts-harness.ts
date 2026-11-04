@@ -15,7 +15,7 @@ export async function accountsHarness(port = Number(process.env.CHEESIT_ACCOUNTS
   await db.exec(readFileSync('supabase/migrations/20261103102339_onboarding_google_compatibility.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/20261103140756_social_follows.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/20261103194247_social_activity_notifications.sql','utf8'));
-  await db.exec(readFileSync('supabase/migrations/20261104150621_training_moments_cycles.sql','utf8'));
+  await db.exec(readFileSync('supabase/migrations/20261104154031_training_moments_cycles.sql','utf8'));
   const users = new Map<string, { id: string; email: string; password: string; confirmed: boolean }>();
   const authUser = (u: { id: string; email: string }) => ({ id:u.id,email:u.email,aud:'authenticated',role:'authenticated',created_at:new Date().toISOString(),app_metadata:{provider:'email'},user_metadata:{},identities:[] });
   const token = (u: {id:string}) => `${Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url')}.${Buffer.from(JSON.stringify({sub:u.id,exp:Math.floor(Date.now()/1000)+3600,role:'authenticated',aud:'authenticated'})).toString('base64url')}.local-test-signature`;
