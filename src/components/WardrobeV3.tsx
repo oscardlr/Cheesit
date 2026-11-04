@@ -17,7 +17,7 @@ type Props={initialPanel?:Panel;onPanelChange?:(panel:Panel)=>void;game:GameStat
 type Panel='inventory'|'looks'|'abilities';
 type LookSlot=GearSlot|'companion';
 type Look={kind:'gear';slot:GearSlot;definition:Gear}|{kind:'companion';slot:'companion';definition:Companion};
-const panels:{id:Panel;label:string;Icon:typeof Shirt}[]=[{id:'inventory',label:'Inventario',Icon:PackageOpen},{id:'looks',label:'Aspectos',Icon:Shirt},{id:'abilities',label:'Habilidades',Icon:Zap}];
+const panels:{id:Panel;label:string;Icon:typeof Shirt}[]=[{id:'looks',label:'Aspectos',Icon:Shirt},{id:'abilities',label:'Habilidades',Icon:Zap},{id:'inventory',label:'Inventario',Icon:PackageOpen}];
 const lookSlots:{id:LookSlot|'all';label:string}[]=[{id:'all',label:'Todos'},{id:'head',label:'Cabeza'},{id:'top',label:'Torso'},{id:'bottom',label:'Piernas'},{id:'hand',label:'Manos'},{id:'back',label:'Espalda'},{id:'companion',label:'Cheesit'}];
 const lookCatalog:Look[]=[...GEAR.map(definition=>({kind:'gear' as const,slot:definition.slot,definition})),...COMPANIONS.map(definition=>({kind:'companion' as const,slot:'companion' as const,definition}))];
 const styleFor=(rarity:Rarity)=>({'--rarity':RARITIES[rarity].color} as CSSProperties);
