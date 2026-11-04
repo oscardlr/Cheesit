@@ -1,4 +1,5 @@
 import { CATALOG_LOAD_CONVENTIONS, resolvedLoadConvention, validSet, type WorkoutExercise, type WorkoutSet } from './model';
+import { isWeightTracking, validBodyWeight, type WeightTracking } from './body-weight';
 
 export type AthleteProfile = {
   weightKg: number;
@@ -6,6 +7,8 @@ export type AthleteProfile = {
   age: number;
   sex: 'male' | 'female';
   dumbbellLoad?: 'per_hand' | 'pair';
+  rewardWeightKg?: number;
+  weightTracking?: WeightTracking;
 };
 export const DEFAULT_PROFILE: AthleteProfile = { weightKg: 70, heightCm: 180, age: 20, sex: 'male', dumbbellLoad: 'per_hand' };
 export const STRENGTH_SOURCES = [
@@ -19,11 +22,12 @@ export function isAthleteProfile(value: unknown): value is AthleteProfile {
   return object(value) && typeof value.weightKg === 'number' && Number.isFinite(value.weightKg) && value.weightKg >= 30 && value.weightKg <= 300 &&
     typeof value.heightCm === 'number' && Number.isFinite(value.heightCm) && value.heightCm >= 100 && value.heightCm <= 250 &&
     typeof value.age === 'number' && Number.isInteger(value.age) && value.age >= 16 && value.age <= 100 &&
-    (value.sex === 'male' || value.sex === 'female') && (value.dumbbellLoad === undefined || value.dumbbellLoad === 'per_hand' || value.dumbbellLoad === 'pair');
+    (value.sex === 'male' || value.sex === 'female') && (value.dumbbellLoad === undefined || value.dumbbellLoad === 'per_hand' || value.dumbbellLoad === 'pair') &&
+    (value.rewardWeightKg === undefined || validBodyWeight(value.rewardWeightKg)) && (value.weightTracking === undefined || isWeightTracking(value.weightTracking));
 }
 export function normalizeProfile(value?: unknown): AthleteProfile {
   if (!isAthleteProfile(value)) return { ...DEFAULT_PROFILE };
-  return { weightKg: value.weightKg, heightCm: value.heightCm, age: value.age, sex: value.sex, dumbbellLoad: value.dumbbellLoad ?? 'per_hand' };
+  return { weightKg: value.weightKg, heightCm: value.heightCm, age: value.age, sex: value.sex, dumbbellLoad: value.dumbbellLoad ?? 'per_hand', ...(value.rewardWeightKg !== undefined ? { rewardWeightKg: value.rewardWeightKg } : {}), ...(value.weightTracking ? { weightTracking: structuredClone(value.weightTracking) } : {}) };
 }
 
 /** Game targets, deliberately NOT population averages or exercise prescriptions. */

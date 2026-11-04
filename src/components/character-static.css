@@ -1,0 +1,16 @@
+/* Enlarge the complete registered assembly, preserving every worn layer's fit. */
+.wardrobe-v3 .wardrobe-stage{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+.wardrobe-v3 .wardrobe-character-preview{width:100%;min-width:0;align-self:center}
+.wardrobe-v3 .wardrobe-character-preview>.character-party{width:100%;max-width:450px;margin:0 auto}
+.character-avatar .character-layers{animation:none!important;transform:none}
+.summary-character .summary-character-stage>.character-party{width:min(100%,430px)}
+.summary-character{grid-template-columns:minmax(0,1fr) minmax(280px,46%)}
+.empty-slot-icon{width:28px;height:28px;flex-shrink:0;color:#bea0d4}
+.ux-shell.product-redesign .wardrobe-v3 .wardrobe-character-preview{display:block}
+.ux-shell.product-redesign .wardrobe-v3 .wardrobe-character-preview>.character-party{width:100%;max-width:450px;flex:none}
+.ux-shell.product-redesign section.summary-character{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:'portrait' 'copy' 'progress' 'actions';gap:16px}
+.ux-shell.product-redesign .summary-character .summary-character-stage{width:100%;max-width:370px}
+.ux-shell.product-redesign .summary-character .summary-character-stage>.character-party{width:100%}
+.gear-catalog-missing{display:grid;place-items:center;color:#bfa7ce;font-size:10px;text-align:center;padding:8px}
+@media(max-width:1100px){.wardrobe-v3 .wardrobe-stage{grid-template-columns:minmax(240px,1fr) minmax(0,1fr)}}
+@media(max-width:760px){.wardrobe-v3 .wardrobe-stage{grid-template-columns:minmax(0,1fr);padding:16px;gap:20px}.wardrobe-v3 .wardrobe-character-preview>.character-party{width:min(100%,360px)}.summary-character{grid-template-columns:minmax(0,1fr)}.summary-character .summary-character-stage>.character-party{width:min(100%,340px)}}

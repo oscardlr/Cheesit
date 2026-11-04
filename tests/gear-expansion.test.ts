@@ -6,6 +6,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { GEAR } from '../src/lib/gear';
 import { CHARACTER_ART, CHARACTER_ATLAS, CHARACTER_VIEWBOX, type CharacterRect } from '../src/lib/character-art';
 import { GearArtwork } from '../src/components/GearArtwork';
+import { CharacterGearArtwork } from '../src/components/CharacterArtwork';
+import { GEAR_CATALOG_ART } from '../src/lib/gear-catalog-art';
 import { ABILITIES, abilityMatches, getAbilityDefinition, isAbilityUse } from '../src/lib/abilities';
 import { applyWorkoutAbility, equipCosmetic, gameBalance, getAbilityCharges, isGameState, normalizeGame, rewardForRoll, setActiveAbility, type GameState } from '../src/lib/game';
 import { createBackup, previewBackup } from '../src/lib/backup';
@@ -88,11 +90,11 @@ test('all 35 cosmetics share registered icon and worn art without deforming thei
     if (gear.slot !== 'back') assert.equal(metadata.origin, 'tailored', `${gear.id}: clothing and accessories are drawn for this master`);
     assert.equal(!!metadata.replacesHand, gear.slot === 'hand', `${gear.id}: authored grip replaces the open base hand`);
     const icon = renderToStaticMarkup(createElement(GearArtwork, { gearId: gear.id }));
-    const worn = renderToStaticMarkup(createElement(GearArtwork, { gearId: gear.id, worn: true }));
-    const content = renderToStaticMarkup(createElement('svg', null, createElement(GearArtwork, { gearId: gear.id, worn: true, contentOnly: true })));
-    assert.match(icon, /gear-forge/);
-    assert.ok(icon.includes(`viewBox="${metadata.source.join(' ')}"`));
-    assert.ok(icon.includes(`href="${CHARACTER_ATLAS.src}"`));
+    const worn = renderToStaticMarkup(createElement(CharacterGearArtwork, { gearId: gear.id, worn: true }));
+    const content = renderToStaticMarkup(createElement('svg', null, createElement(CharacterGearArtwork, { gearId: gear.id, worn: true, contentOnly: true })));
+    assert.match(icon, /gear-catalog/);
+    assert.ok(icon.includes(`viewBox="${GEAR_CATALOG_ART[gear.id].source.join(' ')}"`));
+    assert.ok(icon.includes(`href="${GEAR_CATALOG_ART[gear.id].src}"`));
     assert.match(icon, /<image /);
     assert.ok(worn.includes(`viewBox="${CHARACTER_VIEWBOX}"`));
     assert.ok(worn.includes(`character-slot-${gear.slot}`));
@@ -101,12 +103,12 @@ test('all 35 cosmetics share registered icon and worn art without deforming thei
     assert.match(content, /overflow="hidden"/);
     assert.ok(content.includes(`href="${CHARACTER_ATLAS.src}"`));
     assert.doesNotMatch(content, /character-equipped/);
-    for (const rendered of [icon, worn, content]) {
+    for (const rendered of [worn, content]) {
       assert.ok(rendered.includes(`data-art-source="${metadata.source.join(' ')}"`), `${gear.id}: identical source in every renderer`);
       assert.match(rendered, /preserveAspectRatio="xMidYMid meet"/);
       assert.doesNotMatch(rendered, /preserveAspectRatio="none"|transform="scale\(/);
     }
-    assert.equal(icon.match(/<image [^>]+>/)?.[0], worn.match(/<image [^>]+>/)?.[0], `${gear.id}: thumbnail and worn image are identical`);
+    assert.notEqual(GEAR_CATALOG_ART[gear.id].src, CHARACTER_ATLAS.src, `${gear.id}: original catalog source is independent`);
   }
   assert.equal(sources.size, GEAR.length);
   assert.equal(GEAR.filter(gear => CHARACTER_ART[gear.id].origin === 'tailored').length, 29);

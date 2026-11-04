@@ -10,6 +10,7 @@ import { getAbilityDefinition } from '@/lib/abilities';
 import type { CharacterMotion } from '@/lib/character-motion';
 import { CHARACTER_ART, CHARACTER_ATLAS, CHARACTER_MASTER, CHARACTER_VIEWBOX, CHARACTER_SLOT_ORDER, CHARACTER_MASKS } from '@/lib/character-art';
 import { CharacterGearArtwork } from './CharacterArtwork';
+import GearCatalogArtwork from './GearCatalogArtwork';
 import { useImageFailure } from '@/lib/use-image-failure';
 import { CHEESIT_ART, CHEESIT_MOTION, type CheesitMotion } from '@/lib/cheesit-art';
 import { useVisibleMotion } from '@/lib/use-visible-motion';
@@ -21,7 +22,7 @@ import './cheesit-motion.css';
 export const SLOT_LABELS: Record<GearSlot, string> = { head: 'Cabeza', top: 'Torso', bottom: 'Piernas', hand: 'Mano', back: 'Espalda' };
 const auraColors = { common: '#aeb8cc', rare: '#58aaff', epic: '#b68aff', legendary: '#ffcf63' };
 export function GearSprite({ gearId, className = '' }: { gearId: string; className?: string }) {
-  return <CharacterGearArtwork gearId={gearId} className={className}/>;
+  return <GearCatalogArtwork gearId={gearId} className={className}/>;
 }
 export function CompanionSprite({ companionId, className = '', animated = true, motion = 'idle' }: { companionId: string; className?: string; animated?: boolean; motion?: CheesitMotion }) {
   const definition = COMPANIONS.find(item => item.id === companionId), art = CHEESIT_ART[companionId], profile = CHEESIT_MOTION[companionId];
@@ -65,23 +66,23 @@ function WornGear({ gearId, foreground = false }: { gearId: string; foreground?:
   </svg>;
 }
 
-/** The whole registered pose moves as one rigid assembly: no cut joints or distorted clothing. */
-export default function CharacterAvatar({ game, level, animated = true, compact = false, motion = 'idle' }: { game: GameState; level: number; animated?: boolean; compact?: boolean; motion?: CharacterMotion }) {
+/** Static registered pose: every equipped layer retains its authored geometry. */
+export default function CharacterAvatar({ game, level, compact = false }: { game: GameState; level: number; animated?: boolean; compact?: boolean; motion?: CharacterMotion }) {
   const equipped = appearanceGear(game);
   const [atlasFailed, , atlasLoaded] = useImageFailure(CHARACTER_ATLAS.src);
   const handReplaced = atlasLoaded && !atlasFailed && equipped.some(({ definition }) => CHARACTER_ART[definition.id]?.replacesHand);
-  return <div className={`character-avatar ${animated ? 'is-animated' : ''} ${compact ? 'is-compact' : ''}`} data-motion={motion} data-physical-stage={CHARACTER_MASTER.stage} aria-label={`Tu personaje, nivel ${level}${equipped.length ? `, equipado con ${equipped.map(item => item.definition.name).join(', ')}` : ', equipamiento inicial'}`}>
+  return <div className={`character-avatar ${compact ? 'is-compact' : ''}`} data-motion="static" data-physical-stage={CHARACTER_MASTER.stage} aria-label={`Tu personaje, nivel ${level}${equipped.length ? `, equipado con ${equipped.map(item => item.definition.name).join(', ')}` : ', equipamiento inicial'}`}>
     <div className="character-glow" aria-hidden="true"/><div className="character-orbit" aria-hidden="true"/>
     <div className="character-layers" data-avatar-viewbox={CHARACTER_VIEWBOX}><span className="character-base" aria-hidden="true"/><MasterImage handReplaced={handReplaced}/>{equipped.map(({ slot, definition }) => <WornGear key={slot} gearId={definition.id}/>)}{equipped.filter(({ definition }) => CHARACTER_ART[definition.id]?.foregroundMask).map(({ definition }) => <WornGear key={definition.id} gearId={definition.id} foreground/>)}</div>
     <div className="character-power-field" aria-hidden="true"><i/><i/><i/><i/></div><div className="character-platform" aria-hidden="true"/><span className="character-level"><Sparkles size={11}/> NIVEL {level}</span>
   </div>;
 }
-export function CharacterParty({game,level,animated=true,compact=false,motion='idle'}:{game:GameState;level:number;animated?:boolean;compact?:boolean;motion?:CharacterMotion}){
+export function CharacterParty({game,level,compact=false}:{game:GameState;level:number;animated?:boolean;compact?:boolean;motion?:CharacterMotion}){
   const companion=unlockedCompanions(game).find(item=>item.id===game.equippedCompanionId);
-  return <div className={`character-party ${companion?'has-companion':''} ${compact?'is-compact':''} ${animated?'is-animated':''}`}><CharacterAvatar game={game} level={level} animated={animated} compact={compact} motion={motion}/>{companion&&<div className="character-companion"><CompanionSprite companionId={companion.id} animated={animated} motion={motion==='victory'?'celebrate':'idle'}/><span>{companion.name}</span></div>}</div>;
+  return <div className={`character-party ${companion?'has-companion':''} ${compact?'is-compact':''}`}><CharacterAvatar game={game} level={level} compact={compact}/>{companion&&<div className="character-companion"><CompanionSprite companionId={companion.id} animated={false}/><span>{companion.name}</span></div>}</div>;
 }
 export function CharacterCard({data,onOpen,animated=true}:{data:AppData;onOpen:()=>void;animated?:boolean}){
   const game=normalizeGame(data.game), progress=gameProgress(game,data.workouts,data.profile);
   const active=getAbilityDefinition(game.activeAbilityId);
-  return <section className="character-summary-card"><div className="character-summary-copy"><span className="eyebrow"><Shirt size={13}/> TU ALTER EGO ARCADE</span><h2>Tu esfuerzo.<br/><em>Tu personaje.</em></h2><p>Aspectos para siempre. Equipo animado, cheesits y una habilidad para tu siguiente sesión.</p><div><span>{appearanceGear(game).length}/5 piezas equipadas</span><span>Nivel {progress.level}</span></div>{game.equippedCompanionId&&<CheesitPassive companionId={game.equippedCompanionId} status="equipped" compact/>}{active&&<p className="character-active-ability"><Sparkles size={11}/>{active.name}</p>}<button onClick={()=>{try{sessionStorage.setItem('grind-open-wardrobe','1')}catch{}onOpen()}}>Personalizar personaje<ArrowUpRight size={17}/></button></div><CharacterParty game={game} level={progress.level} animated={animated}/></section>;
+  return <section className="character-summary-card"><div className="character-summary-copy"><span className="eyebrow"><Shirt size={13}/> TU ALTER EGO ARCADE</span><h2>Tu esfuerzo.<br/><em>Tu personaje.</em></h2><p>Aspectos para siempre. Equipo, cheesits y una habilidad para tu siguiente sesión.</p><div><span>{appearanceGear(game).length}/5 piezas equipadas</span><span>Nivel {progress.level}</span></div>{game.equippedCompanionId&&<CheesitPassive companionId={game.equippedCompanionId} status="equipped" compact/>}{active&&<p className="character-active-ability"><Sparkles size={11}/>{active.name}</p>}<button onClick={()=>{try{sessionStorage.setItem('grind-open-wardrobe','1')}catch{}onOpen()}}>Personalizar personaje<ArrowUpRight size={17}/></button></div><CharacterParty game={game} level={progress.level} animated={animated}/></section>;
 }

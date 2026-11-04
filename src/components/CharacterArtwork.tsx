@@ -5,7 +5,7 @@ import { GEAR } from '@/lib/gear';
 import { CHARACTER_ART, CHARACTER_ATLAS, CHARACTER_VIEWBOX, type CharacterRect } from '@/lib/character-art';
 import { useImageFailure } from '@/lib/use-image-failure';
 
-/** Pixel crops are shared by inventory and equipment; all scaling is uniform. */
+/** Registered worn layers only. Catalog artwork lives in GearCatalogArtwork. */
 export function AtlasImage({ source, target = source, id }: { source: CharacterRect; target?: CharacterRect; id: string }) {
   const [failed, fail] = useImageFailure(CHARACTER_ATLAS.src);
   const [x, y, width, height] = target;

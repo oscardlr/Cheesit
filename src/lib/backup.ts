@@ -144,7 +144,7 @@ function mergeGame(current: GameState | undefined, incoming: GameState | undefin
 }
 type Counts = { routines: number; workouts: number; customExercises: number };
 export type BackupResolution = 'local' | 'incoming' | 'duplicate';
-export type BackupConflict = { key: string; kind: keyof Counts | 'game' | 'routineDraft' | 'personalProfile'; id: string; name: string; local: unknown; incoming: unknown; choices: BackupResolution[] };
+export type BackupConflict = { key: string; kind: keyof Counts | 'game' | 'routineDraft' | 'personalProfile' | 'profile'; id: string; name: string; local: unknown; incoming: unknown; choices: BackupResolution[] };
 export type BackupPreview = { newCounts: Counts; duplicateCounts: Counts; conflicts: string[]; conflictDetails: BackupConflict[]; multipleDates: string[]; merged: AppData };
 
 export function previewBackup(raw: unknown, current: AppData, resolutions: Record<string, BackupResolution> = {}): BackupPreview {
@@ -238,7 +238,11 @@ export function previewBackup(raw: unknown, current: AppData, resolutions: Recor
   }
   const preferences = current.preferences ?? incoming.preferences;
   if (preferences) merged.preferences = { ...preferences };
-  const profile=current.profile??incoming.profile;
+  let profile=current.profile??incoming.profile;
+  if (current.profile && incoming.profile && (current.profile.weightTracking || incoming.profile.weightTracking) && canonical(current.profile) !== canonical(incoming.profile)) {
+    const choice = conflict({ key: 'profile:weight', kind: 'profile', id: 'weight', name: 'Peso corporal, objetivo e historial de XP', local: current.profile, incoming: incoming.profile, choices: ['local', 'incoming'] });
+    profile = choice === 'incoming' ? incoming.profile : current.profile;
+  }
   if(profile)merged.profile={...profile};
   if (current.personalProfile && incoming.personalProfile && canonical(current.personalProfile) !== canonical(incoming.personalProfile)) {
     const choice = conflict({ key: 'personalProfile:identity', kind: 'personalProfile', id: 'identity', name: 'Foto, nombre y biografía', local: current.personalProfile, incoming: incoming.personalProfile, choices: ['local', 'incoming'] });

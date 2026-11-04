@@ -23,7 +23,8 @@ function performanceScore(exercise: WorkoutExercise, set: WorkoutSet, profile?: 
 }
 function calculateSet(exercise: WorkoutExercise, set: WorkoutSet, previous: Previous | undefined, profile?: AthleteProfile): SetReward {
   if (!validSet(set, exercise.mode)) return { xp: 0, baseXp: 0, repsXp: 0, loadXp: 0, progressXp: 0, relativeLoad: 0, estimatedOneRepMax: null, record: false };
-  const reference = strengthReference(exercise, set, profile);
+  // Recording body weight must not reprice previously earned training rewards.
+  const reference = strengthReference(exercise, set, profile?.rewardWeightKg === undefined ? profile : { ...profile, weightKg: profile.rewardWeightKg });
   const repsXp = 2 * Math.min(set.reps!, 15);
   const loadXp = exercise.mode === 'bodyweight_reps' ? 10 : Math.min(40, Math.round(20 * reference.relativeLoad));
   const score = performanceScore(exercise, set, profile);
