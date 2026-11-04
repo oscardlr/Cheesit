@@ -1,0 +1,34 @@
+.workout-publication{display:grid;gap:22px;margin:20px 0;text-align:left}
+.workout-publish-setting{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.workout-publish-setting strong,.workout-photo-setting>strong{display:flex;align-items:center;gap:8px;font-size:15px}
+.workout-publication p{font-size:13px;line-height:1.6;color:var(--muted,#aaa3b7);margin:7px 0 0}
+.workout-publish-setting .workout-publish-switch{display:flex;align-items:center;gap:6px;min-width:76px;min-height:44px;padding:0;background:transparent;flex-shrink:0;margin-top:2px}
+.workout-photo-setting{padding-top:20px;border-top:1px solid var(--border,#393340)}
+.workout-photo-setting>strong small{font-size:11px;font-weight:500;color:var(--muted,#aaa3b7)}
+.workout-caption-setting>label{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.workout-caption-setting small{font-size:11px;font-weight:400;color:var(--muted)}
+.workout-caption-setting textarea{display:block;width:100%;margin-top:10px;padding:12px 14px;min-height:100px;max-height:220px;resize:vertical;border:1px solid #b8a0ff45;border-radius:15px;background:linear-gradient(135deg,#b8a0ff0c,#17131f);color:var(--text);font:inherit;font-size:16px;line-height:1.6}
+.workout-caption-setting textarea::placeholder{color:var(--muted)}
+.workout-caption-setting textarea:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+.workout-caption-setting>div{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.workout-caption-setting>div>small{white-space:nowrap;font-variant-numeric:tabular-nums}
+.workout-photo-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:14px}
+.workout-photo-preview{display:block;width:100%;height:auto;max-height:360px;object-fit:contain;background:#17131d;border-radius:14px;margin-top:14px}
+.workout-camera{margin-top:18px;border:1px solid var(--line,#393340);border-radius:14px;padding:12px;min-width:0;background:#15121b}
+.workout-camera>header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.workout-camera>header>strong{display:flex;align-items:center;gap:8px;font-size:13px}
+.workout-camera>header .icon-button{min-width:44px;min-height:44px}
+.workout-camera-video,.workout-camera-capture{display:block;width:100%;height:auto;max-height:360px;aspect-ratio:4/3;object-fit:contain;background:#08070b;border-radius:8px}
+.workout-camera-video.mirrored{transform:scaleX(-1)}
+.workout-camera-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:14px}
+.workout-camera-actions>button{min-height:46px;gap:7px}
+.workout-camera :focus-visible{outline:2px solid var(--lime);outline-offset:3px}
+.finish-dialog{position:fixed;inset:0;margin:auto;width:min(560px,calc(100% - 24px));max-height:calc(100dvh - 32px);padding:24px;border:1px solid var(--border,#393340);border-radius:22px;background:var(--surface,#211c2b);color:var(--text,#f5f1fa);overflow:auto;box-shadow:0 24px 100px #0008}
+.finish-dialog::backdrop{background:#08060dc9;backdrop-filter:blur(5px)}
+.finish-dialog header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.finish-dialog h2{margin:6px 0;font-size:25px;letter-spacing:-1px}
+.finish-dialog>p{color:var(--muted,#aaa3b7);font-size:14px;line-height:1.6}
+.finish-dialog fieldset{border:0;padding:0;margin:0;min-width:0}
+.finish-dialog footer{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-top:22px}
+.finish-dialog footer button{min-height:46px}
+@media(max-width:600px){.finish-dialog{padding:20px}.finish-dialog footer{display:grid;grid-template-columns:1fr 1fr}.finish-dialog footer .primary{padding:12px;font-size:13px}}

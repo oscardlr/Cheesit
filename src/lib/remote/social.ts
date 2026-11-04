@@ -2,13 +2,11 @@ import { normalizeUsername } from '../account-profile';
 import { remoteClient, verifiedUser } from './auth';
 import type { Workout } from '../model';
 import type { ActivitySummary } from '../social-activity';
-import { socialActivitySummary } from '../social-activity';
-import { accountTransport } from './account-sync';
 
 export type SocialList = 'followers' | 'following';
 export type SocialRoute = { owner: string | null; list: SocialList | null; query: string; workout?: string | null; source?: 'notifications' };
 export type SocialProfile = {
-  owner_id: string; username: string; display_name: string; photo: string | null; bio: string;
+  owner_id: string; username: string; display_name: string; photo: string | null; bio: string; gym?: string | null;
   followers: number; following: number; is_following: boolean; follows_you: boolean;
   activity_shared?: boolean;
 };
@@ -45,14 +43,6 @@ export async function readActivity(owner: string, workout: string | null = null,
 export async function shareActivity(owner: string, shared: boolean) {
   if ((await verifiedUser()).id !== owner) throw new Error('La cuenta activa ha cambiado.');
   const client = remoteClient()!;
-  if (shared) {
-    // Seed derived XP for existing accounts without exposing their physical data.
-    const transport = accountTransport(owner);
-    const snapshot = await transport.download();
-    const { data, revision, tombstones, migrations } = snapshot;
-    const { data: result, error } = await client.rpc('cheesit_commit_account', { p_expected_owner: owner, p_operation_id: crypto.randomUUID(), p_base_revision: revision, p_document: { data, tombstones, migrations, socialSummary: socialActivitySummary(data) } }).abortSignal(AbortSignal.timeout(15000));
-    if (error || result?.status !== 'applied') throw new Error('La cuenta ha cambiado o no hay conexión. Reintenta para compartir la actividad sincronizada.');
-  }
   const { data, error } = await client.from('cheesit_social_profiles').update({ activity_shared: shared }).eq('owner_id', owner).select('activity_shared').abortSignal(AbortSignal.timeout(15000)).single();
   if (error || data?.activity_shared !== shared) throw new Error('No se ha confirmado el cambio de privacidad. Comprueba la conexión y reintenta.');
   return shared;

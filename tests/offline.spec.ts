@@ -81,7 +81,7 @@ test('a second production build waits for consent, flushes the latest draft and 
     await prepare(page);
     await page.goto(`http://127.0.0.1:${address.port}`);
     await expect(page.locator('.offline-shell')).toContainText('Disponible sin conexión', { timeout: 30000 });
-    await page.getByRole('navigation').getByRole('button', { name: 'Rutinas', exact: true }).click();
+    await page.getByRole('navigation').getByRole('button', { name: 'Entrenar', exact: true }).click();
     await page.getByRole('button', { name: /Crear rutina/ }).click();
     await page.getByLabel('Nombre de la rutina').fill('Rutina protegida durante actualización');
     // The new deployment is discovered with unsaved routine changes in memory.
@@ -94,7 +94,7 @@ test('a second production build waits for consent, flushes the latest draft and 
     await expect(page.getByText('Guarda o descarta los cambios antes de actualizar.', { exact: true })).toBeVisible();
     console.info('Offline update: dirty routine correctly prevented reload.');
     await page.getByRole('button', { name: 'Guardar rutina', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Rutinas', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Entrenar', exact: true })).toBeVisible();
     console.info('Offline update: routine saved; preparing pending session.');
     await startDraft(page);
     // This change is intentionally made immediately before activation, inside the autosave debounce.

@@ -23,11 +23,11 @@ export function ActivityPrivacy({ owner }: { owner: string }) {
   async function toggle() {
     if (busy || shared === undefined) return;
     setBusy(true); setError('');
-    try { setShared(await shareActivity(owner, !shared)); }
+    try { setShared(await shareActivity(owner, !shared)); window.dispatchEvent(new Event('cheesit:feed-changed')); }
     catch (e) { setShared(undefined); setError(e instanceof Error ? e.message : 'No se pudo guardar la privacidad.'); }
     finally { setBusy(false); }
   }
-  return <section className="activity-privacy" aria-label="Privacidad de la actividad"><div><strong><LockKeyhole size={15}/>Compartir actividad</strong><p>Al activarlo, las personas con cuenta podrán ver tu nivel, puntos, estadísticas y sesiones completadas, incluidas las notas. Tus seguidores recibirán avisos de tus próximas sesiones.</p><p role="status">{busy ? 'Guardando privacidad…' : shared === undefined ? error ? 'Estado sin confirmar.' : 'Consultando privacidad…' : shared ? 'Actividad compartida con la comunidad.' : 'Actividad privada. Solo tú puedes verla.'}</p></div><button className={`toggle ${shared ? 'on' : ''}`} role="switch" aria-label="Compartir actividad" aria-checked={shared === true} disabled={busy || shared === undefined} onClick={() => void toggle()}><span/></button>{error && <div role="alert"><p>{error}</p><button className="text-action" onClick={() => setRevision(n => n + 1)}>Reintentar privacidad</button></div>}</section>;
+  return <section className="activity-privacy" aria-label="Privacidad del perfil"><div><strong><LockKeyhole size={15}/>Privacidad del perfil</strong><p>Activa Perfil público para mostrar tus publicaciones y estadísticas a la comunidad. Si lo desactivas, tus entrenamientos y fotos solo serán visibles para ti, incluso mediante un enlace. Tus notas siempre son privadas.</p><p role="status">{busy ? 'Guardando privacidad…' : shared === undefined ? error ? 'Estado sin confirmar.' : 'Consultando privacidad…' : shared ? 'Perfil público. Solo se muestran los entrenamientos que publiques.' : 'Perfil privado. Solo tú puedes ver tus publicaciones.'}</p></div><button className={`toggle ${shared ? 'on' : ''}`} role="switch" aria-label="Perfil público" aria-checked={shared === true} disabled={busy || shared === undefined} onClick={() => void toggle()}><span/></button>{error && <div role="alert"><p>{error}</p><button className="text-action" onClick={() => setRevision(n => n + 1)}>Reintentar privacidad</button></div>}</section>;
 }
 
 export default function SocialActivity({ owner, workout, own = false, onWorkout }: { own?: boolean; owner: string; workout?: string | null; onWorkout: (id: string) => void }) {

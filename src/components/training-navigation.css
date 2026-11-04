@@ -1,0 +1,41 @@
+.training-navigation.bottom-nav > button { order: 0; }
+.training-navigation.bottom-nav > .nav-settings { order: 1; }
+.training-start { padding: 28px; border: 1px solid #b8a0ff70; border-radius: 16px; background: linear-gradient(125deg,#322541,#201a29); }
+.training-start > div > svg { color: var(--lime); margin-bottom: 16px; }
+.training-start .eyebrow { display: block; }
+.training-start h2 { max-width: 510px; margin: 12px 0; font-size: 32px; line-height: 1.15; letter-spacing: -.8px; }
+.training-start p { color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+.training-start .primary { justify-content: space-between; }
+.training-start .draft-inline { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px; text-align: left; }
+.training-splits > p { margin-bottom: 18px; }
+.training-split-action { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; font-size: 12px; }
+.training-create-routine { margin-top: 20px; }
+.progress-calendar > h2 { margin: 0 0 18px; font-size: 22px; }
+.progress-calendar { margin-bottom: 38px; }
+.progress-overview > .page-header { display: none; }
+
+@media (max-width: 760px) {
+  .training-navigation.bottom-nav {
+    grid-template-columns: repeat(5,minmax(0,1fr));
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    width: auto;
+    max-width: 480px;
+    height: 70px;
+    margin-inline: auto;
+    padding: 6px;
+    border: 1px solid #594664;
+    border-radius: 22px;
+    background: #19131fee;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 30px #0007;
+  }
+  .training-navigation.bottom-nav > button { min-height: 56px; border-radius: 16px; }
+  .training-start { padding: 24px 20px; }
+  .training-start h2 { font-size: 28px; }
+  .training-start p { font-size: 13px; }
+  .training-splits .starter-card { min-height: 175px; }
+  .training-splits .starter-card > strong { font-size: 25px; }
+  .training-split-action { font-size: 11px; }
+}

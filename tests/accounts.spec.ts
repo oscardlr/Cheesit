@@ -19,8 +19,8 @@ async function login(page: Page, email: string, password = 'test-password-123') 
 }
 async function synced(page:Page) { await expect(page.locator('.account-sync-copy')).toContainText('Sincronizado con tu cuenta',{timeout:15000}); }
 async function routine(page:Page,name:string) {
-  await page.getByRole('navigation').getByRole('button',{name:'Rutinas',exact:true}).click();
-  await page.getByRole('button',{name:'＋ Crear rutina'}).click();
+  await page.getByRole('navigation').getByRole('button',{name:'Entrenar',exact:true}).click();
+  await page.getByRole('button',{name:'Crear rutina'}).click();
   await page.getByLabel('Nombre de la rutina').fill(name); await page.getByRole('button',{name:'Guardar rutina',exact:true}).click();
   await synced(page);
 }
@@ -45,9 +45,9 @@ test('two browser devices retrieve account data and switching accounts hides pri
   await harness.seed('devices@example.test');await harness.seed('other@example.test');
   await login(page,'devices@example.test');await routine(page,'Rutina entre dispositivos');
   const context=await browser.newContext();const other=await context.newPage();await login(other,'devices@example.test');
-  await other.getByRole('navigation').getByRole('button',{name:'Rutinas',exact:true}).click();await expect(other.getByRole('button',{name:'Rutina entre dispositivos 0 ejercicios'})).toBeVisible();
+  await other.getByRole('navigation').getByRole('button',{name:'Entrenar',exact:true}).click();await expect(other.getByRole('button',{name:'Rutina entre dispositivos 0 ejercicios'})).toBeVisible();
   await account(page);await page.getByRole('button',{name:'Cerrar sesión',exact:true}).click();await login(page,'other@example.test');
-  await page.getByRole('navigation').getByRole('button',{name:'Rutinas',exact:true}).click();await expect(page.getByText('Rutina entre dispositivos',{exact:true})).toHaveCount(0);
+  await page.getByRole('navigation').getByRole('button',{name:'Entrenar',exact:true}).click();await expect(page.getByText('Rutina entre dispositivos',{exact:true})).toHaveCount(0);
   await context.close();
 });
 
@@ -55,13 +55,13 @@ test('offline training draft persists, reconnect uploads, and pending logout pre
   await harness.seed('offline@example.test');await login(page,'offline@example.test');await synced(page);
   await expect(page.locator('.offline-shell')).toContainText('Disponible sin conexión', { timeout: 30000 });
   await context.setOffline(true);await page.reload();await expect(page.getByRole('heading',{name:'Resumen',exact:true})).toBeVisible();
-  await page.getByRole('navigation').getByRole('button',{name:'Empezar entrenamiento',exact:true}).click();
+  await page.locator('.topbar').getByRole('button',{name:'Empezar entrenamiento',exact:true}).click();
   await page.getByRole('main').getByRole('button',{name:/Empezar entrenamiento/}).click();
-  await page.getByRole('button',{name:'＋ Añadir ejercicio',exact:true}).click();await page.getByRole('dialog').getByRole('button',{name:/^Press de banca con barra/}).click();
+  await page.getByRole('button',{name:/Añadir ejercicio/}).click();await page.getByRole('dialog').getByRole('button',{name:/^Press de banca con barra/}).click();
   await page.getByLabel('Carga en kg, serie 1 de Press de banca con barra').fill('42.5');await page.getByLabel('Repeticiones, serie 1 de Press de banca con barra').fill('8');await page.getByRole('button',{name:'Confirmar serie 1',exact:true}).click();
   await expect(page.locator('.account-sync-copy')).toContainText('Pendiente de conexión');
   const close=page.getByRole('button',{name:'Cerrar celebración',exact:true});if(await close.isVisible())await close.click();
-  await page.getByRole('button',{name:'Finalizar entrenamiento',exact:true}).click();await page.getByRole('button',{name:'Continuar',exact:true}).click();
+  await page.getByRole('button',{name:'Finalizar entrenamiento',exact:true}).click();await page.getByRole('button',{name:'Guardar entrenamiento',exact:true}).click();await page.getByRole('button',{name:'Continuar',exact:true}).click();
   await context.setOffline(false);await settings(page);await page.getByRole('button',{name:'Reintentar sincronización'}).click();await synced(page);await page.getByRole('navigation',{name:'Navegación principal'}).getByRole('button',{name:'Resumen',exact:true}).click();
   await page.reload();await expect(page.getByRole('heading',{name:'Resumen',exact:true})).toBeVisible();
   const saved=await harness.account('offline@example.test');expect((saved.data as AppData).workouts[0].exercises[0].sets[0].confirmed).toBe(true);
@@ -81,12 +81,12 @@ test('legacy data migrates through the interface, preserves the original and rel
 
  test('pending logout keeps unsent data private and resumes only in its owning account', async({page,context})=>{
   await harness.seed('pending@example.test');await harness.seed('clean@example.test');await login(page,'pending@example.test');await synced(page);
-  await context.setOffline(true);await page.getByRole('navigation').getByRole('button',{name:'Rutinas',exact:true}).click();await page.getByRole('button',{name:'＋ Crear rutina'}).click();await page.getByLabel('Nombre de la rutina').fill('Solo cuenta pendiente');await page.getByRole('button',{name:'Guardar rutina',exact:true}).click();
+  await context.setOffline(true);await page.getByRole('navigation').getByRole('button',{name:'Entrenar',exact:true}).click();await page.getByRole('button',{name:'Crear rutina'}).click();await page.getByLabel('Nombre de la rutina').fill('Solo cuenta pendiente');await page.getByRole('button',{name:'Guardar rutina',exact:true}).click();
   await expect(page.locator('.account-sync-copy')).toContainText('Pendiente de conexión');await context.setOffline(false);
   // Stop only the cloud writes; sign-out/auth stay available.
   await page.route('**/rest/v1/**',route=>route.abort());await account(page);
   page.once('dialog',dialog=>dialog.accept());await page.getByRole('button',{name:'Cerrar sesión',exact:true}).click();await expect(page.getByRole('button',{name:'Entrar',exact:true})).toBeVisible();
-  await page.unroute('**/rest/v1/**');await login(page,'clean@example.test');await page.getByRole('navigation').getByRole('button',{name:'Rutinas',exact:true}).click();await expect(page.getByText('Solo cuenta pendiente',{exact:true})).toHaveCount(0);
+  await page.unroute('**/rest/v1/**');await login(page,'clean@example.test');await page.getByRole('navigation').getByRole('button',{name:'Entrenar',exact:true}).click();await expect(page.getByText('Solo cuenta pendiente',{exact:true})).toHaveCount(0);
   await synced(page);await account(page);await page.getByRole('button',{name:'Cerrar sesión',exact:true}).click();await expect(page.getByRole('button',{name:'Entrar',exact:true})).toBeVisible();await login(page,'pending@example.test');await synced(page);expect((await harness.account('pending@example.test')).data).toMatchObject({routines:[{name:'Solo cuenta pendiente'}]});
 });
 
