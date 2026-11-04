@@ -1,1 +1,2 @@
 .session-ability-note{display:flex;gap:12px;align-items:flex-start;border:1px solid #d8ff3e35;background:#d8ff3e08;border-radius:10px;padding:16px 18px;margin:18px 0;color:#d8ff3e}.session-ability-note>svg{flex-shrink:0;margin-top:2px}.session-ability-note strong{font-size:13px}.session-ability-note p{color:#c8b8db;font-size:11px;line-height:1.6;margin:5px 0}.session-ability-note small{font-size:10px;line-height:1.6;color:#a9b58b}
+.session-ability-note>.ability-details{width:100%}

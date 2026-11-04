@@ -1,21 +1,26 @@
 import { Sparkles } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { COMPANIONS } from '@/lib/companions';
 import { getCompanionPassive, workoutPassiveReward } from '@/lib/cheesit-passives';
 import { isCivilDate } from '@/lib/dates';
 import type { Workout } from '@/lib/model';
+import AbilityDetails from './AbilityDetails';
 import './cheesit-passive.css';
 
 type Status = 'equipped' | 'available' | 'locked';
 const statusLabels: Record<Status, string> = { equipped: 'Equipado', available: 'Disponible', locked: 'Pendiente de conseguir' };
 
-export default function CheesitPassive({ companionId, status, compact = false }: { companionId: string; status?: Status; compact?: boolean }) {
+export default function CheesitPassive({ companionId, status, compact = false, children }: { companionId: string; status?: Status; compact?: boolean; children?: ReactNode }) {
   const passive = getCompanionPassive(companionId);
   if (!passive) return null;
   return <div className={`cheesit-passive ${compact ? 'is-compact' : ''}`} data-passive-id={passive.id} data-passive-status={status} aria-label={`Pasiva: ${passive.name}`}>
-    <div className="cheesit-passive-heading"><span><Sparkles size={13} aria-hidden="true"/> PASIVA{status === 'equipped' ? ' ACTIVA' : ''}</span>{status && <small>{statusLabels[status]}</small>}</div>
-    <strong>{passive.name}<span>{passive.valueLabel}</span></strong>
-    <p>{passive.description}</p>
-    {!compact && <small className="cheesit-passive-rule">Automática al equipar · Se fija al empezar la sesión.</small>}
+    <AbilityDetails title={passive.name} icon={<Sparkles size={14} aria-hidden="true"/>}>
+      <div className="cheesit-passive-heading"><span><Sparkles size={13} aria-hidden="true"/> PASIVA{status === 'equipped' ? ' ACTIVA' : ''}</span>{status && <small>{statusLabels[status]}</small>}</div>
+      <strong className="cheesit-passive-value">{passive.valueLabel}</strong>
+      <p>{passive.description}</p>
+      {!compact && <small className="cheesit-passive-rule">Automática al equipar · Se fija al empezar la sesión.</small>}
+      {children}
+    </AbilityDetails>
   </div>;
 }
 
@@ -27,8 +32,8 @@ export function SessionCheesitPassive({ workout }: { workout: Workout }) {
     : snapshot && workout.date !== snapshot.fixedDate ? 'La fecha registrada no coincide con el día de inicio. Esta sesión no recibe bonificación del cheesit.'
       : 'Esta sesión conserva este cheesit aunque cambies el equipo. La condición se comprueba una sola vez al finalizar. Si terminas después de medianoche, conserva la fecha con la que empezó.';
   return <aside className="session-cheesit-passive" data-empty={!companion} aria-label="Pasiva del cheesit de esta sesión">
-    {companion ? <><strong>{companion.name} · Pasiva fijada al empezar</strong><CheesitPassive companionId={companion.id} compact/>{startDay && <p>Inicio: {startDay} · hora de Madrid.</p>}<p>{note}</p></>
-      : <><strong>Sesión sin pasiva de cheesit</strong><p>{snapshot === undefined ? 'Este registro se creó antes de las pasivas. Conserva sus recompensas habituales, sin bonificaciones retroactivas.' : 'Equipa un cheesit antes de la próxima sesión para activar su pasiva.'}</p></>}
+    {companion ? <CheesitPassive companionId={companion.id} compact><p>{companion.name} · Pasiva fijada al empezar</p>{startDay && <p>Inicio: {startDay} · hora de Madrid.</p>}<p>{note}</p></CheesitPassive>
+      : <AbilityDetails title="Sesión sin pasiva de cheesit"><p>{snapshot === undefined ? 'Este registro se creó antes de las pasivas. Conserva sus recompensas habituales, sin bonificaciones retroactivas.' : 'Equipa un cheesit antes de la próxima sesión para activar su pasiva.'}</p></AbilityDetails>}
   </aside>;
 }
 

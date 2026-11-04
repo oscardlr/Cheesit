@@ -27,3 +27,5 @@
 @media(max-width:760px){.cosmetic-locked-card{padding:19px}.cosmetic-locked-card h4{font-size:22px}.cosmetic-locked-card>p{font-size:11px}.cosmetic-locked-art>.gear-sprite{width:145px}.cosmetic-locked-badge{font-size:11px}}
 .wardrobe-v3 button{min-height:44px}.wardrobe-v3 [aria-busy=true]{opacity:.8}.wardrobe-v3 .quote-card-actions{flex-wrap:wrap}.wardrobe-v3 .quote-card-actions .quote-equip{flex:1 1 135px}.legacy-quote-note{font-size:12px;line-height:1.7;color:#d1e0b1}.wardrobe-slot-copy{min-width:0}.wardrobe-slot small{letter-spacing:.4px}.character-companion>span:last-child{font-size:11px;max-width:130px;line-height:1.4}
 @media(max-width:440px){.wardrobe-slots{grid-template-columns:1fr}.character-party{max-width:100%;overflow:hidden}.wardrobe-v3 .character-companion>span:last-child{display:none}.cosmetic-slot-filters{gap:5px}}
+
+.wardrobe-permanence>.ability-details{width:100%}.ability-card>.cosmetic-ability{flex:1}.cosmetic-ability>summary{min-height:44px;font-size:12px}.ability-current>.ability-details,.ability-current>div{min-width:0}.ability-current .ability-details>summary{color:#e5f9bc}
