@@ -156,6 +156,18 @@ export type BackupResolution = 'local' | 'incoming' | 'duplicate';
 export type BackupConflict = { key: string; kind: keyof Counts | 'game' | 'routineDraft' | 'personalProfile' | 'profile' | 'training'; id: string; name: string; local: unknown; incoming: unknown; choices: BackupResolution[] };
 export type BackupPreview = { newCounts: Counts; duplicateCounts: Counts; conflicts: string[]; conflictDetails: BackupConflict[]; multipleDates: string[]; merged: AppData };
 
+/** Reject foreign Storage references before staging an imported document.
+ * A backup keeps its exact photo references; restoring it in another account
+ * must never strip photos or leave the entire account unable to synchronize.
+ * Full backup validation remains the responsibility of previewBackup. */
+export function assertBackupPhotoReferences(raw: unknown, owner?: string): void {
+  if (!record(raw) || !record(raw.data) || !Array.isArray(raw.data.workouts)) return;
+  const foreign = raw.data.workouts.some(workout => record(workout) && record(workout.publication) &&
+    typeof workout.publication.photoPath === 'string' &&
+    (!owner || workout.publication.photoPath.split('/')[0] !== owner));
+  if (foreign) throw new Error('Esta copia contiene referencias a fotos de otra cuenta. Restáurala en la cuenta original para conservar sus fotos.');
+}
+
 export function previewBackup(raw: unknown, current: AppData, resolutions: Record<string, BackupResolution> = {}): BackupPreview {
   if (!record(raw) || raw.format !== 'entrenos-local' || raw.schema_version !== 1 || raw.units !== 'kg') return fail('formato no reconocido; los respaldos antiguos aún no son compatibles');
   let incoming = validateData(raw.data);
