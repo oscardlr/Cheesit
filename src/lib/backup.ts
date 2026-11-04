@@ -1,3 +1,4 @@
+import { preserveTrainingHistory, validTrainingFeatures } from './training-features';
 import { isPersonalProfile } from './personal-profile';
 import { CATALOG, GROUPS } from './catalog';
 import { isAthleteProfile } from './strength';
@@ -28,8 +29,11 @@ function metadata(value: Record<string, unknown>) {
   const muscles = (items: unknown) => items === undefined || (bounded(items, 10) && new Set(items).size === items.length && items.every(id => muscleIds.has(id as never)));
   return (value.loadConvention === undefined || ['total', 'per_unit_bilateral', 'per_unit_alternating', 'per_unit_single'].includes(value.loadConvention as string)) && muscles(value.primaryMuscles) && muscles(value.secondaryMuscles) && !(Array.isArray(value.primaryMuscles) && Array.isArray(value.secondaryMuscles) && value.primaryMuscles.some(id => (value.secondaryMuscles as unknown[]).includes(id)));
 }
+function trainingPrescription(value: Record<string, unknown>) {
+  return (value.supersetId === undefined || uuid(value.supersetId)) && (value.setKinds === undefined || (bounded(value.setKinds, 20) && value.setKinds.every(kind => kind === 'work' || kind === 'warmup')));
+}
 function prescription(value: Record<string, unknown>) {
-  return optionalText(value.notes) && optionalNumber(value.repsMin, 1, 1000, true) && optionalNumber(value.repsMax, 1, 1000, true) && (value.repsMin == null || value.repsMax == null || (value.repsMin as number) <= (value.repsMax as number)) && optionalNumber(value.targetWeight, 0, 1000) && (value.targetWeight == null || Math.abs((value.targetWeight as number) * 100 - Math.round((value.targetWeight as number) * 100)) < 1e-8) && optionalNumber(value.restSeconds, 0, 3600, true);
+  return trainingPrescription(value) && optionalText(value.notes) && optionalNumber(value.repsMin, 1, 1000, true) && optionalNumber(value.repsMax, 1, 1000, true) && (value.repsMin == null || value.repsMax == null || (value.repsMin as number) <= (value.repsMax as number)) && optionalNumber(value.targetWeight, 0, 1000) && (value.targetWeight == null || Math.abs((value.targetWeight as number) * 100 - Math.round((value.targetWeight as number) * 100)) < 1e-8) && optionalNumber(value.restSeconds, 0, 3600, true);
 }
 
 export function createBackup(data: AppData) {
@@ -53,7 +57,7 @@ export function validateData(value: unknown): AppData {
     // This is an editor snapshot of a saved routine; its identifiers may intentionally match it.
     const draftIds = new Set<string>([draft.id]);
     for (const exercise of draft.exercises) {
-      if (!record(exercise) || !uuid(exercise.id) || draftIds.has(exercise.id) || typeof exercise.exerciseId !== 'string' || !knownExercises.has(exercise.exerciseId) || !(exercise.sets === null || finite(exercise.sets)) || !optionalText(exercise.notes) || !['repsMin', 'repsMax', 'targetWeight', 'restSeconds'].every(key => exercise[key] === undefined || exercise[key] === null || finite(exercise[key]))) return fail('valores del borrador de rutina');
+      if (!record(exercise) || !trainingPrescription(exercise) || !uuid(exercise.id) || draftIds.has(exercise.id) || typeof exercise.exerciseId !== 'string' || !knownExercises.has(exercise.exerciseId) || !(exercise.sets === null || finite(exercise.sets)) || !optionalText(exercise.notes) || !['repsMin', 'repsMax', 'targetWeight', 'restSeconds'].every(key => exercise[key] === undefined || exercise[key] === null || finite(exercise[key]))) return fail('valores del borrador de rutina');
       draftIds.add(exercise.id);
     }
   }
@@ -69,6 +73,8 @@ export function validateData(value: unknown): AppData {
     if (!record(workout) || (workout.status === 'draft' ? !optionalText(workout.name, 80) || typeof workout.name !== 'string' : !name(workout.name)) || !workoutColor(workout.color) || typeof workout.date !== 'string' || (workout.status === 'draft' ? workout.date !== '' && !isCivilDate(workout.date) : !isCivilDate(workout.date) || workout.date > todayMadrid()) || !['draft', 'finished', 'deleted'].includes(workout.status as string) || !timestamp(workout.createdAt) || !timestamp(workout.updatedAt) || !bounded(workout.exercises, 50) || !optionalText(workout.notes)) return fail('entrenamiento o fecha futura');
     if ((workout.startedAt !== undefined && !timestamp(workout.startedAt)) || (workout.finishedAt !== undefined && !timestamp(workout.finishedAt)) || (workout.autoRest !== undefined && typeof workout.autoRest !== 'boolean') || (workout.defaultRestSeconds !== undefined && !optionalNumber(workout.defaultRestSeconds, 0, 3600, true))) return fail('duración o descanso');
     if (workout.restTimer !== undefined && (!record(workout.restTimer) || !(workout.restTimer.endsAt === null || timestamp(workout.restTimer.endsAt)) || !finite(workout.restTimer.remainingSeconds) || workout.restTimer.remainingSeconds < 0 || workout.restTimer.remainingSeconds > 3600 || !finite(workout.restTimer.durationSeconds) || !Number.isInteger(workout.restTimer.durationSeconds) || workout.restTimer.durationSeconds < 0 || workout.restTimer.durationSeconds > 3600)) return fail('temporizador de descanso');
+    if (workout.routineId !== undefined && !uuid(workout.routineId)) return fail('rutina de origen');
+    if (workout.cycleLink !== undefined && (!record(workout.cycleLink) || !uuid(workout.cycleLink.cycleId) || !uuid(workout.cycleLink.routineId) || !Number.isInteger(workout.cycleLink.position) || (workout.cycleLink.position as number) < 0 || (workout.cycleLink.position as number) >= 100)) return fail('vínculo de ciclo');
     add(workout.id);
     if(workout.abilityId!==undefined&&workout.abilityId!==null&&(typeof workout.abilityId!=='string'||!getAbilityDefinition(workout.abilityId)))return fail('habilidad de entrenamiento');
     if(workout.abilityReward!==undefined&&(!isAbilityUse(workout.abilityReward)||workout.abilityReward.workoutId!==workout.id||workout.abilityReward.abilityId!==workout.abilityId||workout.status==='draft'))return fail('recompensa de habilidad');
@@ -79,7 +85,7 @@ export function validateData(value: unknown): AppData {
       if (!record(exercise) || typeof exercise.exerciseId !== 'string' || !exercise.exerciseId || !name(exercise.name) || !GROUPS.includes(exercise.group as string) || !mode(exercise.mode) || !bounded(exercise.sets, 50) || !metadata(exercise) || !prescription(exercise)) return fail('ejercicio de entrenamiento');
       add(exercise.id);
       for (const set of exercise.sets) {
-        if (!record(set) || typeof set.confirmed !== 'boolean') return fail('serie');
+        if (!record(set) || (set.kind !== undefined && set.kind !== 'work' && set.kind !== 'warmup') || typeof set.confirmed !== 'boolean') return fail('serie');
         add(set.id);
         const weight = set.weight, reps = set.reps;
         // Pending input is recoverable even while incomplete or outside confirmation bounds.
@@ -97,6 +103,7 @@ export function validateData(value: unknown): AppData {
   for(const workout of value.workouts as Workout[]){
     if(workout.abilityReward&&(!value.game||!isGameState(value.game)||!(value.game.abilityUses??[]).some(use=>use.workoutId===workout.id&&canonical(use)===canonical(workout.abilityReward))))return fail('carga de habilidad sin movimiento correspondiente');
   }
+  if (value.training !== undefined && !validTrainingFeatures(value.training)) return fail('álbum, ciclos u objetivos registrados');
   if (value.preferences !== undefined && (!record(value.preferences) || typeof value.preferences.effects !== 'boolean' || typeof value.preferences.sound !== 'boolean')) return fail('preferencias de efectos o sonido');
   if (value.profile !== undefined && !isAthleteProfile(value.profile)) return fail('perfil de entrenamiento');
   if (value.personalProfile !== undefined && !isPersonalProfile(value.personalProfile)) return fail('perfil personal');
@@ -144,7 +151,7 @@ function mergeGame(current: GameState | undefined, incoming: GameState | undefin
 }
 type Counts = { routines: number; workouts: number; customExercises: number };
 export type BackupResolution = 'local' | 'incoming' | 'duplicate';
-export type BackupConflict = { key: string; kind: keyof Counts | 'game' | 'routineDraft' | 'personalProfile' | 'profile'; id: string; name: string; local: unknown; incoming: unknown; choices: BackupResolution[] };
+export type BackupConflict = { key: string; kind: keyof Counts | 'game' | 'routineDraft' | 'personalProfile' | 'profile' | 'training'; id: string; name: string; local: unknown; incoming: unknown; choices: BackupResolution[] };
 export type BackupPreview = { newCounts: Counts; duplicateCounts: Counts; conflicts: string[]; conflictDetails: BackupConflict[]; multipleDates: string[]; merged: AppData };
 
 export function previewBackup(raw: unknown, current: AppData, resolutions: Record<string, BackupResolution> = {}): BackupPreview {
@@ -168,6 +175,7 @@ export function previewBackup(raw: unknown, current: AppData, resolutions: Recor
     // passive event or turn the source's award into a second credit/XP grant.
     if (kind === 'workouts') {
       delete (copy as unknown as Workout).companionReward;
+      delete (copy as unknown as Workout).cycleLink;
       (copy as unknown as Workout).companionPassive = null;
     }
     return copy;
@@ -203,7 +211,7 @@ export function previewBackup(raw: unknown, current: AppData, resolutions: Recor
   }
   const customExercises = merge<Exercise>('customExercises', current.customExercises, incoming.customExercises);
   if (remappedExercises.size) incoming = { ...incoming, ...(incoming.routineDraft ? { routineDraft: { ...incoming.routineDraft, exercises: incoming.routineDraft.exercises.map(exercise => ({ ...exercise, exerciseId: remappedExercises.get(exercise.exerciseId) ?? exercise.exerciseId })) } } : {}), routines: incoming.routines.map(routine => ({ ...routine, exercises: routine.exercises.map(exercise => ({ ...exercise, exerciseId: remappedExercises.get(exercise.exerciseId) ?? exercise.exerciseId })) })), workouts: incoming.workouts.map(workout => ({ ...workout, exercises: workout.exercises.map(exercise => ({ ...exercise, exerciseId: remappedExercises.get(exercise.exerciseId) ?? exercise.exerciseId })) })) };
-  const merged: AppData = { customExercises, routines: merge<Routine>('routines', current.routines, incoming.routines), workouts: merge<Workout>('workouts', current.workouts, incoming.workouts) };
+  let merged: AppData = { customExercises, routines: merge<Routine>('routines', current.routines, incoming.routines), workouts: merge<Workout>('workouts', current.workouts, incoming.workouts) };
   const draftSnapshot = (draft: AppData['routineDraft']) => draft ? { ...draft, icon: resolvedRoutineIcon(draft.icon) } : draft;
   if (current.routineDraft && incoming.routineDraft && canonical(draftSnapshot(current.routineDraft)) !== canonical(draftSnapshot(incoming.routineDraft))) {
     const choice = conflict({ key: 'routineDraft:recovery', kind: 'routineDraft', id: incoming.routineDraft.id, name: 'Borrador de rutina pendiente', local: current.routineDraft, incoming: incoming.routineDraft, choices: ['local', 'incoming'] });
@@ -248,6 +256,11 @@ export function previewBackup(raw: unknown, current: AppData, resolutions: Recor
     const choice = conflict({ key: 'personalProfile:identity', kind: 'personalProfile', id: 'identity', name: 'Foto, nombre y biografía', local: current.personalProfile, incoming: incoming.personalProfile, choices: ['local', 'incoming'] });
     merged.personalProfile = { ...(choice === 'incoming' ? incoming.personalProfile : current.personalProfile) };
   } else if (current.personalProfile ?? incoming.personalProfile) merged.personalProfile = { ...(current.personalProfile ?? incoming.personalProfile)! };
+  if (current.training && incoming.training && canonical(current.training) !== canonical(incoming.training)) {
+    const choice = conflict({ key: 'training:features', kind: 'training', id: 'features', name: 'Álbum privado, ciclos y objetivos registrados', local: current.training, incoming: incoming.training, choices: ['local', 'incoming'] });
+    merged.training = structuredClone(choice === 'incoming' ? incoming.training : current.training);
+  } else if (current.training ?? incoming.training) merged.training = structuredClone((current.training ?? incoming.training)!);
+  merged = preserveTrainingHistory(merged, current);
   // Detect UUID collisions in nested entities across the two sources too.
   // A top-level match with differing content is reported as a conflict above.
   if (!conflicts.length) validateData(merged);

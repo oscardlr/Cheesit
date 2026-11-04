@@ -1,5 +1,5 @@
 import { addDays, isCivilDate, todayMadrid, weekStart } from './dates';
-import { validSet, type Workout } from './model';
+import { isWorkSet, validSet, type Workout } from './model';
 
 export type MissionReward = { id: string; xp: number; target: number; awardedAt: string };
 export type Mission = { id: string; title: string; description: string; current: number; target: number; complete: boolean; unit: string; xp: number; scope: 'weekly' | 'career'; rewarded: boolean; rewardNote?: string };
@@ -43,7 +43,7 @@ function stats(history: Workout[], start: string, end: string): Stats {
     if (workout.status !== 'finished' || !isCivilDate(workout.date) || workout.date < start || workout.date > end || workouts.has(workout.id)) continue;
     let useful = false;
     for (const exercise of workout.exercises) for (const set of exercise.sets) {
-      if (!set.confirmed || !validSet(set, exercise.mode) || sets.has(set.id)) continue;
+      if (!isWorkSet(set) || !set.confirmed || !validSet(set, exercise.mode) || sets.has(set.id)) continue;
       useful = true; sets.add(set.id); reps += set.reps!; exercises.add(exercise.exerciseId);
       byGroup.set(exercise.group, (byGroup.get(exercise.group) ?? 0) + 1);
     }

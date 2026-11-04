@@ -1,4 +1,4 @@
-import { validSet, type Workout, type WorkoutExercise, type WorkoutSet } from './model';
+import { isWorkSet, validSet, type Workout, type WorkoutExercise, type WorkoutSet } from './model';
 import { effectiveLoad, normalizeProfile, strengthReference, type AthleteProfile } from './strength';
 import { isAbilityUse } from './abilities';
 import { workoutPassiveReward } from './cheesit-passives';
@@ -22,7 +22,7 @@ function performanceScore(exercise: WorkoutExercise, set: WorkoutSet, profile?: 
   return exercise.mode === 'bodyweight_reps' ? Math.min(set.reps!, 30) : effectiveLoad(exercise, set.weight!, profile) * (1 + Math.min(set.reps!, 15) / 30);
 }
 function calculateSet(exercise: WorkoutExercise, set: WorkoutSet, previous: Previous | undefined, profile?: AthleteProfile): SetReward {
-  if (!validSet(set, exercise.mode)) return { xp: 0, baseXp: 0, repsXp: 0, loadXp: 0, progressXp: 0, relativeLoad: 0, estimatedOneRepMax: null, record: false };
+  if (!isWorkSet(set) || !validSet(set, exercise.mode)) return { xp: 0, baseXp: 0, repsXp: 0, loadXp: 0, progressXp: 0, relativeLoad: 0, estimatedOneRepMax: null, record: false };
   // Recording body weight must not reprice previously earned training rewards.
   const reference = strengthReference(exercise, set, profile?.rewardWeightKg === undefined ? profile : { ...profile, weightKg: profile.rewardWeightKg });
   const repsXp = 2 * Math.min(set.reps!, 15);
@@ -51,7 +51,7 @@ export function setReward(exercise: WorkoutExercise, set: WorkoutSet, history: W
     if (workout.status !== 'finished' || workout.id === workoutId || workout.date >= workoutDate) continue;
     for (const candidate of workout.exercises) {
       if (conditionKey(candidate) !== conditionKey(exercise)) continue;
-      for (const old of candidate.sets) if (old.confirmed && validSet(old, candidate.mode)) previous = updatePrevious(previous, candidate, old, profile);
+      for (const old of candidate.sets) if (isWorkSet(old) && old.confirmed && validSet(old, candidate.mode)) previous = updatePrevious(previous, candidate, old, profile);
     }
   }
   return calculateSet(exercise, set, previous, profile);
@@ -71,7 +71,7 @@ export function rewardSetIndex(history: Workout[], profile?: AthleteProfile): Ma
       const workout = sorted[index++];
       const ability = workout.status === 'finished' && isAbilityUse(workout.abilityReward) && workout.abilityReward.workoutId === workout.id && workout.abilityReward.abilityId === workout.abilityId ? workout.abilityReward : null;
       for (const exercise of workout.exercises) for (const set of exercise.sets) {
-        if (!set.confirmed || !validSet(set, exercise.mode) || rewards.has(set.id)) continue;
+        if (!isWorkSet(set) || !set.confirmed || !validSet(set, exercise.mode) || rewards.has(set.id)) continue;
         const core = calculateSet(exercise, set, previous.get(conditionKey(exercise)), currentProfile);
         const abilityXp = ability?.setBonuses[set.id] ?? 0;
         rewards.set(set.id, abilityXp ? { ...core, xp: core.xp + abilityXp, abilityXp } : core);
@@ -99,7 +99,7 @@ function sessionReward(workout: Workout, index: Map<string, SetReward>, visited 
   const groups = new Set<string>();
   if (workout.status !== 'deleted') for (const exercise of workout.exercises) for (const set of exercise.sets) {
     const reward = index.get(set.id);
-    if (!set.confirmed || !validSet(set, exercise.mode) || !reward || visited.has(set.id)) continue;
+    if (!isWorkSet(set) || !set.confirmed || !validSet(set, exercise.mode) || !reward || visited.has(set.id)) continue;
     visited.add(set.id); sets++; setXp += reward.xp - (reward.abilityXp ?? 0); abilityXp += reward.abilityXp ?? 0;
     if (reward.record) records++;
     groups.add(exercise.group);

@@ -7,6 +7,12 @@
 @media(max-width:360px){.character-summary-card>.character-party{width:150px}.character-companion>span:last-child{display:none}}
 @media(prefers-reduced-motion:reduce){.character-avatar.is-animated .character-layers,.character-avatar.is-animated .character-equipped,.character-avatar.is-animated .character-orbit:after,.companion-sprite.is-animated,.wardrobe-v3 .gear-card-preview>.rarity-legendary{animation:none!important}}
 .collection-type-filters{flex-wrap:wrap}.collection-type-filters button{min-width:0}.wardrobe-v3,.wardrobe-v3>.wardrobe-stage,.wardrobe-v3 .wardrobe-slots,.wardrobe-v3 .wardrobe-slot{min-width:0}@media(max-width:480px){.collection-subtabs,.collection-type-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.collection-subtabs button,.collection-type-filters button{width:100%;min-width:0;white-space:normal}.wardrobe-stage>.character-party{width:min(235px,100%)}.wardrobe-v3 .wardrobe-slot{gap:6px}.wardrobe-v3 .wardrobe-slot strong{overflow-wrap:anywhere}}
+
+/* Tint the entire equipped slot, including the copy and passive, by rarity. */
+.wardrobe-v3 .wardrobe-slots>.wardrobe-slot[data-slot][data-rarity]{background:color-mix(in srgb,var(--rarity) 25%,#211729);border-color:color-mix(in srgb,var(--rarity) 65%,#211729)}
+.wardrobe-v3 .wardrobe-slots>.wardrobe-slot[data-slot][data-rarity] .wardrobe-slot-shortcut{background:transparent}
+.wardrobe-v3 .wardrobe-slots>.wardrobe-slot[data-slot][data-rarity] .wardrobe-slot-copy small{color:#f1e9f7}
+.wardrobe-v3 .wardrobe-slots>.wardrobe-slot[data-slot][data-rarity] .wardrobe-slot-copy strong{color:#fff}
 @media(max-width:760px){.wardrobe-v3 .wardrobe-stage{grid-template-columns:minmax(0,1fr)}}
 .wardrobe-v3 .quote-card>.inventory-quantity{align-self:flex-end;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:30px;margin:0 0 12px;padding:5px 10px;border:1px solid var(--rarity);border-radius:7px;background:color-mix(in srgb,var(--rarity) 15%,#241b2d);color:#f5eefc;font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
 .wardrobe-v3 .wardrobe-slot:last-child{grid-column:auto}.wardrobe-slot-companion>.companion-sprite{width:35px;max-height:72px}.wardrobe-v3 .collection-subtabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}

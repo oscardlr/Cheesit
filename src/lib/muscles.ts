@@ -1,5 +1,5 @@
 import { currentSeasons, inSeason, isMonthSeason } from './seasons';
-import { validSet, type Workout } from './model';
+import { isWorkSet, validSet, type Workout } from './model';
 import { rewardSetIndex } from './rewards';
 import type { AthleteProfile } from './strength';
 
@@ -95,7 +95,7 @@ export function muscleActivity(history: Workout[], today: string, days: number |
       const known = exercise.primaryMuscles ? { primary: exercise.primaryMuscles, secondary: exercise.secondaryMuscles ?? [] } : mapping[exercise.exerciseId];
       const targets: Involvement = known ?? { primary: groupFallback[exercise.group] ?? [], secondary: [] };
       const sets = exercise.sets.filter(set => {
-        if (!set.confirmed || !validSet(set, exercise.mode) || visited.has(set.id)) return false;
+        if (!isWorkSet(set) || !set.confirmed || !validSet(set, exercise.mode) || visited.has(set.id)) return false;
         visited.add(set.id); return true;
       });
       if (!sets.length) continue;

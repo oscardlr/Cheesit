@@ -1,4 +1,4 @@
-import { CATALOG_LOAD_CONVENTIONS, resolvedLoadConvention, validSet, type WorkoutExercise, type WorkoutSet } from './model';
+import { CATALOG_LOAD_CONVENTIONS, resolvedLoadConvention, isWorkSet, validSet, type WorkoutExercise, type WorkoutSet } from './model';
 import { isWeightTracking, validBodyWeight, type WeightTracking } from './body-weight';
 
 export type AthleteProfile = {
@@ -80,7 +80,7 @@ export function effectiveLoad(exercise: Pick<WorkoutExercise, 'exerciseId' | 'mo
 
 /** Informational Brzycki estimate. No extrapolation beyond ten reps, no machine/custom equivalence. */
 export function estimatedOneRepMax(exercise: Pick<WorkoutExercise, 'exerciseId' | 'mode' | 'loadConvention'>, set: WorkoutSet): number | null {
-  if (exercise.mode !== 'external_load_reps' || !ESTIMATED_MAX_EXERCISES.has(exercise.exerciseId) || !validSet(set, exercise.mode) || set.weight! <= 0 || set.reps! > 10) return null;
+  if (!isWorkSet(set) || exercise.mode !== 'external_load_reps' || !ESTIMATED_MAX_EXERCISES.has(exercise.exerciseId) || !validSet(set, exercise.mode) || set.weight! <= 0 || set.reps! > 10) return null;
   return Math.round(set.weight! * 36 / (37 - set.reps!) * 10) / 10;
 }
 

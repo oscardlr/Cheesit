@@ -10,7 +10,7 @@ import { characterLevelThreshold, seasonBounds, seasonLabel } from '@/lib/season
 import { levelRank } from '@/lib/rewards';
 import { playSound } from '@/lib/sound';
 import PixelAthlete from './PixelAthlete';
-import CharacterAvatar from './CharacterAvatar';
+import CharacterAvatar, { CharacterParty } from './CharacterAvatar';
 import BodyFigure, { activityColor } from './MuscleMap';
 import ArcadeOverview from './ArcadeOverview';
 import { ArrowLeft } from 'lucide-react';
@@ -151,7 +151,7 @@ export default function GameHub({ data, onChange, today, effectsEnabled, soundEn
 
 
       {tab === 'crates' && <>
-        <div className="arcade-crate-intro"><div><span className="eyebrow">RECOMPENSAS</span><h2>Cofres disponibles</h2><p>Consigue equipo, habilidades y cheesits con tus créditos.</p><div><span><Zap size={14} />5 XP = 1 crédito</span><span><Shirt size={14} />{REWARD_CATEGORY_LABEL}</span></div></div><CharacterAvatar game={game} level={currentProgress.level} animated={effectsEnabled} compact /></div>
+        <div className="arcade-crate-intro"><div><span className="eyebrow">RECOMPENSAS</span><h2>Cofres disponibles</h2><p>Consigue equipo, habilidades y cheesits con tus créditos.</p><div><span><Zap size={14} />5 XP = 1 crédito</span><span><Shirt size={14} />{REWARD_CATEGORY_LABEL}</span></div></div>{game.equippedCompanionId?<CharacterParty game={game} level={currentProgress.level} animated={effectsEnabled} compact/>:<CharacterAvatar game={game} level={currentProgress.level} animated={effectsEnabled} compact/>}</div>
         {allLevelCrates.some(crate => !crate.claimed) && <LevelRewards crates={allLevelCrates} busy={busy || Boolean(game.pendingOpening)} onOpen={(level, season) => void buyCrate('level:' + level, level, season)} />}
         <div className="arcade-crates">{CRATES.map((crate, index) => <article key={crate.id} className={'arcade-crate crate-' + index}><div className="crate-art" aria-hidden="true"><div className="crate-halo" /><CrateArtwork crateId={crate.id}/></div><span className="eyebrow">{index === 0 ? 'COFRE BÁSICO' : index === 1 ? 'COFRE INTERMEDIO' : 'COFRE AVANZADO'}</span><h3>{crate.name}</h3><p>{crate.description}</p><div className="crate-odds">{(Object.keys(RARITIES) as Rarity[]).map(rarity => <span key={rarity} style={rarityStyle(rarity)}><i />{RARITIES[rarity].label}<strong>{crate.odds[rarity]}%</strong></span>)}</div><button className="arcade-primary" disabled={busy || Boolean(game.pendingOpening) || balance < crate.cost} onClick={() => void buyCrate(crate.id)}><PackageOpen size={17} /><span>{busy ? 'Guardando recompensa…' : balance < crate.cost ? 'Necesitas más créditos' : 'Abrir cofre'}</span><strong>{fmt(crate.cost)} <Coins size={14} /></strong></button></article>)}</div>
         <p className="arcade-economy-note"><Coins size={15} />Créditos virtuales. Cada cofre sortea primero la rareza y después equipo o cheesit de esa rareza. Los objetos no se pueden vender. El equipo duplicado añade cargas de habilidad.</p>

@@ -1,0 +1,7 @@
+'use client';
+import { groupWith, supersetLabel, ungroup } from '@/lib/training-features';
+export default function SupersetControl<T extends { id: string; supersetId?: string }>({ items, item, name, onChange, onAlternate }: { items: T[]; item: T; name: (item: T) => string; onChange: (items: T[]) => void; onAlternate?: (id: string) => void }) {
+  const label = supersetLabel(items, item.id), members = items.filter(e => item.supersetId && e.supersetId === item.supersetId);
+  const next = members[(members.findIndex(e => e.id === item.id) + 1) % Math.max(1, members.length)];
+  return <div className="superset-controls">{label && <><strong className="superset-badge">{label} · Superserie</strong>{onAlternate && next && <button type="button" className="text-action" onClick={() => onAlternate(next.id)}>Ir a {supersetLabel(items, next.id)} →</button>}<button type="button" className="text-action" onClick={() => onChange(ungroup(items, item.id))}>Desagrupar</button></>}<label className="superset-select">{label ? 'Añadir a la superserie' : 'Superserie con'}<select aria-label={`Superserie de ${name(item)}`} value="" onChange={e => { if (e.target.value) onChange(groupWith(items, item.id, e.target.value)); }}><option value="">Elegir ejercicio</option>{items.filter(e => e.id !== item.id && (!item.supersetId || e.supersetId !== item.supersetId)).map(e => <option key={e.id} value={e.id}>{name(e)}</option>)}</select></label></div>;
+}

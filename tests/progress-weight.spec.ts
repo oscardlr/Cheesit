@@ -113,7 +113,7 @@ test('collection uses all original objects, category icons and a larger static c
   await first.getByRole('button', { name: /Usar aspecto/ }).click();
   await page.getByRole('navigation', { name: 'Organizar colección' }).getByRole('button', { name: 'Aspectos', exact: true }).click();
   await expect(page.locator('.wardrobe-character-preview .character-equipped[data-gear-id="purple-tank"]')).toBeVisible();
-  await page.getByLabel('Quitar equipo de Torso').click();
+  await page.locator('.cosmetic-card[data-gear-id="purple-tank"]').getByRole('button', { name: 'Quitar aspecto', exact: true }).click();
   await expect(page.locator('.wardrobe-character-preview .character-equipped[data-gear-id="purple-tank"]')).toHaveCount(0);
 });
 
