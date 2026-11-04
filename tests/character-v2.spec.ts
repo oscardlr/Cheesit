@@ -55,7 +55,7 @@ test('five gear layers render and unequipping preserves inventory through reload
   }
   await page.getByRole('button',{name:'Personalizar personaje'}).click();
   await page.locator('.wardrobe-stage').screenshot({path:info.outputPath('armario-equipado.png'),animations:'disabled'});
-  await page.getByRole('button',{name:'Quitar equipo de Cabeza',exact:true}).click();
+  await page.locator('.loot-item-card[data-definition-id="dragon-head"]').getByRole('button',{name:'Quitar aspecto',exact:true}).click();
   await expect(page.locator('.wardrobe-stage .character-slot-head')).toHaveCount(0);
   await expect(page.locator('.wardrobe-stage .character-equipped')).toHaveCount(4);
   await expect(page.getByRole('button',{name:/Vender/})).toHaveCount(0);

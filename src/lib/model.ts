@@ -1,3 +1,4 @@
+import type { TrainingFeatures } from './training-features';
 import { CATALOG } from './catalog';
 import { todayMadrid } from './dates';
 import type { GameState } from './game';
@@ -12,11 +13,13 @@ export type ExerciseMode = 'external_load_reps' | 'bodyweight_reps';
 export type LoadConvention = 'total' | 'per_unit_bilateral' | 'per_unit_alternating' | 'per_unit_single';
 export type ExerciseMetadata = { loadConvention?: LoadConvention; primaryMuscles?: MuscleId[]; secondaryMuscles?: MuscleId[] };
 export type Exercise = ExerciseMetadata & { id: string; name: string; group: string; mode: ExerciseMode; image?: string; archived?: boolean; description?: string; technique?: string; equipment?: string; resource?: { title: string; url: string; license: string } };
-export type WorkoutSet = { id: string; weight: number | null; reps: number | null; confirmed: boolean; rpe?: number | null; rir?: number | null; weightText?: string; repsText?: string };
+export type SetKind = 'work' | 'warmup';
+export const isWorkSet = (set: Pick<WorkoutSet, 'kind'>): boolean => set.kind !== 'warmup';
+export type WorkoutSet = { kind?: SetKind; id: string; weight: number | null; reps: number | null; confirmed: boolean; rpe?: number | null; rir?: number | null; weightText?: string; repsText?: string };
 export type ExercisePrescription = { repsMin?: number | null; repsMax?: number | null; targetWeight?: number | null; restSeconds?: number | null; notes?: string };
-export type WorkoutExercise = ExerciseMetadata & ExercisePrescription & { id: string; exerciseId: string; name: string; group: string; mode: ExerciseMode; sets: WorkoutSet[] };
-export type Workout = { id: string; date: string; name: string; color: string; status: 'draft' | 'finished' | 'deleted'; createdAt: string; updatedAt: string; exercises: WorkoutExercise[]; abilityId?:string|null; abilityReward?:AbilityUse; companionPassive?: CompanionPassiveSnapshot | null; companionReward?: CompanionPassiveAward; notes?: string; startedAt?: string; finishedAt?: string; autoRest?: boolean; defaultRestSeconds?: number; restTimer?: { endsAt: string | null; remainingSeconds: number; durationSeconds: number } };
-export type RoutineExercise = ExercisePrescription & { id: string; exerciseId: string; sets: number };
+export type WorkoutExercise = { supersetId?: string } & ExerciseMetadata & ExercisePrescription & { id: string; exerciseId: string; name: string; group: string; mode: ExerciseMode; sets: WorkoutSet[] };
+export type Workout = { routineId?: string; cycleLink?: { cycleId: string; position: number; routineId: string }; id: string; date: string; name: string; color: string; status: 'draft' | 'finished' | 'deleted'; createdAt: string; updatedAt: string; exercises: WorkoutExercise[]; abilityId?:string|null; abilityReward?:AbilityUse; companionPassive?: CompanionPassiveSnapshot | null; companionReward?: CompanionPassiveAward; notes?: string; startedAt?: string; finishedAt?: string; autoRest?: boolean; defaultRestSeconds?: number; restTimer?: { endsAt: string | null; remainingSeconds: number; durationSeconds: number } };
+export type RoutineExercise = { setKinds?: SetKind[]; supersetId?: string } & ExercisePrescription & { id: string; exerciseId: string; sets: number };
 export const ROUTINE_ICONS = ['dumbbell', 'biceps-flexed', 'target', 'flame', 'activity', 'timer', 'mountain', 'heart-pulse'] as const;
 export type RoutineIconId = typeof ROUTINE_ICONS[number];
 export const DEFAULT_ROUTINE_ICON: RoutineIconId = 'dumbbell';
@@ -25,7 +28,7 @@ export const isRoutineIcon = (value: unknown): value is RoutineIconId => typeof 
 export const resolvedRoutineIcon = (value: unknown): RoutineIconId => isRoutineIcon(value) ? value : DEFAULT_ROUTINE_ICON;
 export type Routine = { id: string; name: string; color: string; icon?: RoutineIconId; archived: boolean; exercises: RoutineExercise[]; notes?: string };
 export type RoutineDraft = Omit<Routine, 'exercises'> & { exercises: (Omit<RoutineExercise, 'sets'> & { sets: number | null })[] };
-export type AppData = { routines: Routine[]; workouts: Workout[]; customExercises: Exercise[]; routineDraft?: RoutineDraft; game?: GameState; profile?: AthleteProfile; personalProfile?: PersonalProfile; preferences?: { effects: boolean; sound: boolean } };
+export type AppData = { training?: TrainingFeatures; routines: Routine[]; workouts: Workout[]; customExercises: Exercise[]; routineDraft?: RoutineDraft; game?: GameState; profile?: AthleteProfile; personalProfile?: PersonalProfile; preferences?: { effects: boolean; sound: boolean } };
 
 export const ROUTINE_COLOR_OPTIONS = [
   { value: '#d8ff3e', label: 'lima' }, { value: '#61C9A8', label: 'jade' },
@@ -48,13 +51,13 @@ export function newWorkout(routine?: Routine, exercises: Exercise[] = CATALOG, p
   const now = new Date().toISOString();
   return snapshotWorkoutPassive({
     id: newId(), date: todayMadrid(), name: routine?.name ?? 'Entrenamiento', color: WORKOUT_COLOR,
-    status: 'draft', createdAt: now, updatedAt: now, startedAt: now, ...(routine?.notes ? { notes: routine.notes } : {}),
+    ...(routine ? { routineId: routine.id } : {}), status: 'draft', createdAt: now, updatedAt: now, startedAt: now, ...(routine?.notes ? { notes: routine.notes } : {}),
     exercises: (routine?.exercises ?? []).flatMap((item) => {
       const exercise = exercises.find((candidate) => candidate.id === item.exerciseId);
       if (!exercise) return [];
-      const { id: _id, exerciseId: _exerciseId, sets: _sets, ...prescription } = item;
+      const { id: _id, exerciseId: _exerciseId, sets: _sets, setKinds, ...prescription } = item;
       return [{ ...prescription, ...exerciseSnapshot(exercise, profile), id: newId(),
-        sets: Array.from({ length: item.sets }, () => ({ ...newSet(), weight: exercise.mode === 'bodyweight_reps' ? 0 : item.targetWeight ?? null, reps: item.repsMin ?? null })) }];
+        sets: Array.from({ length: item.sets }, (_, index) => ({ ...newSet(), kind: setKinds?.[index] ?? 'work', weight: exercise.mode === 'bodyweight_reps' ? 0 : item.targetWeight ?? null, reps: item.repsMin ?? null })) }];
     }),
   }, game);
 }
@@ -131,7 +134,7 @@ export function copyPreviousSets(current: WorkoutSet[], previous: WorkoutSet[], 
     if (!Number.isInteger(i) || i < 0 || i >= 50 || !previous[i]) continue;
     while (result.length <= i) result.push(newSet());
     const source = previous[i];
-    result[i] = { ...result[i], weight: source.weight, reps: source.reps, confirmed: false, rpe: source.rpe, rir: source.rir, weightText: undefined, repsText: undefined };
+    result[i] = { ...result[i], weight: source.weight, reps: source.reps, confirmed: false, kind: source.kind ?? 'work', rpe: source.rpe, rir: source.rir, weightText: undefined, repsText: undefined };
   }
   return result;
 }

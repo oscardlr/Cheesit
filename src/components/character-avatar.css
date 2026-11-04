@@ -21,6 +21,24 @@
 .character-companion>.companion-sprite{object-fit:contain}
 .companion-sprite[data-companion-id]{background:none;overflow:hidden}
 .character-avatar:not(.is-animated)[data-motion] *,.character-avatar:not(.is-animated)[data-motion] *::after{animation:none!important}
+/* A shared stage only replaces the solo stage while a cheesit is equipped. */
+.character-party.has-companion{overflow:visible}
+.character-party.has-companion>.character-avatar{position:absolute;left:0;bottom:10%;width:64%;height:88%;aspect-ratio:auto;transform:none}
+.character-party.has-companion>.character-avatar .character-layers{inset:auto auto 0 50%;width:100%;height:auto;aspect-ratio:1265/1494}
+.character-party.has-companion>.character-avatar :is(.character-glow,.character-orbit,.character-power-field,.character-platform,.character-level){display:none}
+.character-party.has-companion>.character-companion{right:0;bottom:14%;width:34%;height:74%;z-index:2}
+.character-party.has-companion>.character-companion>.companion-sprite{width:100%;height:100%}
+.character-party.has-companion .cheesit-figure{object-position:center bottom}
+.party-glow,.party-orbit,.party-platform{position:absolute;pointer-events:none;z-index:-1;border-radius:50%}
+.party-glow{inset:4% 1% 12%;background:radial-gradient(ellipse at 32% 45%,#a585ff30,transparent 65%),radial-gradient(ellipse at 72% 55%,#d8ff3e1c,transparent 65%);filter:blur(8px)}
+.party-orbit{inset:8% 3% 15%;border:1px solid #b99aff30;box-shadow:inset 0 0 28px #a585ff18,0 0 20px #a585ff12}
+.party-orbit::after{content:'';position:absolute;inset:9% 5%;border:1px dashed #d7ff5f30;border-radius:50%}
+.party-platform{left:2%;right:0;bottom:10%;height:11%;border:1px solid #d8ff3e70;background:radial-gradient(ellipse,#d8ff3e25,transparent 75%);box-shadow:0 0 24px #d8ff3e18}
+.character-party.has-companion>.party-level{bottom:1%;font-size:clamp(9px,2.5vw,11px);transform:translateX(-50%);padding:6px 10px}
+.ux-shell.product-redesign .character-party.has-companion>.party-level{display:flex}
+.arcade-crate-intro>.character-party.has-companion{position:relative;flex:0 0 200px;width:200px;max-width:100%;min-width:0}
+.arcade-crate-intro>.character-party.has-companion>div{margin-top:0;gap:0}
+@media(max-width:760px){.arcade-crate-intro:has(>.character-party.has-companion){flex-wrap:wrap;gap:16px}.arcade-crate-intro>.character-party.has-companion{margin-inline:auto}.arcade-crate-intro:has(>.character-party.has-companion)>div:first-child{max-width:100%}}
 .effects-disabled .character-avatar *,.effects-disabled .character-avatar *::before,.effects-disabled .character-avatar *::after,.effects-disabled .gear-sprite,.effects-disabled .companion-sprite{animation:none!important}
 .motion-feedback-reduced{display:none}
 @media(prefers-reduced-motion:reduce){.character-avatar[data-motion] *,.character-avatar[data-motion] *::before,.character-avatar[data-motion] *::after,.companion-sprite{animation:none!important}.character-avatar .character-power-field{opacity:0!important}.motion-feedback-active{display:none}.motion-feedback-reduced{display:inline}}

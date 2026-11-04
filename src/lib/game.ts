@@ -1,6 +1,6 @@
 import { isCivilDate, todayMadrid } from './dates';
 import { currentSeasons, isYearSeason, MAX_CHARACTER_LEVEL } from './seasons';
-import { validSet, type Workout } from './model';
+import { isWorkSet, validSet, type Workout } from './model';
 import { levelProgress, legacyLevelProgress, rewardProgress, rewardSetIndex } from './rewards';
 import { GEAR, GEAR_SLOTS, type GearSlot } from './gear';
 import type { AthleteProfile } from './strength';
@@ -343,7 +343,7 @@ export function gameCreditStatus(game: GameState, history: Workout[], profile?: 
   const unique = new Set<string>();
   const abilityCredits = history.reduce((sum, workout) => {
     if (workout.status !== 'finished' || unique.has(workout.id) || !isAbilityUse(workout.abilityReward) || workout.abilityReward.workoutId !== workout.id || workout.abilityReward.abilityId !== workout.abilityId ||
-      !workout.exercises.some(exercise => exercise.sets.some(set => set.confirmed && validSet(set, exercise.mode))) ||
+      !workout.exercises.some(exercise => exercise.sets.some(set => isWorkSet(set) && set.confirmed && validSet(set, exercise.mode))) ||
       !(game.abilityUses ?? []).some(use => use.workoutId === workout.id && use.abilityId === workout.abilityReward!.abilityId && use.bonusCredits === workout.abilityReward!.bonusCredits)) return sum;
     unique.add(workout.id); return sum + workout.abilityReward.bonusCredits;
   }, 0);
@@ -523,7 +523,7 @@ export function applyWorkoutAbility(game: GameState, workout: Workout, history: 
   const bare: Workout = { ...workout, abilityReward: undefined };
   const index = rewardSetIndex([...history.filter(previous => previous.id !== workout.id), bare], profile);
   const eligible = workout.exercises.flatMap(exercise => abilityMatches(ability, exercise)
-    ? exercise.sets.filter(set => set.confirmed && validSet(set, exercise.mode)).map(set => ({ set, xp: index.get(set.id)?.xp ?? 0 })) : []);
+    ? exercise.sets.filter(set => isWorkSet(set) && set.confirmed && validSet(set, exercise.mode)).map(set => ({ set, xp: index.get(set.id)?.xp ?? 0 })) : []);
   const setBonuses: Record<string, number> = {};
   let bonusXp = 0;
   if (ability.target !== 'credits') for (const { set, xp } of eligible) {
@@ -558,7 +558,7 @@ export function getAchievements(history: Workout[], profile?: AthleteProfile, ga
   const lifetime = rewardProgress(history, profile);
   const progress = { ...lifetime, level: game ? gameProgress(game, history, profile).level : lifetime.level };
   const sessions = history.filter(workout => workout.status === 'finished');
-  const groups = new Set(sessions.flatMap(workout => workout.exercises.filter(exercise => exercise.sets.some(set => set.confirmed && validSet(set, exercise.mode))).map(exercise => exercise.group))).size;
+  const groups = new Set(sessions.flatMap(workout => workout.exercises.filter(exercise => exercise.sets.some(set => isWorkSet(set) && set.confirmed && validSet(set, exercise.mode))).map(exercise => exercise.group))).size;
   return [
     { ...mission('first', 'El primer paso', 'Termina tu primer entrenamiento.', progress.workouts, 1, 'sesión'), icon: 'flag' },
     { ...mission('ten', 'Ya es un hábito', 'Completa diez sesiones.', progress.workouts, 10, 'sesiones'), icon: 'flame' },

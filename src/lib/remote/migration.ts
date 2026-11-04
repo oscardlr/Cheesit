@@ -15,10 +15,10 @@ export function previewLegacy(source: AppData, current: AccountDocument, choices
     // inventing charges. Both original branches stay recoverable.
     const unresolved = previewBackup(createBackup(incoming), current.data);
     if (!unresolved.conflictDetails.some(c => c.kind === 'game')) throw error;
-    const structural = (data: AppData): AppData => { const { game: _game, profile: _profile, ...rest } = data; return { ...rest, workouts: [] }; };
+    const structural = (data: AppData): AppData => { const { game: _game, profile: _profile, training: _training, ...rest } = data; return { ...rest, workouts: [] }; };
     preview = previewBackup(createBackup(structural(incoming)), structural(current.data), choices);
     const key = 'migration:activity';
-    const activity = (data: AppData) => ({ workouts: data.workouts, game: data.game, profile: data.profile });
+    const activity = (data: AppData) => ({ workouts: data.workouts, game: data.game, profile: data.profile, training: data.training });
     preview.conflictDetails.push({ key, kind: 'activity', id: 'activity', name: 'Las economías independientes requieren elegir historial y juego juntos. Ambas copias se conservan.', local: activity(current.data), incoming: activity(incoming), choices: ['local','incoming'] });
     if (!choices[key]) preview.conflicts.push(key);
     Object.assign(preview.merged, activity(choices[key] === 'incoming' ? incoming : current.data));

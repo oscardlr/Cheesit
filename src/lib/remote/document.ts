@@ -1,3 +1,4 @@
+import { preserveTrainingHistory } from '../training-features';
 import { preserveWorkoutPassiveEvent } from '../cheesit-passives';
 import { emptyData, type AppData } from '../model';
 
@@ -46,7 +47,7 @@ export function mergeDocuments(base: AccountDocument, local: AccountDocument, se
     return choices[key] === 'local' ? l : r;
   }
   const data = emptyData();
-  const activity = (d: AppData) => ({ workouts: d.workouts, game: d.game, profile: d.profile });
+  const activity = (d: AppData) => ({ workouts: d.workouts, game: d.game, profile: d.profile, training: d.training });
   Object.assign(data, choose('activity', 'Historial, perfil y economía del juego', activity(base.data), activity(local.data), activity(server.data)));
   for (const kind of ['routines', 'customExercises'] as const) {
     // The cloud's array order is authoritative; append local additions in their
@@ -69,5 +70,5 @@ export function mergeDocuments(base: AccountDocument, local: AccountDocument, se
   data.routines = data.routines.filter(x => !tombstones.includes(`routines:${x.id}`));
   data.customExercises = data.customExercises.filter(x => !tombstones.includes(`customExercises:${x.id}`));
   data.workouts = data.workouts.filter(x => !tombstones.includes(`workouts:${x.id}`) || x.status === 'deleted').map(workout => { const authoritative = server.data.workouts.find(x => x.id === workout.id); return authoritative ? preserveWorkoutPassiveEvent(workout, authoritative) : workout; });
-  return { document: { data: JSON.parse(JSON.stringify(data)) as AppData, tombstones, migrations: union(base.migrations, local.migrations, server.migrations) }, conflicts, unresolved: conflicts.filter(c => !choices[c.key]) };
+  return { document: { data: JSON.parse(JSON.stringify(preserveTrainingHistory(data, server.data))) as AppData, tombstones, migrations: union(base.migrations, local.migrations, server.migrations) }, conflicts, unresolved: conflicts.filter(c => !choices[c.key]) };
 }

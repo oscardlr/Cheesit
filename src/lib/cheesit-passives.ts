@@ -1,7 +1,7 @@
 import { COMPANIONS } from './companions';
 import { isCivilDate, todayMadrid } from './dates';
 import type { GameState } from './game';
-import { validSet, type Workout } from './model';
+import { isWorkSet, validSet, type Workout } from './model';
 import { setReward } from './rewards';
 import type { AthleteProfile } from './strength';
 
@@ -95,7 +95,7 @@ export function applyWorkoutPassive(workout: Workout, history: Workout[], profil
   const snapshot = previous ? previous.companionPassive : workout.companionPassive;
   if (workout.status !== 'finished' || !isCompanionPassiveSnapshot(snapshot) || snapshot.workoutId !== workout.id) return { ...workout, companionPassive: snapshot, companionReward: undefined };
   const definition = getCompanionPassive(snapshot.companionId)!;
-  const exercises = workout.exercises.map(exercise => ({ exercise, sets: exercise.sets.filter(set => set.confirmed && validSet(set, exercise.mode)) })).filter(entry => entry.sets.length);
+  const exercises = workout.exercises.map(exercise => ({ exercise, sets: exercise.sets.filter(set => isWorkSet(set) && set.confirmed && validSet(set, exercise.mode)) })).filter(entry => entry.sets.length);
   const groups = new Set(exercises.map(({ exercise }) => exercise.group));
   const isCurrentDate = workout.date === snapshot.fixedDate;
   const hasSets = exercises.length > 0;
@@ -106,7 +106,7 @@ export function applyWorkoutPassive(workout: Workout, history: Workout[], profil
   if (definition.condition === 'record') condition = exercises.some(({ exercise, sets }) => sets.some(set => setReward(exercise, set, history, workout.id, workout.date, profile).record));
   if (definition.condition === 'rest') {
     // Same-date prior sessions disqualify too. Missing/invalid dates never qualify.
-    const preceding = history.filter(candidate => candidate.id !== workout.id && candidate.status === 'finished' && candidate.date <= workout.date && candidate.exercises.some(exercise => exercise.sets.some(set => set.confirmed && validSet(set, exercise.mode)))).map(candidate => candidate.date).sort().at(-1);
+    const preceding = history.filter(candidate => candidate.id !== workout.id && candidate.status === 'finished' && candidate.date <= workout.date && candidate.exercises.some(exercise => exercise.sets.some(set => isWorkSet(set) && set.confirmed && validSet(set, exercise.mode)))).map(candidate => candidate.date).sort().at(-1);
     condition = !!preceding && civilDayOrdinal(workout.date) - civilDayOrdinal(preceding) >= snapshot.parameters.restDays! + 1;
   }
   const eligible = hasSets && isCurrentDate && condition;
@@ -119,6 +119,6 @@ export function applyWorkoutPassive(workout: Workout, history: Workout[], profil
 /** Read the frozen award only: no access to the equipped cheesit or catalog math. */
 export function workoutPassiveReward(workout: Workout): { bonusXp: number; bonusCredits: number } {
   const award = workout.companionReward;
-  if (workout.status !== 'finished' || !isCompanionPassiveAward(award) || award.workoutId !== workout.id || !workout.exercises.some(exercise => exercise.sets.some(set => set.confirmed && validSet(set, exercise.mode)))) return { bonusXp: 0, bonusCredits: 0 };
+  if (workout.status !== 'finished' || !isCompanionPassiveAward(award) || award.workoutId !== workout.id || !workout.exercises.some(exercise => exercise.sets.some(set => isWorkSet(set) && set.confirmed && validSet(set, exercise.mode)))) return { bonusXp: 0, bonusCredits: 0 };
   return { bonusXp: award.bonusXp, bonusCredits: award.bonusCredits };
 }

@@ -1,4 +1,4 @@
-import { validSet, type Workout, type WorkoutExercise } from './model';
+import { isWorkSet, validSet, type Workout, type WorkoutExercise } from './model';
 import { effectiveLoad, type AthleteProfile } from './strength';
 
 /** Derive from confirmed, valid sets. Cents keep decimal loads exact until display. */
@@ -6,7 +6,7 @@ export function totals(workouts: Workout[], profile?: AthleteProfile) {
   let sets = 0, reps = 0, volumeCents = 0, excludedSets = 0;
   const finished = workouts.filter((workout) => workout.status === 'finished');
   for (const workout of finished) for (const exercise of workout.exercises) for (const set of exercise.sets) {
-    if (!set.confirmed || !validSet(set, exercise.mode)) continue;
+    if (!isWorkSet(set) || !set.confirmed || !validSet(set, exercise.mode)) continue;
     sets++;
     reps += set.reps!;
     if (exercise.mode === 'external_load_reps') volumeCents += Math.round(effectiveLoad(exercise, set.weight!, profile) * 100) * set.reps!;
@@ -18,7 +18,7 @@ export function totals(workouts: Workout[], profile?: AthleteProfile) {
 /** Compare only identical exercise identities and modes with one shared condition. */
 export function comparableSets(previous: WorkoutExercise, current: WorkoutExercise) {
   if (previous.exerciseId !== current.exerciseId || previous.mode !== current.mode) return { loads: [], repetitions: [] };
-  const eligible = (exercise: WorkoutExercise) => exercise.sets.filter((set) => set.confirmed && validSet(set, exercise.mode));
+  const eligible = (exercise: WorkoutExercise) => exercise.sets.filter((set) => isWorkSet(set) && set.confirmed && validSet(set, exercise.mode));
   const oldSets = eligible(previous), newSets = eligible(current);
   const oldByReps = new Map<number, number>(), newByReps = new Map<number, number>();
   const oldByWeight = new Map<number, number>(), newByWeight = new Map<number, number>();
@@ -46,7 +46,7 @@ export function comparableSets(previous: WorkoutExercise, current: WorkoutExerci
 }
 
 /** Each entry is one session and mode; repeated exercise blocks share one set list. */
-export function workoutExerciseSessions(history: Workout[], exerciseId: string, mode?: WorkoutExercise['mode']): { w: Workout; e: WorkoutExercise }[] {
+export function workoutExerciseSessions(history: Workout[], exerciseId: string, mode?: WorkoutExercise['mode'], options: { includeWarmups?: boolean } = {}): { w: Workout; e: WorkoutExercise }[] {
   return history.filter(w => w.status === 'finished').flatMap(w => {
     const grouped = new Map<WorkoutExercise['mode'], WorkoutExercise[]>();
     for (const exercise of w.exercises) {
@@ -58,10 +58,15 @@ export function workoutExerciseSessions(history: Workout[], exerciseId: string, 
       const differentConventions = blocks.some(block => block.loadConvention !== first.loadConvention);
       const ids = new Set<string>();
       const sets = blocks.flatMap(block => block.sets.filter(set => {
-        if (ids.has(set.id) || !set.confirmed || !validSet(set, block.mode)) return false;
+        if (ids.has(set.id) || (!options.includeWarmups && !isWorkSet(set)) || !set.confirmed || !validSet(set, block.mode)) return false;
         ids.add(set.id); return true;
       }).map(set => differentConventions ? { ...set, weight: effectiveLoad(block, set.weight!) } : { ...set }));
       return { w, e: { ...first, ...(differentConventions ? { loadConvention: 'total' as const } : {}), sets } };
-    });
+    }).filter(entry => entry.e.sets.length > 0);
   }).sort((a, b) => b.w.date.localeCompare(a.w.date) || b.w.createdAt.localeCompare(a.w.createdAt) || b.w.id.localeCompare(a.w.id) || a.e.mode.localeCompare(b.e.mode));
+}
+
+/** Session copying preserves all confirmed valid rows, including warmups, at their original positions. */
+export function workoutCopySessions(history: Workout[], exerciseId: string, mode?: WorkoutExercise['mode']) {
+  return workoutExerciseSessions(history, exerciseId, mode, { includeWarmups: true });
 }

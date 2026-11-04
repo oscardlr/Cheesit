@@ -79,7 +79,7 @@ export default function CharacterAvatar({ game, level, compact = false }: { game
 }
 export function CharacterParty({game,level,compact=false}:{game:GameState;level:number;animated?:boolean;compact?:boolean;motion?:CharacterMotion}){
   const companion=unlockedCompanions(game).find(item=>item.id===game.equippedCompanionId);
-  return <div className={`character-party ${companion?'has-companion':''} ${compact?'is-compact':''}`}><CharacterAvatar game={game} level={level} compact={compact}/>{companion&&<div className="character-companion"><CompanionSprite companionId={companion.id} animated={false}/><span>{companion.name}</span></div>}</div>;
+  return <div className={`character-party ${companion?'has-companion':''} ${compact?'is-compact':''}`}><CharacterAvatar game={game} level={level} compact={compact}/>{companion&&<><div className="party-glow" aria-hidden="true"/><div className="party-orbit" aria-hidden="true"/><div className="party-platform" aria-hidden="true"/><span className="character-level party-level"><Sparkles size={11}/> NIVEL {level}</span></>}{companion&&<div className="character-companion"><CompanionSprite companionId={companion.id} animated={false}/><span hidden>{companion.name}</span></div>}</div>;
 }
 export function CharacterCard({data,onOpen,animated=true}:{data:AppData;onOpen:()=>void;animated?:boolean}){
   const game=normalizeGame(data.game), progress=gameProgress(game,data.workouts,data.profile);
