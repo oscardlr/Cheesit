@@ -1,5 +1,7 @@
 /** Original unequipped artwork. Independent of the registered worn layers in character-art.ts.
- * Source viewports retained from the original atlas metadata; never garment masks or body crops. */
+ * Source viewports retained from the original atlas metadata; never garment masks or body crops.
+ * Explicit catalog masks keep neighboring atlas objects out of the four corrected previews.
+ * The cape boundary follows the transparent gap before the adjacent wings. */
 export type CatalogArt = { src: string; width: number; height: number; source: readonly number[]; clip?: string };
 export const GEAR_CATALOG_ART: Record<string, CatalogArt> = {
   "purple-tank": {
@@ -33,7 +35,8 @@ export const GEAR_CATALOG_ART: Record<string, CatalogArt> = {
       119,
       313,
       231
-    ]
+    ],
+    "clip": "M748 119H1061V350H748Z"
   },
   "dragon-head": {
     "src": "/assets/grind-gear.png",
@@ -77,7 +80,8 @@ export const GEAR_CATALOG_ART: Record<string, CatalogArt> = {
       350,
       164,
       418
-    ]
+    ],
+    "clip": "M819 350H983V768H819Z"
   },
   "plasma-blaster": {
     "src": "/assets/grind-gear.png",
@@ -88,7 +92,8 @@ export const GEAR_CATALOG_ART: Record<string, CatalogArt> = {
       484,
       395,
       197
-    ]
+    ],
+    "clip": "M1052 484H1447V681H1052Z"
   },
   "violet-cape": {
     "src": "/assets/grind-gear.png",
@@ -99,7 +104,8 @@ export const GEAR_CATALOG_ART: Record<string, CatalogArt> = {
       746,
       375,
       312
-    ]
+    ],
+    "clip": "M12 746H360V908L387 948V1058H12Z"
   },
   "neon-wings": {
     "src": "/assets/grind-gear.png",
