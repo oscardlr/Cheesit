@@ -14,3 +14,8 @@
 
 .weekly-title{display:flex;align-items:center;gap:6px;min-width:0}.weekly-title>h2{min-width:0}
 .weekly-title>.info-popup-trigger{position:relative;top:-4px}
+
+.progress-chart>figcaption.progress-chart-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.progress-chart-heading .info-popup-trigger>svg{width:19px;height:19px}
+.progress-words-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px;min-width:0}
+.progress-words .progress-words-heading>h2{margin:0;min-width:0}
