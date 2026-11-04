@@ -1,6 +1,6 @@
 import type { Workout } from './model';
 
-export type PersonalProfile = { displayName: string; bio: string; photo: string | null };
+export type PersonalProfile = { displayName: string; bio: string; photo: string | null; gym?: string };
 export const EMPTY_PERSONAL_PROFILE: PersonalProfile = { displayName: '', bio: '', photo: null };
 export const PROFILE_PHOTO_MAX_LENGTH = 262144;
 export const PROFILE_PHOTO_MAX_FILE_SIZE = 8 * 1024 * 1024;
@@ -12,9 +12,10 @@ export function isProfilePhoto(value: unknown): value is string {
 export function isPersonalProfile(value: unknown): value is PersonalProfile {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const p = value as Record<string, unknown>;
-  return Object.keys(p).every(key => ['displayName', 'bio', 'photo'].includes(key)) &&
+  return Object.keys(p).every(key => ['displayName', 'bio', 'photo', 'gym'].includes(key)) &&
     typeof p.displayName === 'string' && p.displayName.length <= 80 &&
-    typeof p.bio === 'string' && p.bio.length <= 300 && (p.photo === null || isProfilePhoto(p.photo));
+    typeof p.bio === 'string' && p.bio.length <= 300 && (p.photo === null || isProfilePhoto(p.photo)) &&
+    (p.gym === undefined || (typeof p.gym === 'string' && p.gym.length <= 100));
 }
 
 export function recentProfileWorkouts(workouts: Workout[], limit = 6): Workout[] {

@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowUpRight, Search, Users, WifiOff } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, MapPin, Search, Users, WifiOff } from 'lucide-react';
 import { readSocial, setFollow, SOCIAL_PAGE_SIZE, validSocialQuery, type SocialList, type SocialProfile, type SocialRoute } from '@/lib/remote/social';
-import SocialActivity from './SocialActivity';
+import WorkoutFeed from './WorkoutFeed';
 import { PersonalAvatar } from './PersonalAvatar';
 import './social.css';
+import './gym-settings.css';
 
 const listLabel = (list: SocialList) => list === 'followers' ? 'Seguidores' : 'Seguidos';
 
@@ -105,11 +106,12 @@ export default function SocialPanel({ owner, guest, route, onNavigate, onBack, o
       {!error && profile && !route.workout && <section className="personal-profile-card social-profile" aria-label="Perfil social">
         <div className="profile-cover" aria-hidden="true"><span>EVERY REP CONNECTS.</span><ArrowUpRight/></div>
         <div className="profile-identity"><PersonalAvatar photo={profile.photo} name={profile.display_name || profile.username}/><div className="profile-name"><span className="eyebrow">COMUNIDAD CHEESIT</span><h2>{profile.display_name || profile.username}</h2><p className="profile-username">@{profile.username}</p>{profile.follows_you && <span className="social-follows-you">Te sigue</span>}<SocialCounts profile={profile} onOpen={list => onNavigate({ ...route, list })}/></div></div>
+        {profile.gym?.trim() && <p className="profile-gym"><MapPin size={16} aria-hidden="true"/><span>{profile.gym}</span></p>}
         <p className="profile-bio">{profile.bio || 'Todavía no ha añadido una biografía.'}</p>
         {profile.owner_id !== owner && <div className="social-follow"><button className={profile.is_following ? 'secondary' : 'primary'} disabled={pending || loading || !online} aria-pressed={profile.is_following} onClick={() => void follow()}>{pending ? 'Confirmando…' : profile.is_following ? 'Dejar de seguir' : 'Seguir'}</button></div>}
         {mutationError && <p className="social-error" role="alert">{mutationError}</p>}{notice && <p className="social-confirmed" role="status">{notice}</p>}
       </section>}
-      {!error && profile && <SocialActivity key={`${profile.owner_id}:${route.workout || ""}`} owner={profile.owner_id} own={profile.owner_id === owner} workout={route.workout} onWorkout={id => onNavigate({ ...route, workout: id })}/>}
+      {!error && profile && <>{!route.workout && <h2 className="social-publications-heading">Publicaciones</h2>}<WorkoutFeed viewer={owner} owner={profile.owner_id} workout={route.workout ?? undefined} onProfile={person => onNavigate({ owner: person, list: null, query: '' })} onWorkout={(person, workout) => onNavigate({ owner: person, list: null, query: '', workout })}/></>}
       {!error && (!route.owner || route.list) && profiles.length > 0 && <ul className="social-people" aria-label={searching ? 'Resultados de personas' : title}>{profiles.map(p => <SocialRow key={p.owner_id} profile={p} onOpen={() => onNavigate({ owner: p.owner_id, list: null, query: route.query })}/>)}</ul>}
       {!loading && !error && valid && profiles.length === 0 && <section className="social-empty"><Users size={32}/><h2>{searching ? 'No encontramos a nadie.' : route.list === 'followers' ? 'Todavía no hay seguidores.' : route.list === 'following' ? 'Todavía no sigue a nadie.' : route.workout ? 'Entrenamiento no disponible.' : 'Perfil no disponible.'}</h2><p>{searching ? 'Prueba con otro @usuario. Solo aparecen perfiles completados.' : route.list ? 'Las conexiones aparecerán aquí cuando se confirmen.' : 'Puede que esta cuenta ya no exista o no haya completado su perfil.'}</p></section>}
       {result.key === key && result.more && !error && <button className="secondary social-more" disabled={loading} onClick={() => setPaging({ key, offset: profiles.length })}>Cargar más personas</button>}

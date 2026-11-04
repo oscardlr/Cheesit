@@ -3,3 +3,5 @@
 .weekly-character svg{width:100%;height:100%}.training-preview-shade{padding:18px}.training-preview{max-height:calc(100dvh - 36px)}
 
 .training-preview .modal-head{position:sticky;top:-18px;z-index:2;background:#201725;padding:12px 0;border-bottom:1px solid #594268}.training-preview .modal-head h2{font-size:20px}.training-preview .modal-head .icon-button{flex-shrink:0}
+
+.detail-stats{flex-wrap:wrap;gap:14px 24px}.detail-hero h2{overflow-wrap:anywhere}

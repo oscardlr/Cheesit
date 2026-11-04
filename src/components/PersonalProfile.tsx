@@ -1,18 +1,21 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { ArrowLeft, ArrowUpRight, Camera, Check, Dumbbell, LockKeyhole, Pencil, Trash2, X, Zap } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Camera, Check, Dumbbell, LockKeyhole, MapPin, Pencil, Trash2, X, Zap } from 'lucide-react';
 import type { AppData } from '@/lib/model';
 import { totals } from '@/lib/metrics';
 import { levelRank } from '@/lib/rewards';
 import { EMPTY_PERSONAL_PROFILE, isPersonalProfile, prepareProfilePhoto, recentProfileWorkouts, type PersonalProfile as Profile } from '@/lib/personal-profile';
 import { ProfileStats, ProfileWorkouts } from './ProfileActivity';
-import { ActivityPrivacy } from './SocialActivity';
+import WorkoutFeed from './WorkoutFeed';
+import MomentsAlbum from './MomentsAlbum';
+import './training-features.css';
 import { OwnSocialSummary } from './SocialPanel';
 import { PersonalAvatar } from './PersonalAvatar';
 export { PersonalAvatar } from './PersonalAvatar';
 import type { SocialList } from '@/lib/remote/social';
 import './personal-profile.css';
+import './gym-settings.css';
 
 const number = (n: number) => new Intl.NumberFormat('es-ES').format(n);
 
@@ -78,7 +81,7 @@ function EditProfile({ profile, onSave, onClose }: { profile: Profile; onSave: (
   </dialog>;
 }
 
-export default function PersonalProfile({ data, level, xp, onSave, onWorkout, onStart, onBack, username, guest, accountOwner, onSocial }: { accountOwner?: string; onSocial?: (list: SocialList | null) => void; username?: string; guest?: boolean; data: AppData; level: number; xp?: number; onSave: (profile: Profile) => Promise<void>; onWorkout: (id: string) => void; onStart: () => void; onBack: () => void }) {
+export default function PersonalProfile({ data, level, xp, onSave, onWorkout, onStart, onBack, username, guest, accountOwner, onSocial, onPublication }: { accountOwner?: string; onSocial?: (list: SocialList | null) => void; onPublication?: (owner: string, workout?: string) => void; username?: string; guest?: boolean; data: AppData; level: number; xp?: number; onSave: (profile: Profile) => Promise<void>; onWorkout: (id: string) => void; onStart: () => void; onBack: () => void }) {
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
   const profile = data.personalProfile ?? EMPTY_PERSONAL_PROFILE;
@@ -90,17 +93,19 @@ export default function PersonalProfile({ data, level, xp, onSave, onWorkout, on
     <section className="personal-profile-card" aria-label="Tu perfil personal">
       <div className="profile-cover" aria-hidden="true"><span>BUILT BY YOU.</span><ArrowUpRight/></div>
       <div className="profile-identity"><PersonalAvatar photo={profile.photo} name={name}/><div className="profile-name"><span className="eyebrow">CADA REP CUENTA</span><h2>{name}</h2>{username && <p className="profile-username">@{username}</p>}<span className="profile-rank"><Zap size={13}/>Nivel {number(level)} · {levelRank(level)}</span>{accountOwner && onSocial && <OwnSocialSummary owner={accountOwner} onOpen={onSocial}/>}</div><button className="secondary profile-edit-button" onClick={() => { setSaved(false); setEditing(true); }}><Pencil size={15}/>Editar perfil</button></div>
+      {profile.gym?.trim() && <p className="profile-gym"><MapPin size={16} aria-hidden="true"/><span>{profile.gym}</span></p>}
       <p className={`profile-bio ${profile.bio ? '' : 'profile-bio-empty'}`}>{profile.bio || 'Este es tu espacio. Añade tu nombre, una foto y eso que te mueve a entrenar.'}</p>
       {saved && <p role="status" className="profile-saved"><Check size={15}/>{guest ? 'Perfil guardado en este navegador.' : 'Perfil guardado en tu cuenta.'}</p>}
 
       <ProfileStats workouts={stats.workouts} sets={stats.sets} level={level} xp={xp}/>
     </section>
     <p className="profile-social-privacy">{guest ? 'Tu perfil de invitado se guarda en este navegador. Necesitas una cuenta para buscar personas y seguirlas.' : 'Las personas con sesión iniciada pueden ver tu perfil y conexiones. Tú eliges si compartes tus entrenamientos. Tu correo y datos físicos siempre son privados.'}</p>
-    {accountOwner && <ActivityPrivacy owner={accountOwner}/>}
+    {accountOwner && !guest && <section className="profile-publications" aria-labelledby="own-publications-title"><div className="profile-section-title"><h2 id="own-publications-title">Mis publicaciones</h2></div><WorkoutFeed viewer={accountOwner} owner={accountOwner} onProfile={owner => onPublication ? onPublication(owner) : onSocial?.(null)} onWorkout={(owner, workout) => onPublication ? onPublication(owner, workout) : onWorkout(workout)}/></section>}
     <div className="profile-activity-layout"><section className="profile-recent" aria-labelledby="profile-recent-title"><div className="profile-section-title"><div><span className="eyebrow">TU ESFUERZO, EN EL TIEMPO</span><h2 id="profile-recent-title">Últimos entrenamientos<span> ({stats.workouts})</span></h2></div></div>
       {recent.length ? <ProfileWorkouts workouts={recent} onWorkout={onWorkout}/>
         : <div className="profile-empty"><span className="profile-empty-icon"><Dumbbell size={28}/></span><h3>Tu primera sesión empieza contigo.</h3><p>Aquí aparecerán tus entrenamientos completados, con cada serie que hayas realizado.</p><button className="primary" onClick={onStart}>Empezar entrenamiento<ArrowUpRight size={18}/></button></div>}
     </section><aside className="profile-manifesto"><span className="eyebrow">TU ÚNICA COMPETENCIA</span><p>ERES<br/><em>TÚ.</em></p><span>Cada sesión forma parte de tu historia. Sigue construyéndola, a tu ritmo.</span>{recent.length > 0 && <button className="text-action" onClick={onStart}>Nueva sesión<ArrowUpRight size={17}/></button>}<div><LockKeyhole size={14}/>Tú decides quién ve tu actividad.</div></aside></div>
+    <MomentsAlbum data={data} onWorkout={onWorkout}/>
     {editing && <EditProfile profile={profile} onSave={async next => { await onSave(next); setSaved(true); }} onClose={() => { setEditing(false); document.querySelector<HTMLButtonElement>('.profile-edit-button')?.focus(); }}/>}
   </div>;
 }

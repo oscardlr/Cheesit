@@ -12,6 +12,14 @@ export function isCivilDate(value: string): boolean {
   const date = new Date(Date.UTC(y, m - 1, d));
   return y >= 1000 && date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
 }
+
+/** Accepts a Madrid civil date, or converts an instant before checking the day. */
+export function isWeekendMadrid(value: string | Date = new Date()): boolean {
+  const date = typeof value === 'string' ? value : todayMadrid(value);
+  if (!isCivilDate(date)) return false;
+  const weekday = new Date(`${date}T12:00:00Z`).getUTCDay();
+  return weekday === 6 || weekday === 0;
+}
 export function addDays(value: string, days: number): string {
   if (!isCivilDate(value)) throw new Error('Fecha no válida');
   const [y, m, d] = value.split('-').map(Number);

@@ -1,4 +1,5 @@
 import { preserveTrainingHistory, validTrainingFeatures } from './training-features';
+import { isWorkoutPublication } from './workout-publication';
 import { isPersonalProfile } from './personal-profile';
 import { CATALOG, GROUPS } from './catalog';
 import { isAthleteProfile } from './strength';
@@ -73,6 +74,7 @@ export function validateData(value: unknown): AppData {
     if (!record(workout) || (workout.status === 'draft' ? !optionalText(workout.name, 80) || typeof workout.name !== 'string' : !name(workout.name)) || !workoutColor(workout.color) || typeof workout.date !== 'string' || (workout.status === 'draft' ? workout.date !== '' && !isCivilDate(workout.date) : !isCivilDate(workout.date) || workout.date > todayMadrid()) || !['draft', 'finished', 'deleted'].includes(workout.status as string) || !timestamp(workout.createdAt) || !timestamp(workout.updatedAt) || !bounded(workout.exercises, 50) || !optionalText(workout.notes)) return fail('entrenamiento o fecha futura');
     if ((workout.startedAt !== undefined && !timestamp(workout.startedAt)) || (workout.finishedAt !== undefined && !timestamp(workout.finishedAt)) || (workout.autoRest !== undefined && typeof workout.autoRest !== 'boolean') || (workout.defaultRestSeconds !== undefined && !optionalNumber(workout.defaultRestSeconds, 0, 3600, true))) return fail('duración o descanso');
     if (workout.restTimer !== undefined && (!record(workout.restTimer) || !(workout.restTimer.endsAt === null || timestamp(workout.restTimer.endsAt)) || !finite(workout.restTimer.remainingSeconds) || workout.restTimer.remainingSeconds < 0 || workout.restTimer.remainingSeconds > 3600 || !finite(workout.restTimer.durationSeconds) || !Number.isInteger(workout.restTimer.durationSeconds) || workout.restTimer.durationSeconds < 0 || workout.restTimer.durationSeconds > 3600)) return fail('temporizador de descanso');
+    if (workout.publication !== undefined && !isWorkoutPublication(workout.publication, workout.id)) return fail('publicación del entrenamiento');
     if (workout.routineId !== undefined && !uuid(workout.routineId)) return fail('rutina de origen');
     if (workout.cycleLink !== undefined && (!record(workout.cycleLink) || !uuid(workout.cycleLink.cycleId) || !uuid(workout.cycleLink.routineId) || !Number.isInteger(workout.cycleLink.position) || (workout.cycleLink.position as number) < 0 || (workout.cycleLink.position as number) >= 100)) return fail('vínculo de split');
     add(workout.id);
@@ -176,6 +178,7 @@ export function previewBackup(raw: unknown, current: AppData, resolutions: Recor
     if (kind === 'workouts') {
       delete (copy as unknown as Workout).companionReward;
       delete (copy as unknown as Workout).cycleLink;
+      delete (copy as unknown as Workout).publication;
       (copy as unknown as Workout).companionPassive = null;
     }
     return copy;
