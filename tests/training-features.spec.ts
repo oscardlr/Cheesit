@@ -64,8 +64,8 @@ test('routine types, superset rest, cycle completion, repeat/convert and recover
   test.setTimeout(90000); const initial = fixture(); await seed(page, initial);
   await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Rutinas', exact: true }).click();
   await page.getByRole('button', { name: 'Superior A 2 ejercicios' }).click();
-  await expect(page.getByLabel('Tipo de serie 1 de Press de banca con barra')).toHaveValue('warmup');
-  await expect(page.getByLabel('Tipo de serie 2 de Press de banca con barra')).toHaveValue('work');
+  await expect(page.getByRole('group', { name: 'Tipo de serie 1 de Press de banca con barra', exact: true }).getByRole('button', { name: 'Calentamiento', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('group', { name: 'Tipo de serie 2 de Press de banca con barra', exact: true }).getByRole('button', { name: 'Serie de trabajo', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.superset-badge').first()).toContainText('A1');
   await page.getByRole('button', { name: 'Guardar rutina', exact: true }).click();
   await page.locator('.cycle-card').getByRole('button', { name: 'Iniciar próxima →' }).click();
@@ -73,8 +73,8 @@ test('routine types, superset rest, cycle completion, repeat/convert and recover
   await page.locator('.exercise-card').first().getByRole('button', { name: 'Copiar todas las series', exact: true }).click();
   await expect(page.getByLabel('Carga en kg, serie 1 de Press de banca con barra')).toHaveValue('10');
   await expect(page.getByLabel('Carga en kg, serie 2 de Press de banca con barra')).toHaveValue('40');
-  await expect(page.getByLabel('Tipo de serie 1 de Press de banca con barra')).toHaveValue('warmup');
-  await expect(page.getByLabel('Tipo de serie 2 de Press de banca con barra')).toHaveValue('work');
+  await expect(page.getByRole('group', { name: 'Tipo de serie 1 de Press de banca con barra', exact: true }).getByRole('button', { name: 'Calentamiento', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('group', { name: 'Tipo de serie 2 de Press de banca con barra', exact: true }).getByRole('button', { name: 'Serie de trabajo', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await page.getByText('Ajustar descanso', { exact: true }).click(); await page.getByLabel('Iniciar al completar una serie o ronda de superserie').check();
   const cards = page.locator('.exercise-card');
   await cards.nth(0).getByRole('button', { name: 'Confirmar serie 1', exact: true }).click();
@@ -95,7 +95,7 @@ test('routine types, superset rest, cycle completion, repeat/convert and recover
   await page.goto(`/#view=detail&id=${final.id}`); await expect(page.locator('.history-sets')).toHaveCount(2);
   await expect(page.locator('.history-sets').first()).toContainText('Calentamiento');
   await page.getByRole('button', { name: 'Repetir sesión', exact: true }).click();
-  await expect(page.getByLabel('Tipo de serie 1 de Press de banca con barra')).toHaveValue('warmup');
+  await expect(page.getByRole('group', { name: 'Tipo de serie 1 de Press de banca con barra', exact: true }).getByRole('button', { name: 'Calentamiento', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.superset-badge').first()).toContainText('A1');
   await expect.poll(async () => (await read(page)).workouts.find(w => w.status === 'draft')?.cycleLink).toBeUndefined();
   await page.getByRole('button', { name: 'Volver', exact: true }).click();
@@ -103,7 +103,7 @@ test('routine types, superset rest, cycle completion, repeat/convert and recover
   await page.getByRole('navigation', {name:'Navegación principal'}).getByRole('button', {name:'Calendario',exact:true}).click();
   await page.locator('.list-card .list-row').filter({hasText:final.name}).click();
   await page.getByRole('button', { name: 'Guardar como rutina', exact: true }).click();
-  await expect(page.getByLabel('Tipo de serie 1 de Press de banca con barra')).toHaveValue('warmup');
+  await expect(page.getByRole('group', { name: 'Tipo de serie 1 de Press de banca con barra', exact: true }).getByRole('button', { name: 'Calentamiento', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.superset-badge').first()).toContainText('A1');
 });
 

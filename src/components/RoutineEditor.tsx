@@ -3,6 +3,7 @@
 import type { Exercise, Routine, RoutineExercise } from '@/lib/model';
 import { COLORS, ROUTINE_COLOR_OPTIONS, ROUTINE_ICONS, resolvedRoutineIcon, validPlannedSets } from '@/lib/model';
 import SupersetControl from './SupersetControl';
+import SetKindControl from './SetKindControl';
 import RoutineIcon, { ROUTINE_ICON_LABELS } from './RoutineIcon';
 import ExerciseThumbnail from './ExerciseThumbnail';
 import './routine-editor.css';
@@ -31,7 +32,7 @@ export default function RoutineEditor({ routine, exercises, message, busy, onCha
           <label>Repeticiones máximas<input type="number" min={1} max={1000} step={1} placeholder="Opcional" value={item.repsMax ?? ''} onChange={event => update(item.id, { repsMax: optionalNumber(event.target.value) })} /></label>
           <label>Carga objetivo, en kg<input type="number" min={0} max={1000} step={.01} placeholder="Opcional" value={item.targetWeight ?? ''} onChange={event => update(item.id, { targetWeight: optionalNumber(event.target.value) })} /></label>
           <label>Descanso, en segundos<input type="number" min={0} max={3600} step={15} placeholder="Opcional" value={item.restSeconds ?? ''} onChange={event => update(item.id, { restSeconds: optionalNumber(event.target.value) })} /></label></div>
-        {validPlannedSets(item.sets) && <fieldset className="routine-set-kinds"><legend>Tipo de cada serie</legend><div>{Array.from({ length: item.sets }, (_, i) => <label key={i}>Serie {i + 1}<select aria-label={`Tipo de serie ${i + 1} de ${ex?.name}`} value={item.setKinds?.[i] ?? 'work'} onChange={event => update(item.id, { setKinds: Array.from({ length: item.sets }, (_, j) => j === i ? event.target.value as 'work' | 'warmup' : item.setKinds?.[j] ?? 'work') })}><option value="work">Serie de trabajo</option><option value="warmup">Calentamiento</option></select></label>)}</div><small>Los calentamientos se guardan, sin récords, XP ni objetivos de series o volumen.</small></fieldset>}{!validPlannedSets(item.sets) && <p className="error" id={`sets-error-${item.id}`} role="alert">Las series previstas deben ser un entero entre 1 y 20.</p>}
+        {validPlannedSets(item.sets) && <fieldset className="routine-set-kinds"><legend>Tipo de cada serie</legend><div className="set-kind-grid">{Array.from({ length: item.sets }, (_, i) => <SetKindControl key={i} label={`Tipo de serie ${i + 1} de ${ex?.name}`} value={item.setKinds?.[i]} onChange={kind => update(item.id, { setKinds: Array.from({ length: item.sets }, (_, j) => j === i ? kind : item.setKinds?.[j] ?? 'work') })}/>)}</div><small>Los calentamientos se guardan, sin récords, XP ni objetivos de series o volumen.</small></fieldset>}{!validPlannedSets(item.sets) && <p className="error" id={`sets-error-${item.id}`} role="alert">Las series previstas deben ser un entero entre 1 y 20.</p>}
         <label>Notas del ejercicio<textarea maxLength={2000} placeholder="Opcional" value={item.notes ?? ''} onChange={event => update(item.id, { notes: event.target.value })} /></label>
       </article>; })}
       <button className="secondary wide" onClick={onAdd}>＋ Añadir ejercicio</button>

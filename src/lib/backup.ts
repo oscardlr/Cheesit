@@ -74,7 +74,7 @@ export function validateData(value: unknown): AppData {
     if ((workout.startedAt !== undefined && !timestamp(workout.startedAt)) || (workout.finishedAt !== undefined && !timestamp(workout.finishedAt)) || (workout.autoRest !== undefined && typeof workout.autoRest !== 'boolean') || (workout.defaultRestSeconds !== undefined && !optionalNumber(workout.defaultRestSeconds, 0, 3600, true))) return fail('duración o descanso');
     if (workout.restTimer !== undefined && (!record(workout.restTimer) || !(workout.restTimer.endsAt === null || timestamp(workout.restTimer.endsAt)) || !finite(workout.restTimer.remainingSeconds) || workout.restTimer.remainingSeconds < 0 || workout.restTimer.remainingSeconds > 3600 || !finite(workout.restTimer.durationSeconds) || !Number.isInteger(workout.restTimer.durationSeconds) || workout.restTimer.durationSeconds < 0 || workout.restTimer.durationSeconds > 3600)) return fail('temporizador de descanso');
     if (workout.routineId !== undefined && !uuid(workout.routineId)) return fail('rutina de origen');
-    if (workout.cycleLink !== undefined && (!record(workout.cycleLink) || !uuid(workout.cycleLink.cycleId) || !uuid(workout.cycleLink.routineId) || !Number.isInteger(workout.cycleLink.position) || (workout.cycleLink.position as number) < 0 || (workout.cycleLink.position as number) >= 100)) return fail('vínculo de ciclo');
+    if (workout.cycleLink !== undefined && (!record(workout.cycleLink) || !uuid(workout.cycleLink.cycleId) || !uuid(workout.cycleLink.routineId) || !Number.isInteger(workout.cycleLink.position) || (workout.cycleLink.position as number) < 0 || (workout.cycleLink.position as number) >= 100)) return fail('vínculo de split');
     add(workout.id);
     if(workout.abilityId!==undefined&&workout.abilityId!==null&&(typeof workout.abilityId!=='string'||!getAbilityDefinition(workout.abilityId)))return fail('habilidad de entrenamiento');
     if(workout.abilityReward!==undefined&&(!isAbilityUse(workout.abilityReward)||workout.abilityReward.workoutId!==workout.id||workout.abilityReward.abilityId!==workout.abilityId||workout.status==='draft'))return fail('recompensa de habilidad');
@@ -103,7 +103,7 @@ export function validateData(value: unknown): AppData {
   for(const workout of value.workouts as Workout[]){
     if(workout.abilityReward&&(!value.game||!isGameState(value.game)||!(value.game.abilityUses??[]).some(use=>use.workoutId===workout.id&&canonical(use)===canonical(workout.abilityReward))))return fail('carga de habilidad sin movimiento correspondiente');
   }
-  if (value.training !== undefined && !validTrainingFeatures(value.training)) return fail('álbum, ciclos u objetivos registrados');
+  if (value.training !== undefined && !validTrainingFeatures(value.training)) return fail('álbum, splits u objetivos registrados');
   if (value.preferences !== undefined && (!record(value.preferences) || typeof value.preferences.effects !== 'boolean' || typeof value.preferences.sound !== 'boolean')) return fail('preferencias de efectos o sonido');
   if (value.profile !== undefined && !isAthleteProfile(value.profile)) return fail('perfil de entrenamiento');
   if (value.personalProfile !== undefined && !isPersonalProfile(value.personalProfile)) return fail('perfil personal');
@@ -257,7 +257,7 @@ export function previewBackup(raw: unknown, current: AppData, resolutions: Recor
     merged.personalProfile = { ...(choice === 'incoming' ? incoming.personalProfile : current.personalProfile) };
   } else if (current.personalProfile ?? incoming.personalProfile) merged.personalProfile = { ...(current.personalProfile ?? incoming.personalProfile)! };
   if (current.training && incoming.training && canonical(current.training) !== canonical(incoming.training)) {
-    const choice = conflict({ key: 'training:features', kind: 'training', id: 'features', name: 'Álbum privado, ciclos y objetivos registrados', local: current.training, incoming: incoming.training, choices: ['local', 'incoming'] });
+    const choice = conflict({ key: 'training:features', kind: 'training', id: 'features', name: 'Álbum privado, splits y objetivos registrados', local: current.training, incoming: incoming.training, choices: ['local', 'incoming'] });
     merged.training = structuredClone(choice === 'incoming' ? incoming.training : current.training);
   } else if (current.training ?? incoming.training) merged.training = structuredClone((current.training ?? incoming.training)!);
   merged = preserveTrainingHistory(merged, current);
