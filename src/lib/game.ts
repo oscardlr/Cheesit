@@ -10,6 +10,7 @@ import { abilityMatches, getAbilityDefinition, isAbilityUse, type AbilityUse } f
 import { getAvailableAbilityCharges, getLegacyAbilityUseIds, validateAbilityChargeHistory } from './ability-charges';
 import { awardObjectiveMissions, getObjectiveMissions, missionRewardXp, validMissionRewards, type Mission, type MissionReward } from './objectives';
 import { workoutPassiveReward } from './cheesit-passives';
+import { bodyWeightXp } from './body-weight';
 import { migrateQuoteConversions, QUOTE_COMPENSATION, quoteConversionCredits, type QuoteConversion } from './quote-conversion';
 
 export type Rarity = 'common' | 'rare' | 'epic' | 'legendary';
@@ -324,12 +325,13 @@ export function normalizeGame(value?: unknown): GameState {
 
 /** Economic XP is lifetime activity plus frozen mission awards, independent of seasons/curve. */
 export function economicXp(game: GameState, history: Workout[], profile?: AthleteProfile): number {
-  return rewardProgress(history, profile).xp + missionRewardXp(game);
+  return rewardProgress(history, profile).xp + missionRewardXp(game) + bodyWeightXp(profile);
 }
 export function gameProgress(game: GameState, history: Workout[], profile?: AthleteProfile, season = currentSeasons().year) {
   const progress = rewardProgress(history, profile, season);
   const objectiveXp = missionRewardXp(game, season);
-  return { ...progress, ...levelProgress(progress.xp + objectiveXp), objectiveXp, season };
+  const weightXp = bodyWeightXp(profile, season);
+  return { ...progress, ...levelProgress(progress.xp + objectiveXp + weightXp), objectiveXp, weightXp, season };
 }
 
 export function awardMissionRewards(game: GameState, history: Workout[], day: string, changedDate?: string): GameState {

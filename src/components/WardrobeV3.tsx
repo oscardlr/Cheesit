@@ -1,15 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { ArrowRight, Check, Heart, LockKeyhole, PackageOpen, Pause, Play, Shirt, Sparkles, Star, Zap } from 'lucide-react';
+import { ArrowRight, Check, Heart, LockKeyhole, PackageOpen, Shirt, Sparkles, Star, Zap } from 'lucide-react';
 import { GEAR, type Gear, type GearSlot } from '@/lib/gear';
 import { COMPANIONS, type Companion } from '@/lib/companions';
 import { getAbilityDefinition } from '@/lib/abilities';
 import { equipCompanion, equipCosmetic, getAbilityCharges, getItemDefinition, RARITIES, setActiveAbility, unlockedCompanions, unlockedGear, type GameState, type InventoryItem, type ItemDefinition, type Rarity } from '@/lib/game';
 import { playSound } from '@/lib/sound';
-import { CHARACTER_MOTIONS, type CharacterMotion } from '@/lib/character-motion';
 import { appearanceGear, CharacterParty, CompanionSprite, GearSprite, SLOT_LABELS } from './CharacterAvatar';
 import CheesitPassive from './CheesitPassive';
+import EmptySlotIcon from './EmptySlotIcon';
 import './wardrobe-v3.css';
 import './wardrobe-motion.css';
 
@@ -37,8 +37,6 @@ export default function WardrobeV3({initialPanel='inventory',onPanelChange,game,
   const [kind,setKind]=useState<'all'|'gear'|'companion'>('all');
   const [lookFilter,setLookFilter]=useState<LookSlot|'all'>('all');
   const [collectionFilter,setCollectionFilter]=useState('all');
-  const [motion,setMotion]=useState<CharacterMotion>('idle');
-  const [motionPaused,setMotionPaused]=useState(false);
   const [lookFocusRequest,setLookFocusRequest]=useState(0);
   const looksRef=useRef<HTMLElement>(null);
   const available=unlockedGear(game).sort(rarestFirst), companions=unlockedCompanions(game).sort(rarestFirst), equipped=appearanceGear(game);
@@ -66,11 +64,11 @@ export default function WardrobeV3({initialPanel='inventory',onPanelChange,game,
   const change=async(transform:(current:GameState)=>GameState,message:string,sound='confirm')=>{if(saveLock.current)return;saveLock.current=true;setSaving(true);try{await onChange(transform);onNotice(message);if(soundEnabled)playSound(sound)}catch{onNotice('No se ha confirmado el guardado. Reintenta desde el aviso de la app.');if(soundEnabled)playSound('error')}finally{saveLock.current=false;setSaving(false)}};
   return <div className={`wardrobe-v3 ${effectsEnabled?'':'is-quiet'}`} aria-busy={saving}>
     <nav className="collection-subtabs" aria-label="Organizar colección">{panels.map(({id,label,Icon})=><button key={id} aria-pressed={panel===id} onClick={()=>{setPanel(id);setFilter('all')}}><Icon size={15}/>{label}</button>)}</nav>
-    {panel==='looks'&&<>    <div className="wardrobe-stage"><div className="wardrobe-character-preview"><CharacterParty game={game} level={level} motion={motion} animated={effectsEnabled&&!motionPaused}/><div className="character-motion-controls"><div className="character-motion-heading"><span><i/> DALE VIDA</span><button type="button" disabled={!effectsEnabled} aria-label={motionPaused?'Reanudar animación':'Pausar animación'} aria-pressed={motionPaused} onClick={()=>setMotionPaused(value=>!value)}>{motionPaused?<Play size={13}/>:<Pause size={13}/>}</button></div><nav aria-label="Animaciones del personaje">{CHARACTER_MOTIONS.map(item=><button type="button" key={item.id} aria-pressed={motion===item.id} onClick={()=>setMotion(item.id)}>{item.label}</button>)}</nav><p role="status"><span className="motion-feedback-active">{!effectsEnabled?'Activa los efectos de la app para ver sus movimientos.':motionPaused?'Animación en pausa.':CHARACTER_MOTIONS.find(item=>item.id===motion)?.description}</span><span className="motion-feedback-reduced">Pose estática: tu dispositivo tiene activado el movimiento reducido.</span></p></div></div><div className="wardrobe-slots">{(Object.keys(SLOT_LABELS) as (keyof typeof SLOT_LABELS)[]).map(slot=>{
+    {panel==='looks'&&<>    <div className="wardrobe-stage"><div className="wardrobe-character-preview"><CharacterParty game={game} level={level}/></div><div className="wardrobe-slots">{(Object.keys(SLOT_LABELS) as (keyof typeof SLOT_LABELS)[]).map(slot=>{
       const current=equipped.find(item=>item.slot===slot)?.definition;
-      return <div className="wardrobe-slot" data-slot={slot} key={slot}><button className="wardrobe-slot-shortcut" aria-label={`Ver aspectos de ${SLOT_LABELS[slot]}`} onClick={()=>openLooks(slot)}>{current?<GearSprite gearId={current.id}/>:<Shirt size={27}/>}<span className="wardrobe-slot-copy"><small>{SLOT_LABELS[slot]}</small><strong>{current?.name??(slot==='top'?'Tirantes básicos':slot==='bottom'?'Bóxer inicial':'Sin equipar')}</strong></span><ArrowRight size={13}/></button>{current&&<button className="wardrobe-slot-remove" aria-label={`Quitar equipo de ${SLOT_LABELS[slot]}`} onClick={()=>change(value=>equipCosmetic(value,null,slot),'Aspecto guardado. Sigue desbloqueado para siempre.')}>Quitar pieza</button>}</div>;
+      return <div className="wardrobe-slot" data-slot={slot} key={slot}><button className="wardrobe-slot-shortcut" aria-label={`Ver aspectos de ${SLOT_LABELS[slot]}`} onClick={()=>openLooks(slot)}>{current?<GearSprite gearId={current.id}/>:<EmptySlotIcon slot={slot}/>}<span className="wardrobe-slot-copy"><small>{SLOT_LABELS[slot]}</small><strong>{current?.name??(slot==='top'?'Tirantes básicos':slot==='bottom'?'Bóxer inicial':'Sin equipar')}</strong></span><ArrowRight size={13}/></button>{current&&<button className="wardrobe-slot-remove" aria-label={`Quitar equipo de ${SLOT_LABELS[slot]}`} onClick={()=>change(value=>equipCosmetic(value,null,slot),'Aspecto guardado. Sigue desbloqueado para siempre.')}>Quitar pieza</button>}</div>;
     })}<div className="wardrobe-slot wardrobe-slot-companion" data-slot="companion">
-      <button className="wardrobe-slot-shortcut" aria-label="Ver aspectos de Cheesit" onClick={()=>openLooks('companion')}>{companion?<CompanionSprite companionId={companion.id} animated={effectsEnabled}/>:<Heart size={27}/>}<span className="wardrobe-slot-copy"><small>Cheesit</small><strong>{companion?.name??'Sin equipar'}</strong></span><ArrowRight size={13}/></button>
+      <button className="wardrobe-slot-shortcut" aria-label="Ver aspectos de Cheesit" onClick={()=>openLooks('companion')}>{companion?<CompanionSprite companionId={companion.id} animated={effectsEnabled}/>:<EmptySlotIcon slot="companion"/>}<span className="wardrobe-slot-copy"><small>Cheesit</small><strong>{companion?.name??'Sin equipar'}</strong></span><ArrowRight size={13}/></button>
       {companion&&<CheesitPassive companionId={companion.id} status="equipped" compact/>}
       {companion&&<button className="wardrobe-slot-remove" aria-label="Quitar cheesit del armario" onClick={()=>change(value=>equipCompanion(value,null),'Cheesit guardado. Su pasiva se desactiva para las próximas sesiones.')}>Quitar cheesit</button>}
     </div></div></div>
