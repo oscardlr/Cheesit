@@ -5,13 +5,13 @@
 .cosmetic-collection-filters button{display:flex;align-items:center;gap:6px;min-width:0;min-height:36px;padding:8px 11px;border:1px solid #9b78c33b;border-radius:7px;background:#b8a0ff05;color:#bca6ce;font-size:9px}
 .cosmetic-collection-filters button[aria-pressed=true]{border-color:#b8a0ffa0;background:#b8a0ff17;color:#e2d5f2}
 .cosmetic-ability{margin:14px 0 7px;padding:12px;border:1px solid #b8a0ff24;border-radius:8px;background:#b8a0ff07}
-.cosmetic-ability>span{display:flex;align-items:center;gap:6px;color:#d9c6ed;font-size:10px;font-weight:700;line-height:1.5}
-.cosmetic-ability>span>svg{flex-shrink:0;color:#d8ff3e}
-.cosmetic-ability>p{margin:6px 0 0;color:#b7a6c4;font-size:9px;line-height:1.7}
+.cosmetic-ability>summary{display:flex;align-items:center;gap:6px;color:#d9c6ed;font-size:10px;font-weight:700;line-height:1.5}
+.cosmetic-ability>summary>svg{flex-shrink:0;color:#d8ff3e}
+.cosmetic-ability>.ability-details-body>p{margin:6px 0 0;color:#b7a6c4;font-size:11px;line-height:1.7}
 .cosmetic-locked-card .cosmetic-ability{border-color:#9b8aab26;background:#ffffff03}
-.cosmetic-locked-card .cosmetic-ability>span{color:#bcb1c7}
-.cosmetic-locked-card .cosmetic-ability>span>svg{color:#a89bb4}
-.cosmetic-locked-card .cosmetic-ability>p{color:#a195ad}
+.cosmetic-locked-card .cosmetic-ability>summary{color:#bcb1c7}
+.cosmetic-locked-card .cosmetic-ability>summary>svg{color:#a89bb4}
+.cosmetic-locked-card .cosmetic-ability>.ability-details-body>p{color:#a195ad}
 .ability-source{display:block;color:#a894bc;font-size:9px;line-height:1.6;margin:-3px 0 9px}
 @media(max-width:760px){.wardrobe-character-preview>.character-party{width:min(270px,100%)}.cosmetic-collection-filters>span{flex-basis:100%;margin-bottom:3px}.cosmetic-collection-filters button{flex-grow:1;justify-content:center;padding-inline:9px}}
 @media(max-width:360px){.cosmetic-collection-filters{gap:6px}.cosmetic-collection-filters button{flex-basis:calc(50% - 6px);font-size:8px}.cosmetic-collection-filters button:first-of-type{flex-basis:100%}}
