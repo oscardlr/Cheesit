@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { GROUPS } from '@/lib/catalog';
 import { MUSCLES, type MuscleId } from '@/lib/muscles';
 import { newId, validName, type Exercise } from '@/lib/model';
@@ -19,6 +19,16 @@ export default function ExerciseLibrary({ exercises, onSelect, onSave }: {
   const [edit, setEdit] = useState<Exercise | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const editing = edit !== null;
+
+  useLayoutEffect(() => {
+    if (!editing) return;
+    // Sync may finish while a local exercise draft is still open.
+    const keepDraft = (event: Event) => event.preventDefault();
+    window.addEventListener('cheesit:before-account-refresh', keepDraft);
+    return () => window.removeEventListener('cheesit:before-account-refresh', keepDraft);
+  }, [editing]);
+
   const isCustom = (ex: Exercise) => /^[0-9a-f]{8}-/i.test(ex.id);
   const visible = exercises.filter(ex => (archived || !ex.archived) && (group === 'Todos' || ex.group === group) && fold(ex.name).includes(fold(search)));
   async function save(exercise: Exercise, add = false) {
@@ -27,10 +37,15 @@ export default function ExerciseLibrary({ exercises, onSelect, onSave }: {
     setBusy(true); setError('');
     try { const next = { ...exercise, name: exercise.name.trim() }; await onSave(next); setEdit(null); if (add) onSelect?.(next); } catch (cause) { setError(cause instanceof Error ? cause.message : 'No se ha podido guardar. Puedes reintentar.'); } finally { setBusy(false); }
   }
-  const toggleMuscle = (id: MuscleId, key: 'primaryMuscles' | 'secondaryMuscles') => {
-    if (!edit) return;
+  const changeMuscle = (id: MuscleId, key: 'primaryMuscles' | 'secondaryMuscles', checked: boolean) => {
     const other = key === 'primaryMuscles' ? 'secondaryMuscles' : 'primaryMuscles';
-    setEdit({ ...edit, [key]: edit[key]?.includes(id) ? edit[key]?.filter(value => value !== id) : [...(edit[key] ?? []), id], [other]: edit[other]?.filter(value => value !== id) });
+    setEdit(current => {
+      if (!current) return current;
+      const selected = current[key] ?? [];
+      if (!checked) return { ...current, [key]: selected.filter(value => value !== id) };
+      if (selected.includes(id)) return current;
+      return { ...current, [key]: [...selected, id], [other]: current[other]?.filter(value => value !== id) };
+    });
   };
   return <div className={`exercise-library ${styles.library}`}>
     <label>Buscar ejercicio<input type="search" placeholder="Busca por nombre" value={search} onChange={event => setSearch(event.target.value)} /></label>
@@ -47,7 +62,21 @@ export default function ExerciseLibrary({ exercises, onSelect, onSave }: {
       <label>Grupo del ejercicio<select value={edit.group} onChange={event => setEdit({ ...edit, group: event.target.value })}>{GROUPS.map(value => <option key={value}>{value}</option>)}</select></label>
       <label>Modalidad<select value={edit.mode} onChange={event => setEdit({ ...edit, mode: event.target.value as Exercise['mode'] })}><option value="external_load_reps">Carga externa y repeticiones</option><option value="bodyweight_reps">Peso corporal y repeticiones</option></select></label>
       {edit.mode === 'external_load_reps' && <label>Convención de carga<select value={edit.loadConvention ?? 'total'} onChange={event => setEdit({ ...edit, loadConvention: event.target.value as Exercise['loadConvention'] })}><option value="total">Carga total del movimiento</option><option value="per_unit_bilateral">Por mancuerna · dos a la vez</option><option value="per_unit_alternating">Por mancuerna · repeticiones alternas totales</option><option value="per_unit_single">Una mancuerna · repeticiones realizadas</option></select></label>}
-      {(['primaryMuscles', 'secondaryMuscles'] as const).map(key => <fieldset key={key} className="muscle-choices"><legend>{key === 'primaryMuscles' ? 'Músculos principales' : 'Músculos secundarios'}</legend>{MUSCLES.map(muscle => <label className="check-label" key={muscle.id}><input type="checkbox" checked={edit[key]?.includes(muscle.id) ?? false} onChange={() => toggleMuscle(muscle.id, key)} />{muscle.label}</label>)}</fieldset>)}
+      {(['primaryMuscles', 'secondaryMuscles'] as const).map(key => (
+        <fieldset key={key} className="muscle-choices">
+          <legend>{key === 'primaryMuscles' ? 'Músculos principales' : 'Músculos secundarios'}</legend>
+          {MUSCLES.map(muscle => (
+            <label className={`check-label ${styles.muscleChoice}`} key={muscle.id}>
+              <input
+                type="checkbox"
+                checked={edit[key]?.includes(muscle.id) ?? false}
+                onChange={event => changeMuscle(muscle.id, key, event.target.checked)}
+              />
+              <span>{muscle.label}</span>
+            </label>
+          ))}
+        </fieldset>
+      ))}
       <label>Descripción<textarea maxLength={2000} placeholder="Opcional" value={edit.description ?? ''} onChange={event => setEdit({ ...edit, description: event.target.value })} /></label>
       <div className="exercise-actions"><button className="primary" onClick={() => void save(edit, Boolean(onSelect))}>{busy ? 'Guardando…' : onSelect ? 'Guardar y añadir' : 'Guardar ejercicio'}</button><button className="secondary" onClick={() => setEdit(null)}>Cancelar</button>{exercises.some(ex => ex.id === edit.id) && <button className="text-action" onClick={() => void save({ ...edit, archived: !edit.archived })}>{edit.archived ? 'Restaurar ejercicio' : 'Archivar ejercicio'}</button>}</div>
       <p className="muted">Los cambios se aplican a sesiones nuevas. El historial conserva la modalidad, la carga y los músculos registrados.</p>

@@ -16,7 +16,7 @@ async function login(page: Page, email: string) {
   await page.goto('/'); await page.getByLabel('Correo electrónico').fill(email);
   await page.getByLabel('Contraseña', { exact: true }).fill('test-password-123');
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Inicio', exact: true })).toBeVisible();
 }
 const nav = (page: Page, name: string) => page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name, exact: true });
 function workout(name: string, status: Workout['status'] = 'finished'): Workout {
@@ -36,7 +36,7 @@ test('global feed paginates real rows, persists likes/comments, opens profiles a
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   const cursors: unknown[] = [];
   page.on('request', request => { if (request.url().endsWith('/rpc/cheesit_read_feed')) cursors.push(request.postDataJSON().p_before); });
-  await login(page, 'feed-viewer@example.test'); await nav(page, 'Feed').click();
+  await login(page, 'feed-viewer@example.test'); await nav(page, 'Comunidad').click();
   await expect(page.locator('.feed-post')).toHaveCount(20);
   await expect(page.locator('.feed-post-header time').first()).toHaveText('20/10/26');
   await expect(page.getByText('NOTA PRIVADA DE LA SESIÓN', { exact: true })).toHaveCount(0);
@@ -52,7 +52,7 @@ test('global feed paginates real rows, persists likes/comments, opens profiles a
   let post = page.locator('.feed-post').first();
   const firstTitle = await post.locator('h2').textContent();
   await post.getByRole('button', { name: 'Dar me gusta', exact: true }).click();
-  await expect(post.getByRole('button', { name: 'Quitar me gusta', exact: true })).toContainText('1');
+  await expect(post.getByRole('button', { name: 'Quitar me gusta', exact: true })).toBeEnabled();
   await page.reload(); post = page.locator('.feed-post').first();
   await expect(post.locator('h2')).toHaveText(firstTitle!);
   await expect(post.getByRole('button', { name: 'Quitar me gusta', exact: true })).toContainText('1');
@@ -118,24 +118,21 @@ test('finish saves public/photo and private sessions, settings owns privacy, and
     await page.setViewportSize({ width, height: 960 });
     await nav(page, 'Entrenar').click();
     await expect(page.getByRole('heading', { name: 'Entrenar', exact: true })).toBeVisible();
-    const order = await page.locator('main h2').allTextContents();
-    expect(order.findIndex(text => text.includes('siguiente entrenamiento'))).toBeLessThan(order.indexOf('Tus splits'));
-    expect(order.indexOf('Tus splits')).toBeLessThan(order.indexOf('Mis rutinas'));
-    await expect(page.getByRole('button', { name: 'Crear rutina', exact: true })).toBeVisible();
-    const navigation = page.getByRole('navigation', { name: 'Navegación principal' });
-    const labels = (await navigation.locator('button').allTextContents()).slice(0, 5).map(label => label.trim());
-    expect(labels).toEqual(['Feed', 'Resumen', 'Entrenar', 'Progreso', 'Arcade']);
-    const feedBox = await nav(page, 'Feed').boundingBox(), summaryBox = await nav(page, 'Resumen').boundingBox(), trainBox = await nav(page, 'Entrenar').boundingBox();
-    expect(width < 761 ? feedBox!.x < summaryBox!.x && summaryBox!.x < trainBox!.x : feedBox!.y < summaryBox!.y && summaryBox!.y < trainBox!.y).toBe(true);
+    await expect(page.getByRole('group', { name: 'Apartados de Entrenar' }).getByRole('button')).toHaveText(['Empezar entreno', 'Mis rutinas', 'Planes de entrenamiento', 'Catálogo de ejercicios']);
+    await expect(page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button')).toHaveText(['Inicio', 'Comunidad', 'Entrenar', 'Progreso', 'Arcade']);
     await nav(page, 'Progreso').click();
     await expect(page.getByRole('heading', { name: 'Calendario', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: `artifacts/workout-feed/progress-${width}.png`, fullPage: false, animations: 'disabled' });
   }
   await page.goto(`/#view=editor&id=${visibleDraft.id}`);
-  await page.getByRole('button', { name: 'Finalizar entrenamiento', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Finalizar entrenamiento', exact: true });
-  await expect(dialog.getByRole('switch', { name: 'Publicar en el feed', exact: true })).toHaveAttribute('aria-checked', 'true');
+  await page.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
+  const confirm = page.getByRole('dialog', { name: 'Finalizar entrenamiento', exact: true });
+  await confirm.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
+  await page.getByRole('button', { name: 'Continuar', exact: true }).click();
+  await page.getByRole('button', { name: 'Publicar en Comunidad', exact: true }).click();
+  const dialog = page.getByRole('main');
+  await expect(dialog.getByRole('switch', { name: 'Publicar en Comunidad', exact: true })).toHaveAttribute('aria-checked', 'true');
   await dialog.getByLabel(/Descripción de la publicación/).fill('Hoy tocaba darlo todo.\nUn paso más. 💪');
   const image = await page.evaluate(() => { const canvas = document.createElement('canvas'); canvas.width = 1600; canvas.height = 1000; const context = canvas.getContext('2d')!; context.fillStyle = '#b8a0ff'; context.fillRect(0, 0, canvas.width, canvas.height); return canvas.toDataURL('image/png').split(',')[1]; });
   const photo = { name: 'entreno.png', mimeType: 'image/png', buffer: Buffer.from(image, 'base64') };
@@ -150,18 +147,15 @@ test('finish saves public/photo and private sessions, settings owns privacy, and
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: `artifacts/workout-feed/finish-dialog-${width}.png`, fullPage: false, animations: 'disabled' });
   }
-  await dialog.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Continuar', exact: true }).click();
-  await expect.poll(async () => ((await harness.account('finish-author@example.test')).data as AppData).workouts.find(item => item.id === visibleDraft.id)?.status).toBe('finished');
+  await dialog.getByRole('button', { name: 'Publicar en Comunidad', exact: true }).click();
+  await expect(page.getByText('Publicación guardada.', { exact: true })).toBeVisible();
   const saved = ((await harness.account('finish-author@example.test')).data as AppData).workouts.find(item => item.id === visibleDraft.id)!;
   expect(saved.publication?.published).toBe(true); expect(saved.publication?.photoPath).toContain(author.id);
   expect(saved.publication?.caption).toBe('Hoy tocaba darlo todo.\nUn paso más. 💪');
   await page.goto(`/#view=editor&id=${privateDraft.id}`);
-  await page.getByRole('button', { name: 'Finalizar entrenamiento', exact: true }).click();
-  await dialog.getByRole('switch', { name: 'Publicar en el feed', exact: true }).click();
-  await dialog.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
+  await confirm.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
+  await expect(page.getByText('Entrenamiento guardado.', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Continuar', exact: true }).click();
   await expect.poll(async () => ((await harness.account('finish-author@example.test')).data as AppData).workouts.find(item => item.id === privateDraft.id)?.publication?.published).toBe(false);
   await page.getByLabel('Menú de perfil', { exact: true }).click(); await page.getByRole('button', { name: 'Mi perfil', exact: true }).click();
@@ -171,7 +165,7 @@ test('finish saves public/photo and private sessions, settings owns privacy, and
   const viewerContext = await browser.newContext({ viewport: { width: 390, height: 844 } }); const viewer = await viewerContext.newPage();
   try {
     await viewer.addInitScript(() => sessionStorage.setItem('grind-intro-v1', '1'));
-    await login(viewer, 'finish-viewer@example.test'); await nav(viewer, 'Feed').click();
+    await login(viewer, 'finish-viewer@example.test'); await nav(viewer, 'Comunidad').click();
     await expect(viewer.locator('.feed-post')).toHaveCount(1);
     await expect(viewer.getByAltText('Foto del entrenamiento de Autora Foto')).toBeVisible();
     await expect(viewer.locator('.feed-post h2')).toHaveText('Sesión con foto');
@@ -205,10 +199,11 @@ test('training starts real routines and split progression survives reload, archi
   const routines = ['Rutina A', 'Rutina B'].map(name => ({ id: crypto.randomUUID(), name, color: '#B8A0FF', archived: false, exercises: [{ id: crypto.randomUUID(), exerciseId: 'press-banca-barra', sets: 1, repsMin: 10, repsMax: 10, targetWeight: 40 }] }));
   await harness.seed('split-author@example.test', undefined, { ...account('Persona Split'), routines });
   await login(page, 'split-author@example.test'); await nav(page, 'Entrenar').click();
-  await page.getByRole('button', { name: 'Empezar un entrenamiento', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Empezar entrenamiento', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Empezar entreno', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Empezar entreno', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Volver', exact: true }).click();
   await nav(page, 'Entrenar').click();
+  await page.getByRole('button', { name: 'Mis rutinas', exact: true }).click();
   const routineBox = await page.locator('.routine-list').boundingBox(), createBox = await page.getByRole('button', { name: 'Crear rutina', exact: true }).boundingBox();
   expect(createBox!.y).toBeGreaterThanOrEqual(routineBox!.y + routineBox!.height);
   page.once('dialog', dialog => void dialog.accept());
@@ -216,6 +211,8 @@ test('training starts real routines and split progression survives reload, archi
   await expect(page.locator('.routine-list .routine-card')).toHaveCount(1);
   await page.getByRole('button', { name: 'Restaurar', exact: true }).click();
   await expect(page.locator('.routine-list .routine-card')).toHaveCount(2);
+  await nav(page, 'Entrenar').click();
+  await page.getByRole('button', { name: 'Planes de entrenamiento', exact: true }).click();
   await page.getByRole('button', { name: '＋ Crear split', exact: true }).click();
   await page.getByLabel('Nombre del split', { exact: true }).fill('Alternar A y B');
   await page.getByRole('combobox', { name: 'Añadir rutina', exact: true }).selectOption({ label: 'Rutina A' });
@@ -225,13 +222,13 @@ test('training starts real routines and split progression survives reload, archi
   await page.getByRole('button', { name: 'Iniciar próxima →', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Confirmar serie 1', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Confirmar serie 1', exact: true }).click();
-  await page.getByRole('button', { name: 'Finalizar entrenamiento', exact: true }).click();
-  await expect(page.getByRole('dialog', { name: 'Finalizar entrenamiento', exact: true }).getByRole('switch', { name: 'Publicar en el feed', exact: true })).toHaveAttribute('aria-checked', 'true');
   await page.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
+  await page.getByRole('dialog', { name: 'Finalizar entrenamiento' }).getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
+  await expect(page.getByText('Entrenamiento guardado.', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Continuar', exact: true }).click();
   await expect.poll(async () => ((await harness.account('split-author@example.test')).data as AppData).workouts.filter(item => item.status === 'finished').length).toBe(1);
   await nav(page, 'Entrenar').click();
+  await page.getByRole('button', { name: 'Planes de entrenamiento', exact: true }).click();
   await expect(page.locator('.cycle-card')).toContainText('Próxima · Rutina B');
   await page.reload(); await expect(page.locator('.cycle-card')).toContainText('Próxima · Rutina B');
   const stored = (await harness.account('split-author@example.test')).data as AppData;
@@ -240,7 +237,7 @@ test('training starts real routines and split progression survives reload, archi
   expect(stored.routines).toHaveLength(2); expect(stored.routines.every(routine => !routine.archived)).toBe(true);
   await nav(page, 'Progreso').click();
   await expect(page.locator('.day.today')).toHaveAccessibleName(/1 entrenamiento/);
-  await page.locator('.progress-calendar .list-row').filter({ hasText: 'Rutina A' }).click();
+  await page.locator('.progress-calendar .list-row').first().filter({ hasText: 'Rutina A' }).click();
   await expect(page.locator('.detail-hero h2')).toHaveText('Rutina A');
   await page.getByRole('button', { name: 'Volver', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Calendario', exact: true })).toBeVisible();

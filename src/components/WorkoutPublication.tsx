@@ -47,7 +47,7 @@ export default function WorkoutPublication({ owner, workoutId, value, onChange, 
       onChange({ ...value, photoPath: path });
       return true;
     } catch (reason) {
-      if (alive.current) setError(reason instanceof Error ? reason.message : 'No se ha podido subir la foto. Puedes guardar el entrenamiento sin foto.');
+      if (alive.current) setError(reason instanceof Error ? reason.message : 'No se ha podido subir la foto. Puedes publicar el entrenamiento sin foto.');
       return false;
     } finally {
       if (alive.current) { setPreparing(false); onBusy(false); }
@@ -57,8 +57,8 @@ export default function WorkoutPublication({ owner, workoutId, value, onChange, 
   const closeCamera = () => { setCameraOpen(false); requestAnimationFrame(() => { if (alive.current) cameraButton.current?.focus(); }); };
 
   return <section className="workout-publication" aria-label="Publicación del entrenamiento">
-    <div className="workout-publish-setting"><div><strong><Globe size={18}/>Publicar en el feed</strong><p>{owner ? 'Se publicará al guardar, según la privacidad de tu perfil en Ajustes. Tus notas siempre son privadas.' : 'Necesitas una cuenta para publicar. Tu entrenamiento se guardará en este navegador.'}</p></div>
-      <button type="button" role="switch" className="superset-switch workout-publish-switch" aria-label="Publicar en el feed" aria-checked={!!owner && value.published} disabled={!owner || disabled || preparing || cameraOpen} onClick={() => onChange({ ...value, published: !value.published })}><span className="superset-switch-track" aria-hidden="true"><span/></span><span className="superset-switch-state" aria-hidden="true">{owner && value.published ? 'Sí' : 'No'}</span></button>
+    <div className="workout-publish-setting"><div><strong><Globe size={18}/>Publicar en Comunidad</strong><p>{owner ? 'La publicación respeta la privacidad de tu perfil en Ajustes. Tus notas siempre son privadas.' : 'Necesitas una cuenta para publicar. Tu entrenamiento se guardará en este navegador.'}</p></div>
+      <button type="button" role="switch" className="superset-switch workout-publish-switch" aria-label="Publicar en Comunidad" aria-checked={!!owner && value.published} disabled={!owner || disabled || preparing || cameraOpen} onClick={() => onChange({ ...value, published: !value.published })}><span className="superset-switch-track" aria-hidden="true"><span/></span><span className="superset-switch-state" aria-hidden="true">{owner && value.published ? 'Sí' : 'No'}</span></button>
     </div>
     <div className="workout-caption-setting"><label htmlFor={captionId}>Descripción de la publicación <small>Opcional</small></label><textarea id={captionId} rows={3} maxLength={1000} placeholder="Escribe una descripción" value={value.caption ?? ''} disabled={!owner || disabled || preparing || cameraOpen} onChange={event => onChange({ ...value, caption: event.target.value })}/><div><p>Este texto aparecerá en tu publicación.</p><small>{value.caption?.length ?? 0}/1000</small></div></div>
     <div className="workout-photo-setting"><strong><Camera size={18}/>Foto del entrenamiento <small>Opcional</small></strong>

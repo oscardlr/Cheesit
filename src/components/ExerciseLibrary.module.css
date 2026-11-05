@@ -58,3 +58,17 @@
     margin-left: auto;
   }
 }
+
+.library .muscleChoice {
+  display: flex;
+  min-height: 44px;
+  margin: 0;
+  padding: 4px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.muscleChoice input {
+  margin: 0;
+  padding: 0;
+}

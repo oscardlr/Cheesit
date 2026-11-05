@@ -7,9 +7,15 @@ test.skip(process.env.PLAYWRIGHT_PRODUCTION !== '1', 'Offline caching is verifie
 async function prepare(page: Page) {
   await page.addInitScript(() => { sessionStorage.setItem('grind-intro-v1', '1'); sessionStorage.setItem('cheesit-access-mode', 'guest'); localStorage.setItem('entrenos-experience-v1', JSON.stringify({ effects: false, sound: false })); });
 }
-async function startDraft(page: Page) {
-  await page.locator('.topbar').getByRole('button', { name: 'Empezar entrenamiento', exact: true }).click();
-  await page.getByRole('main').getByRole('button', { name: 'Empezar entrenamiento', exact: true }).click();
+async function startDraft(page: Page, previousBuild = false) {
+  if (previousBuild) {
+    await page.locator('.topbar').getByRole('button', { name: 'Empezar entrenamiento', exact: true }).click();
+    await page.getByRole('main').getByRole('button', { name: 'Empezar entrenamiento', exact: true }).click();
+  } else {
+    await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Entrenar', exact: true }).click();
+    await page.getByRole('button', { name: 'Empezar entreno', exact: true }).click();
+    await page.getByRole('main').getByRole('button', { name: 'Empezar sin rutina', exact: true }).click();
+  }
   await page.getByRole('button', { name: /Añadir ejercicio/ }).click();
   await page.getByRole('dialog').getByRole('button', { name: /Press de banca con barra/ }).click();
   await page.getByLabel('Carga en kg, serie 1 de Press de banca con barra').fill('12,5');
@@ -18,7 +24,7 @@ async function startDraft(page: Page) {
 async function checkDraft(page: Page, expectedReps = '0') {
   const weight = page.getByLabel('Carga en kg, serie 1 de Press de banca con barra');
   const view = new URLSearchParams(new URL(page.url()).hash.slice(1)).get('view');
-  if (view !== 'editor') await page.getByRole('button', { name: 'Continuar entrenamiento', exact: true }).click();
+  if (view !== 'editor') await page.getByRole('button', { name: 'Continuar entreno', exact: true }).click();
   await expect(weight).toHaveValue('12,5');
   await expect(page.getByLabel('Repeticiones, serie 1 de Press de banca con barra')).toHaveValue(expectedReps);
   await expect(page.getByRole('button', { name: 'Confirmar serie 1', exact: true })).toBeEnabled();
@@ -30,11 +36,11 @@ test('verified offline shell recovers an incomplete decimal draft after offline 
   await page.goto('/');
   await expect(page.locator('.offline-shell')).toContainText('Disponible sin conexión', { timeout: 30000 });
   await startDraft(page);
-  await page.getByRole('navigation').getByRole('button', { name: 'Resumen', exact: true }).click();
+  await page.getByRole('navigation').getByRole('button', { name: 'Inicio', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Guardado en este navegador');
   await context.setOffline(true);
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Inicio', exact: true })).toBeVisible();
   await checkDraft(page);
   const thumbnail = page.locator('.exercise-head img');
   await expect(thumbnail).toBeVisible();
@@ -96,7 +102,7 @@ test('a second production build waits for consent, flushes the latest draft and 
     await page.getByRole('button', { name: 'Guardar rutina', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Entrenar', exact: true })).toBeVisible();
     console.info('Offline update: routine saved; preparing pending session.');
-    await startDraft(page);
+    await startDraft(page, true);
     // This change is intentionally made immediately before activation, inside the autosave debounce.
     await page.getByLabel('Repeticiones, serie 1 de Press de banca con barra').fill('1001');
     await page.getByRole('button', { name: 'Guardar y actualizar', exact: true }).click();

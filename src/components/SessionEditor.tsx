@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, Check, Plus, Settings2, Timer } from 'lucide-react';
 import { copyPreviousSets, newSet, parseWeight, validSet, type Workout, type WorkoutExercise, type WorkoutSet } from '@/lib/model';
-import WorkoutPublication from './WorkoutPublication';
 import { workoutCopySessions } from '@/lib/metrics';
 import { effectiveLoad, exerciseLoadConvention, type AthleteProfile } from '@/lib/strength';
 import SupersetControl from './SupersetControl';
@@ -16,9 +15,8 @@ import type { GameState } from '@/lib/game';
 
 const elapsed = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 
-export default function SessionEditor({ workout, history, profile, game, historical, saveState, message, busy, today, onChange, onConfirm, onFinish, onAdd, onBack, onAbandon, onProgress, onSubstitute, accountOwner, finishPending }: {
+export default function SessionEditor({ workout, history, profile, game, historical, saveState, message, busy, today, onChange, onConfirm, onFinish, onAdd, onBack, onAbandon, onProgress, onSubstitute, finishPending }: {
   finishPending?: boolean;
-  accountOwner?: string;
   workout: Workout; history: Workout[]; profile: AthleteProfile; game: GameState; historical: boolean;
   saveState: string; message: string; busy: boolean; today: string;
   onChange: (workout: Workout) => void; onConfirm: (exercise: WorkoutExercise, set: WorkoutSet) => void;
@@ -27,11 +25,8 @@ export default function SessionEditor({ workout, history, profile, game, histori
 }) {
   const [now, setNow] = useState(() => Date.now());
   const [finalizing, setFinalizing] = useState(false);
-  const [photoBusy, setPhotoBusy] = useState(false);
-  const [cameraOpen, setCameraOpen] = useState(false);
   const finishDialog = useRef<HTMLDialogElement>(null);
   const finishButton = useRef<HTMLButtonElement>(null);
-  const publication = workout.publication ?? { published: !historical && !!accountOwner };
   // A failed local write must leave the page's retry/export controls reachable.
   useEffect(() => { if (finishPending) setFinalizing(false); }, [finishPending]);
   useEffect(() => {
@@ -43,14 +38,14 @@ export default function SessionEditor({ workout, history, profile, game, histori
     return () => { dialog?.close(); document.body.style.overflow = overflow; finishButton.current?.focus(); };
   }, [finalizing]);
   useEffect(() => {
-    if (!photoBusy && !finalizing && !cameraOpen) return;
+    if (!finalizing) return;
     const guard = (event: Event) => event.preventDefault();
     const unload = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
     window.addEventListener('cheesit:before-profile-navigation', guard);
     window.addEventListener('cheesit:before-update', guard);
     window.addEventListener('beforeunload', unload);
     return () => { window.removeEventListener('cheesit:before-profile-navigation', guard); window.removeEventListener('cheesit:before-update', guard); window.removeEventListener('beforeunload', unload); };
-  }, [photoBusy, finalizing, cameraOpen]);
+  }, [finalizing]);
   useEffect(() => { const tick = window.setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(tick); }, []);
   const change = (next: Workout) => onChange({ ...next, updatedAt: new Date().toISOString() });
   const changeExercise = (id: string, update: (value: WorkoutExercise) => WorkoutExercise) => change({ ...workout, exercises: workout.exercises.map(ex => ex.id === id ? update(ex) : ex) });
@@ -66,7 +61,7 @@ export default function SessionEditor({ workout, history, profile, game, histori
   return <>
     <header className="page-header"><button className="icon-button back" aria-label="Volver" onClick={onBack}>‹</button><h1>{historical ? 'Editar entrenamiento' : 'Entrenamiento'}</h1><span className="header-spacer" /></header>
     <section className="session-compact" aria-label="Estado de la sesión"><div><strong>{confirmed} / {planned} series</strong><span>{historical&&(!workout.startedAt||!workout.finishedAt)?'Duración no registrada':`Duración · ${elapsed(duration)}`}</span></div><div className="progress-track" role="progressbar" aria-label="Series completadas" aria-valuenow={confirmed} aria-valuemin={0} aria-valuemax={planned||1}><span style={{ width: `${planned ? confirmed / planned * 100 : 0}%` }} /></div></section>
-    <SessionCheesitPassive workout={workout}/><SessionAbilityNote workout={workout} game={game} /><fieldset className="session-fields" disabled={busy || photoBusy}>
+    <SessionCheesitPassive workout={workout}/><SessionAbilityNote workout={workout} game={game} /><fieldset className="session-fields" disabled={busy}>
     {!historical && <section className="rest-timer rest-compact" aria-label="Descanso"><div className="rest-main"><Timer size={19} /><strong>{rest ? (remaining ? elapsed(remaining) : 'Descanso completado') : `Descanso · ${elapsed(workout.defaultRestSeconds ?? 90)}`}</strong><button className="secondary" onClick={() => startRest(workout.defaultRestSeconds ?? 90)}>Iniciar descanso</button></div>
       {rest && <div className="rest-running-actions">{remaining > 0 && <button className="text-action" onClick={() => change({ ...workout, restTimer: { ...rest, remainingSeconds: remaining, endsAt: rest.endsAt ? null : new Date(Date.now() + remaining * 1000).toISOString() } })}>{rest.endsAt ? 'Pausar' : 'Reanudar'}</button>}<button className="text-action" onClick={() => startRest(Math.min(3600, remaining + 30))}>+30 s</button></div>}
       <details><summary>Ajustar descanso</summary><label>Segundos de descanso<input type="number" min={0} max={3600} step={15} value={workout.defaultRestSeconds ?? 90} onChange={event => { const seconds = Number(event.target.value); if (Number.isInteger(seconds) && seconds >= 0 && seconds <= 3600) change({ ...workout, defaultRestSeconds: seconds }); }} /></label><label className="check-label"><input type="checkbox" checked={workout.autoRest === true} onChange={event => change({ ...workout, autoRest: event.target.checked })} /> Iniciar al completar una serie o ronda de superserie</label><p className="muted">El contador continúa al cambiar de pantalla o volver a la app.</p></details>
@@ -100,20 +95,18 @@ export default function SessionEditor({ workout, history, profile, game, histori
       <label>Fecha<input type="date" max={today} value={workout.date} onChange={event => change({ ...workout, date: event.target.value })} /></label>
       <label>Notas de la sesión<textarea maxLength={2000} placeholder="Opcional" value={workout.notes ?? ''} onChange={event => change({ ...workout, notes: event.target.value })} /></label>
     </div></details>
-    {historical && <WorkoutPublication owner={accountOwner} workoutId={workout.id} value={publication} onChange={value => change({ ...workout, publication: value })} onBusy={setPhotoBusy} onCameraOpen={setCameraOpen} disabled={busy}/>}
     {message && <p className="error" role="alert">{message}</p>}
-    <button ref={finishButton} className="primary wide finish" data-ready={confirmed>0} disabled={cameraOpen} onClick={() => {
+    <button ref={finishButton} className="primary wide finish" data-ready={confirmed>0} onClick={() => {
       if (historical || !workout.exercises.some(exercise => exercise.sets.some(set => set.confirmed && validSet(set, exercise.mode)))) onFinish();
       else setFinalizing(true);
-    }}>{busy ? 'Guardando…' : historical ? 'Guardar cambios' : 'Finalizar entrenamiento'}</button>
+    }}>{busy ? 'Guardando…' : historical ? 'Guardar cambios' : 'Guardar entrenamiento'}</button>
     {!historical && <button className="danger-link" onClick={onAbandon}>Abandonar borrador</button>}
     </fieldset>
-    {finalizing && <dialog ref={finishDialog} className="finish-dialog" aria-labelledby="finish-dialog-title" onCancel={event => { event.preventDefault(); if (!busy && !photoBusy) setFinalizing(false); }}>
-      <header><div><span className="eyebrow">CADA REP CUENTA</span><h2 id="finish-dialog-title">Finalizar entrenamiento</h2></div><button type="button" className="icon-button" aria-label="Volver al entrenamiento" disabled={busy || photoBusy} onClick={() => setFinalizing(false)}>×</button></header>
-      <p>{workout.name} · {confirmed} {confirmed === 1 ? 'serie completada' : 'series completadas'}. Guarda tu sesión y elige cómo compartirla.</p>
-      <fieldset disabled={busy || photoBusy}><WorkoutPublication owner={accountOwner} workoutId={workout.id} value={publication} onChange={value => change({ ...workout, publication: value })} onBusy={setPhotoBusy} onCameraOpen={setCameraOpen} disabled={busy}/></fieldset>
+    {finalizing && <dialog ref={finishDialog} className="finish-dialog" aria-labelledby="finish-dialog-title" onCancel={event => { event.preventDefault(); if (!busy) setFinalizing(false); }}>
+      <header><div><span className="eyebrow">CADA REP CUENTA</span><h2 id="finish-dialog-title">Finalizar entrenamiento</h2></div><button type="button" className="icon-button" aria-label="Volver al entrenamiento" disabled={busy} onClick={() => setFinalizing(false)}>×</button></header>
+      <p>{workout.name} · {confirmed} {confirmed === 1 ? 'serie completada' : 'series completadas'}. Guarda la sesión en tu historial.</p>
       {message && <p className="error" role="alert">{message}</p>}
-      <footer><button type="button" className="secondary" disabled={busy || photoBusy} onClick={() => setFinalizing(false)}>Seguir entrenando</button><button type="button" className="primary" disabled={busy || photoBusy || cameraOpen} onClick={onFinish}>{busy ? 'Guardando…' : 'Guardar entrenamiento'}</button></footer>
+      <footer><button type="button" className="secondary" disabled={busy} onClick={() => setFinalizing(false)}>Seguir entrenando</button><button type="button" className="primary" disabled={busy} onClick={onFinish}>{busy ? 'Guardando…' : 'Guardar entrenamiento'}</button></footer>
     </dialog>}
   </>;
 }

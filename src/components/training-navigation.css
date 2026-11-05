@@ -39,3 +39,66 @@
   .training-splits .starter-card > strong { font-size: 25px; }
   .training-split-action { font-size: 11px; }
 }
+
+.section-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 900px;
+  margin-bottom: 24px;
+}
+.section-card {
+  min-height: 124px;
+  position: relative;
+  display: grid;
+  justify-items: start;
+  align-content: space-between;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: linear-gradient(145deg, #37284a, var(--card));
+  color: var(--text);
+  text-align: left;
+}
+.section-card:hover { border-color: var(--purple); }
+.section-card:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+.section-card > svg:first-child { color: var(--lime); }
+.section-card > svg:last-child { position: absolute; right: 13px; top: 15px; color: var(--purple); }
+.section-card > strong { max-width: 100%; overflow-wrap: anywhere; font-size: clamp(14px, 2.3vw, 21px); line-height: 1.2; }
+
+.ux-shell.product-redesign .training-navigation button.active {
+  font-weight: 750;
+  box-shadow: inset 3px 0 var(--lime);
+}
+.ux-shell.product-redesign .training-navigation .nav-training {
+  border-color: #d8ff3e80;
+  color: var(--lime);
+  background: #d8ff3e14;
+  font-weight: 700;
+}
+.home-secondary-links, .progress-views { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 24px; }
+.home-secondary-links { margin-top: 18px; }
+.progress-views button {
+  min-height: 44px;
+  padding: 9px 13px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--card);
+}
+.progress-views button[aria-current='page'] {
+  font-weight: 750;
+  color: var(--lime);
+  border-bottom: 3px solid var(--lime);
+}
+.weekly-goal-editor { margin-bottom: 24px; }
+.screen-progress .view-body { margin-top: 24px; }
+
+@media (max-width: 760px) {
+  .section-cards { gap: 9px; }
+  .section-card { padding: 12px; min-height: 110px; }
+  .ux-shell.product-redesign .training-navigation button.active { box-shadow: inset 0 -3px var(--lime); }
+  .ux-shell.product-redesign[class*=screen-] .app-content { padding-bottom: calc(130px + env(safe-area-inset-bottom)); }
+  .ux-shell.product-redesign .arcade-redesign .arcade-header h1 { font-size: clamp(25px, 7vw, 40px); overflow-wrap: anywhere; }
+  .session-fields .set-row input { font-size: 16px; }
+}

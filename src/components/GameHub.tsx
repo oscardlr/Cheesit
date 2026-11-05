@@ -1,35 +1,36 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type Dispatch, type SetStateAction } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { ArrowRight, Award, Box, Check, ChevronRight, Clock3, Coins, Crown, Dumbbell, Footprints, Gift, Heart, LockKeyhole, PackageOpen, Shirt, Sparkles, Target, Trophy, TrendingUp, Zap } from 'lucide-react';
 import type { AppData } from '@/lib/model';
 import { CRATES, RARITIES, REWARD_CATEGORY_LABEL, gameProgress, equipCosmetic, equipCompanion, gameBalance, gameCreditStatus, getAchievements, getLevelCrates, getMissions, normalizeGame, progressionSeasons, openCrate, openLevelCrate, type GameState, type InventoryItem, type Rarity } from '@/lib/game';
-import { muscleActivity, type MuscleActivity } from '@/lib/muscles';
-import { nextWeeklyResetMadrid, todayMadrid } from '@/lib/dates';
-import { characterLevelThreshold, seasonBounds, seasonLabel } from '@/lib/seasons';
+import { nextWeeklyResetMadrid } from '@/lib/dates';
+import { characterLevelThreshold, seasonBounds } from '@/lib/seasons';
 import { levelRank } from '@/lib/rewards';
 import { playSound } from '@/lib/sound';
 import PixelAthlete from './PixelAthlete';
 import CharacterAvatar, { CharacterParty } from './CharacterAvatar';
-import BodyFigure, { activityColor } from './MuscleMap';
-import ArcadeOverview from './ArcadeOverview';
 import { ArrowLeft } from 'lucide-react';
 import WardrobeV3 from './WardrobeV3';
 import CrateOpening from './CrateOpening';
 import CrateArtwork from './CrateArtwork';
 import './game-hub.css';
+import SectionCards from './SectionCards';
 import filterStyles from './ExerciseLibrary.module.css';
 import { formatCreditBalance, TEST_CREDITS } from '@/lib/test-credits';
 import { acknowledgeQuoteConversions, quoteConversionNotice } from '@/lib/quote-conversion';
 import type { Mission } from '@/lib/objectives';
 
-type Props = { data: AppData; onChange: Dispatch<SetStateAction<AppData>>; today: string; effectsEnabled: boolean; soundEnabled: boolean; initialTab?: Tab; onTabChange?: (tab: Tab) => void; onPersist: (next: AppData) => Promise<void>; onSettings?: () => void };
-export type ArcadeView = 'overview' | 'goals' | 'body' | 'crates' | 'collection' | 'ascent' | 'looks' | 'abilities';
+type Props = { data: AppData; today: string; effectsEnabled: boolean; soundEnabled: boolean; initialTab?: Tab; onTabChange?: (tab: Tab) => void; onPersist: (next: AppData) => Promise<void>; onSettings?: () => void };
+export type ArcadeView = 'overview' | 'goals' | 'crates' | 'collection' | 'ascent' | 'looks' | 'abilities';
 type Tab = ArcadeView;
-const tabs: { id: Tab; label: string; Icon: typeof Target }[] = [
-  { id: 'goals', label: 'Objetivos', Icon: Target }, { id: 'body', label: 'Cuerpo', Icon: Heart },
-  { id: 'crates', label: 'Cofres', Icon: Box }, { id: 'collection', label: 'Colección', Icon: Sparkles }, { id: 'ascent', label: 'Ascenso', Icon: TrendingUp },
-];
+const destinations = [
+  { id: 'looks', label: 'Personaje', icon: Shirt },
+  { id: 'crates', label: 'Cofres y créditos', icon: Box },
+  { id: 'goals', label: 'Retos y logros', icon: Target },
+  { id: 'ascent', label: 'Nivel y temporadas', icon: TrendingUp },
+] as const;
+
 const fmt = (value: number) => new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(value);
 const rarityStyle = (rarity: Rarity): CSSProperties => ({ '--rarity': RARITIES[rarity].color } as CSSProperties);
 const percent = (current: number, target: number) => Math.min(100, Math.max(0, current / target * 100));
@@ -39,24 +40,19 @@ function ProgressBar({ value, label }: { value: number; label: string }) {
 }
 
 
-export default function GameHub({ data, onChange, today, effectsEnabled, soundEnabled, initialTab = 'overview', onTabChange, onPersist, onSettings }: Props) {
+export default function GameHub({ data, today, effectsEnabled, soundEnabled, initialTab = 'overview', onTabChange, onPersist, onSettings }: Props) {
   const [tab, setTab] = useState<Tab>(initialTab);
   const headingRef=useRef<HTMLHeadingElement>(null);
   const previousTab=useRef(initialTab);
   useEffect(()=>{if(previousTab.current===tab)return;previousTab.current=tab;window.scrollTo({top:0,behavior:'instant'});if(document.activeElement?.getAttribute('role')!=='tab')headingRef.current?.focus({preventScroll:true})},[tab]);
   const activeTab = tab === 'looks' || tab === 'abilities' ? 'collection' : tab;
-  const [bodySide, setBodySide] = useState<'front'|'back'>('front');
   const selectTab = (next: Tab) => { setTab(next); onTabChange?.(next); };
-  const selectMuscle = (id: string) => { setSelectedMuscle(id); if (['back','triceps','glutes','hamstrings'].includes(id)) setBodySide('back'); else if (['chest','biceps','abs','quads'].includes(id)) setBodySide('front'); };
-  const [monthChoice, setMonthChoice] = useState('');
   const [yearChoice, setYearChoice] = useState('');
-  const selectedMonth = monthChoice || today.slice(0, 7);
   const selectedYear = yearChoice || today.slice(0, 4);
-  const [selectedMuscle, setSelectedMuscle] = useState('chest');
   const [missionFilter, setMissionFilter] = useState<'all' | 'pending' | 'rewarded'>('all');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
-  const [openingVisible, setOpeningVisible] = useState(Boolean(data.game?.pendingOpening));
+  const [openingVisible, setOpeningVisible] = useState(false);
   const [lastPrize, setLastPrize] = useState<InventoryItem | null>(null);
   const lock = useRef(false);
   const mounted = useRef(true);
@@ -68,14 +64,10 @@ export default function GameHub({ data, onChange, today, effectsEnabled, soundEn
   const currentProgress = useMemo(() => gameProgress(game, data.workouts, data.profile, today.slice(0,4)), [game, data.workouts, data.profile, today]);
   const missions = useMemo(() => getMissions(data.workouts, today, game), [data.workouts, today, game]);
   const achievements = useMemo(() => getAchievements(data.workouts, data.profile, game), [data.workouts, data.profile, game]);
-  const muscles = useMemo(() => muscleActivity(data.workouts, today, selectedMonth, data.profile), [data.workouts, today, selectedMonth, data.profile]);
-  const overviewMuscles=useMemo(()=>selectedMonth===today.slice(0,7)?muscles:muscleActivity(data.workouts,today,today.slice(0,7),data.profile),[muscles,selectedMonth,today,data.workouts,data.profile]);
   const levelCrates = useMemo(() => getLevelCrates(game, data.workouts, data.profile, selectedYear), [game, data.workouts, data.profile, selectedYear, today]);
   const years = useMemo(() => progressionSeasons(game, data.workouts, today.slice(0, 4)), [game, data.workouts, today]);
-  const months = [...new Set([today.slice(0, 7), ...data.workouts.filter(workout => workout.status !== 'deleted').map(workout => workout.date.slice(0, 7)), ...(game.missionRewards ?? []).map(reward => todayMadrid(new Date(reward.awardedAt)).slice(0,7)), ...game.transactions.map(transaction => todayMadrid(new Date(transaction.createdAt)).slice(0,7))])].sort().reverse();
   const allLevelCrates = useMemo(() => years.flatMap(year => getLevelCrates(game, data.workouts, data.profile, year)), [years, game, data.workouts, data.profile, today]);
   const conversionNotice = quoteConversionNotice(game);
-  const selected = muscles.find(muscle => muscle.id === selectedMuscle) ?? muscles[0];
   const inventory = game.inventory.filter(item => (!item.sold && !item.quoteId) && item.id !== game.pendingOpening?.itemId);
   useEffect(()=>setTab(initialTab),[initialTab]);
   useEffect(() => { mounted.current = true; try { if (sessionStorage.getItem('grind-open-wardrobe')) { selectTab('looks'); sessionStorage.removeItem('grind-open-wardrobe'); } } catch {} return () => { mounted.current = false; }; }, []);
@@ -115,25 +107,33 @@ export default function GameHub({ data, onChange, today, effectsEnabled, soundEn
 
   return <div className={`game-hub arcade-redesign view-${activeTab} ${effectsEnabled ? '' : 'game-hub-quiet'}`}>
     <header className="arcade-header">
-      <div>{tab==='overview'?<span className="arcade-kicker"><span/>CADA REP DESBLOQUEA ALGO</span>:<button className="arcade-back" onClick={()=>selectTab('overview')}><ArrowLeft size={15}/>Inicio de Arcade</button>}<h1 ref={headingRef} tabIndex={-1} aria-label="Zona arcade">Arcade<span className="arcade-title-dot">.</span></h1></div>
+      <div>{tab==='overview'?<span className="arcade-kicker"><span/>CADA REP DESBLOQUEA ALGO</span>:<button className="arcade-back" onClick={()=>selectTab('overview')}><ArrowLeft size={15}/>Inicio de Arcade</button>}<h1 ref={headingRef} tabIndex={-1} >{tab==='overview'?'Arcade':tab==='goals'?'Retos y logros':tab==='crates'?'Cofres y créditos':tab==='ascent'?'Nivel y temporadas':'Personaje'}<span className="arcade-title-dot" aria-hidden="true">.</span></h1></div>
       <button className="arcade-wallet" onClick={()=>selectTab('crates')} title={`${fmt(balance)} créditos disponibles`} aria-label={`${fmt(balance)} créditos disponibles`}><Coins size={20}/><span><strong>{formatCreditBalance(balance)}</strong><small>créditos</small></span><ArrowRight size={16}/></button>
     </header>
     {TEST_CREDITS>0&&<p className="arcade-notice test-credit-banner">MODO PRUEBAS · {new Intl.NumberFormat('es-ES').format(TEST_CREDITS)} créditos temporales extra. Se retirarán para la versión final.</p>}
-    <nav hidden={tab==='overview'} className="arcade-tabs" role="tablist" aria-label="Apartados de la zona arcade" onKeyDown={event => {
-      if (busy || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-      event.preventDefault();
-      const index = tabs.findIndex(item => item.id === activeTab);
-      const target = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
-      selectTab(tabs[target].id); document.getElementById(`arcade-tab-${tabs[target].id}`)?.focus();
-    }}>{tabs.map(({ id, label, Icon }) => <button key={id} id={`arcade-tab-${id}`} role="tab" tabIndex={activeTab === id ? 0 : -1} aria-selected={activeTab === id} aria-controls={`arcade-panel-${id}`} disabled={busy} onClick={() => { selectTab(id); setNotice(''); }}><Icon size={17} /><span>{label}</span></button>)}</nav>
     {notice && <p className="arcade-notice" role="status">{notice}</p>}
     {gameCreditStatus(game, data.workouts, data.profile).deficit > 0 && <p className="arcade-notice">Ajuste de actividad: {fmt(gameCreditStatus(game, data.workouts, data.profile).deficit)} créditos de compras anteriores ya no están respaldados por tu historial actual. Conservas los objetos; las nuevas ganancias cubren primero este ajuste. Tus movimientos originales siguen intactos.</p>}
     {conversionNotice.count > 0 && <div className="opening-resume-banner" role="status"><Coins size={26}/><div><strong>{conversionNotice.count} {conversionNotice.count === 1 ? 'frase antigua convertida' : 'frases antiguas convertidas'} · +{fmt(conversionNotice.credits)} créditos</strong><p>Las ventas antiguas ya compensadas no añaden créditos. El historial se conserva.</p></div><button onClick={() => void updateGame(acknowledgeQuoteConversions).catch(() => setNotice('Reintenta el guardado del aviso desde la app.'))}>Entendido</button></div>}
     {game.pendingOpening && !openingVisible && <div className="opening-resume-banner"><Gift size={27}/><div><strong>Tu cofre sigue cerrado.</strong><p>La apertura está guardada con la misma recompensa y el mismo débito.</p></div><button onClick={() => setOpeningVisible(true)}>Continuar apertura</button></div>}
-    <section key={activeTab} id={`arcade-panel-${activeTab}`} role={tab==='overview'?'region':'tabpanel'} aria-label={tab==='overview'?'Inicio de Arcade':undefined} aria-labelledby={tab==='overview'?undefined:`arcade-tab-${activeTab}`} className="arcade-panel">
-      {tab==='overview'&&<ArcadeOverview game={game} progress={currentProgress} missions={missions} muscles={overviewMuscles} levelCrates={allLevelCrates} today={today} effectsEnabled={effectsEnabled} busy={busy||Boolean(game.pendingOpening)} onNavigate={selectTab} onOpenReward={(level,season)=>void buyCrate('level:'+level,level,season)} onResumeOpening={()=>setOpeningVisible(true)}/>}
+    <section key={activeTab} className="arcade-panel">
+      {tab==='overview' && <SectionCards label="Apartados de Arcade" cards={destinations.map(({ id, label, icon }) => ({ label, icon, open: () => selectTab(id) }))}/>}
 
       {tab === 'goals' && <>
+        <form className="form-card weekly-goal-editor" key={`${game.weeklyWorkoutGoal}:${game.weeklySetGoal}`} onSubmit={event => {
+          event.preventDefault();
+          const values = new FormData(event.currentTarget);
+          const days = Number(values.get('days'));
+          const sets = Number(values.get('sets'));
+          if (!Number.isInteger(days) || days < 1 || days > 7 || !Number.isInteger(sets) || sets < 1 || sets > 200) return;
+          void updateGame(current => ({ ...current, weeklyWorkoutGoal: days, weeklySetGoal: sets }))
+            .then(() => setNotice('Objetivo semanal guardado.'))
+            .catch(() => setNotice('Reintenta el guardado del objetivo semanal.'));
+        }}>
+          <h2>Tu objetivo semanal</h2>
+          <label>Días de entrenamiento<input name="days" type="number" min={1} max={7} required defaultValue={game.weeklyWorkoutGoal}/></label>
+          <label>Series de trabajo<input name="sets" type="number" min={1} max={200} required defaultValue={game.weeklySetGoal}/></label>
+          <button className="secondary" type="submit">Guardar objetivo semanal</button>
+        </form>
         <div className="arcade-section-head"><div><span className="eyebrow">OBJETIVOS</span><h2>Objetivos de actividad</h2></div><span className="arcade-tag"><Check size={13} /> {missions.filter(mission => mission.complete).length}/{missions.length} completas</span></div>
         <fieldset className={filterStyles.groupFilter}><legend>Mostrar objetivos</legend><div className={filterStyles.groupButtons}>{([{ value: 'all', label: 'Todos' }, { value: 'pending', label: 'Pendientes' }, { value: 'rewarded', label: 'Recompensados' }] as const).map(({ value, label }) => <button type="button" key={value} aria-pressed={missionFilter === value} onClick={() => setMissionFilter(value)}>{label}</button>)}</div></fieldset>
         {(['weekly','career'] as const).map(scope => <MissionCategory key={scope} scope={scope} missions={missions.filter(mission => mission.scope === scope && (missionFilter === 'all' || (missionFilter === 'rewarded' ? mission.rewarded : !mission.rewarded)))}/>)}
@@ -141,14 +141,6 @@ export default function GameHub({ data, onChange, today, effectsEnabled, soundEn
         <div className="arcade-achievements">{achievements.map(achievement => <article key={achievement.id} className={achievement.complete ? 'unlocked' : ''}><span>{achievement.complete ? <Trophy size={24} /> : <LockKeyhole size={22} />}</span><div><h3>{achievement.title}</h3><p>{achievement.description}</p><small>{fmt(achievement.current)} / {fmt(achievement.target)} {achievement.unit}</small><ProgressBar value={percent(achievement.current, achievement.target)} label={achievement.title} /></div>{achievement.complete && <Check size={16} />}</article>)}</div>
         {onSettings && <button className="arcade-primary" onClick={onSettings}>Editar mi perfil en Ajustes<ArrowRight size={16}/></button>}
       </>}
-
-      {tab === 'body' && <>
-        <div className="arcade-section-head"><div><span className="eyebrow">MAPA MUSCULAR</span><h2>Actividad por músculo</h2></div><label className="mission-filter">Mes muscular<select aria-label="Mes muscular" value={monthChoice} onChange={event => setMonthChoice(event.target.value)}><option value="">{seasonLabel(today.slice(0,7))} · actual</option>{months.filter(month => month !== today.slice(0,7)).map(month => <option key={month} value={month}>{seasonLabel(month)} · histórico</option>)}</select></label></div>
-        <div className="arcade-body-grid"><article className="body-map-card" data-side={bodySide}><div className="body-map-top"><span><ActivityDot /> ACTIVIDAD REGISTRADA</span><small>TOCA UN MÚSCULO</small></div><div className="body-view-controls" aria-label="Vista del mapa muscular"><button aria-pressed={bodySide==='front'} onClick={()=>setBodySide('front')}>Frente</button><button aria-pressed={bodySide==='back'} onClick={()=>setBodySide('back')}>Espalda</button></div><div className="body-figures"><BodyFigure back={false} muscles={muscles} selected={selectedMuscle} onSelect={selectMuscle} /><BodyFigure back muscles={muscles} selected={selectedMuscle} onSelect={selectMuscle} /></div><div className="body-legend">{[['#40344f', '0'], ['#7160a0', '0,5–3,5'], ['#b8a0ff', '4–8,5'], ['#d8ff3e', '9+']].map(([color, label]) => <span key={label}><i style={{ background: color }} />{label}</span>)}<small>series equivalentes</small></div></article>
-          <aside className="body-detail"><span className="eyebrow">TU FOCO</span><h3>{selected?.label}</h3><div className="muscle-level-panel"><div><span className="eyebrow">{selectedMonth === today.slice(0,7) ? 'TEMPORADA ACTUAL' : 'TEMPORADA HISTÓRICA'}</span><strong>NIVEL {selected?.level ?? 1}</strong><small>{selected?.rank}</small></div><div className="muscle-level-xp"><span>{fmt(selected?.levelXp ?? 0)} / {fmt(selected?.nextLevelXp ?? 500)} XP</span><ProgressBar value={selected?.percent ?? 0} label={'Nivel muscular de ' + selected?.label}/></div><p>{fmt(selected?.xp ?? 0)} XP en {seasonLabel(selectedMonth)}. Reinicio: {seasonBounds(selectedMonth).next}. {fmt(selected?.lifetimeSets ?? 0)} series equivalentes históricas. Nivel de juego basado en lo registrado; no mide condición física.</p></div><div className="body-detail-total" style={{ color: selected?.weightedSets ? activityColor(selected.weightedSets) : '#b59cc8' }}><strong>{fmt(selected?.weightedSets ?? 0)}</strong><span>SERIES EQUIVALENTES<br />{seasonLabel(selectedMonth).toLocaleUpperCase('es-ES')}</span></div><dl><div><dt>Series directas</dt><dd>{selected?.sets ?? 0}</dd></div><div><dt>Participación secundaria</dt><dd>{selected?.secondarySets ?? 0}</dd></div><div><dt>Repeticiones con participación</dt><dd>{fmt(selected?.reps ?? 0)}</dd></div><div><dt>Última actividad</dt><dd>{selected?.lastDate ? new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${selected.lastDate}T12:00:00Z`)) : 'Sin registrar'}</dd></div></dl><p>1 serie directa = 1 equivalente. Una participación secundaria suma 0,5.</p>{selected?.approximate && <p className="body-approximate">Incluye ejercicios personalizados: la asignación por grupo es aproximada.</p>}<div className="body-detail-hint"><Heart size={17} /><span>El color refleja actividad, no crecimiento ni recuperación muscular.</span></div></aside></div>
-        <div className="muscle-list">{muscles.map(muscle => <button key={muscle.id} aria-pressed={selectedMuscle === muscle.id} onClick={() => selectMuscle(muscle.id)}><span className="muscle-list-dot" style={{ background: activityColor(muscle.weightedSets) }} /><span>{muscle.label}<small className="muscle-list-level">NIVEL {muscle.level}</small></span><strong>{fmt(muscle.weightedSets)} <small>series</small></strong><ChevronRight size={15} /></button>)}</div>
-      </>}
-
 
       {tab === 'crates' && <>
         <div className="arcade-crate-intro"><div><span className="eyebrow">RECOMPENSAS</span><h2>Cofres disponibles</h2><p>Consigue equipo, habilidades y cheesits con tus créditos.</p><div><span><Zap size={14} />5 XP = 1 crédito</span><span><Shirt size={14} />{REWARD_CATEGORY_LABEL}</span></div></div>{game.equippedCompanionId?<CharacterParty game={game} level={currentProgress.level} animated={effectsEnabled} compact/>:<CharacterAvatar game={game} level={currentProgress.level} animated={effectsEnabled} compact/>}</div>
@@ -170,8 +162,6 @@ export default function GameHub({ data, onChange, today, effectsEnabled, soundEn
     {openingVisible && (game.pendingOpening || lastPrize) && <CrateOpening game={game} result={lastPrize} effectsEnabled={effectsEnabled} soundEnabled={soundEnabled} onGameChange={updateGame} onFinished={setLastPrize} onClose={()=>{setOpeningVisible(false);setLastPrize(null)}} onEquip={item => { void equipPrize(item).catch(() => setNotice('No se ha confirmado el aspecto. Reintenta desde el aviso de guardado.')); }}/>}
   </div>;
 }
-
-function ActivityDot() { return <i className="activity-dot" aria-hidden="true" />; }
 
 function WeeklyResetCountdown() {
   const [minutes, setMinutes] = useState<number | null>(null);

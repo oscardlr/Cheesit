@@ -38,10 +38,19 @@ export default function AccountGate() {
   const [copies, setCopies] = useState<Awaited<ReturnType<typeof recoveryCopies>>>([]);
   const [migrationBusy, setMigrationBusy] = useState(false);
   const syncing = useRef(false);
-  const initialRefresh = useRef(false);
+  const refreshPending = useRef(false);
   const signingOut = useRef(false);
   const storeRef = useRef<AccountStore | null>(null);
   const configured = !!remoteClient();
+
+  function refreshApp(changed: boolean) {
+    if (changed) refreshPending.current = true;
+    if (!refreshPending.current) return;
+    if (!window.dispatchEvent(new Event('cheesit:before-account-refresh', { cancelable: true }))
+      || !window.dispatchEvent(new Event('cheesit:before-update', { cancelable: true }))) return;
+    refreshPending.current = false;
+    setGeneration(v => v + 1);
+  }
 
   useEffect(() => {
     // Remember the explicit guest choice in this tab; data stays in its own store.
@@ -79,7 +88,7 @@ export default function AccountGate() {
     let active = true; let current: AccountStore | undefined;
     setError(''); setGuest(false); setIdentity(undefined); setStore(null); setLegacy(undefined); setMigrationPreview(undefined); setConflictChoices({}); setCopies([]); setMigrationChoices({});
     const owner = session.user.id;
-    initialRefresh.current = false;
+    refreshPending.current = false;
     void (async () => {
       current = await new AccountStore(owner, accountTransport(owner)).initialize();
       if (!active) { current.dispose(); return; }
@@ -91,12 +100,7 @@ export default function AccountGate() {
       if (cachedIdentity?.owner_id === owner && cachedIdentity.completed_at) setIdentity(cachedIdentity);
       try {
         const changed = await current.synchronize();
-        if (active && changed) {
-          // A verified cache can mount the app before the first download ends.
-          // Refresh that mounted view, while preserving an open unsaved editor.
-          if (window.dispatchEvent(new Event('cheesit:before-update', { cancelable: true }))) setGeneration(v => v + 1);
-          else initialRefresh.current = true;
-        }
+        if (active) refreshApp(changed);
       }
       catch (reason) { if (active) setError(reason instanceof Error ? reason.message : 'No se pudo abrir tu cuenta.'); }
       if (!active) return;
@@ -130,9 +134,7 @@ export default function AccountGate() {
       if (storeRef.current !== store) return;
       await store.flushData();
       if (storeRef.current !== store) return;
-      const refresh = store.consumeRefresh() || initialRefresh.current;
-      initialRefresh.current = false;
-      if (changed || refresh) setGeneration(v => v + 1);
+      refreshApp(store.consumeRefresh() || changed);
       const savedIdentity = await fetchIdentity(store.owner);
       if (storeRef.current !== store) return;
       if (savedIdentity?.completed_at) await metadata(`identity:${store.owner}`, savedIdentity);
@@ -146,7 +148,7 @@ export default function AccountGate() {
   useEffect(() => {
     if (!store) return;
     let timer: ReturnType<typeof setTimeout>;
-    const unsub = store.subscribe(() => { redraw(v => v + 1); if (!syncing.current && !store.hasPendingData() && store.consumeRefresh()) setGeneration(v => v + 1); clearTimeout(timer); if (store.status === 'pending' && navigator.onLine && !syncing.current) timer = setTimeout(() => void synchronize(), 800); });
+    const unsub = store.subscribe(() => { redraw(v => v + 1); if (!syncing.current && !store.hasPendingData()) refreshApp(store.consumeRefresh()); clearTimeout(timer); if (store.status === 'pending' && navigator.onLine && !syncing.current) timer = setTimeout(() => void synchronize(), 800); });
     const trigger = () => { if (document.visibilityState === 'visible') void synchronize(); };
     const interval = setInterval(trigger, 15000);
     window.addEventListener('online', trigger); window.addEventListener('focus', trigger); document.addEventListener('visibilitychange', trigger);

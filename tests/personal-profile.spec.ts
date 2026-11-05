@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
 });
 async function login(page: Page, email: string) {
   await page.goto('/'); await page.getByLabel('Correo electrónico').fill(email); await page.getByLabel('Contraseña', { exact: true }).fill('test-password-123'); await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Inicio', exact: true })).toBeVisible();
   await synced(page);
 }
 async function synced(page: Page) { await expect(page.locator('.account-sync-copy')).toContainText('Sincronizado con tu cuenta', { timeout: 15000 }); }
