@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { ArrowRight, Award, Box, Check, ChevronRight, Clock3, Crown, Dumbbell, Footprints, Gift, Heart, LockKeyhole, Shirt, Sparkles, Target, Trophy, TrendingUp, Zap } from 'lucide-react';
 import type { AppData } from '@/lib/model';
-import { CRATES, RARITIES, gameProgress, equipCosmetic, equipCompanion, gameBalance, gameCreditStatus, getAchievements, getLevelCrates, getMissions, normalizeGame, progressionSeasons, openCrate, openLevelCrate, type GameState, type InventoryItem, type Rarity } from '@/lib/game';
+import { CRATES, MASTER_CRATE_ID, RARITIES, gameProgress, equipCosmetic, equipCompanion, gameBalance, gameCreditStatus, getAchievements, getLevelCrates, getMissions, normalizeGame, progressionSeasons, openCrate, openLevelCrate, type GameState, type InventoryItem, type Rarity } from '@/lib/game';
 import { nextWeeklyResetMadrid } from '@/lib/dates';
 import { characterLevelThreshold } from '@/lib/seasons';
 import { levelRank } from '@/lib/rewards';
@@ -34,6 +34,7 @@ const destinations = [
 ] as const;
 
 const fmt = (value: number) => new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(value);
+const cratePrice = new Intl.NumberFormat('es-ES', { useGrouping: true });
 const rarityStyle = (rarity: Rarity): CSSProperties => ({ '--rarity': RARITIES[rarity].color } as CSSProperties);
 const percent = (current: number, target: number) => Math.min(100, Math.max(0, current / target * 100));
 
@@ -151,11 +152,12 @@ export default function GameHub({ data, today, effectsEnabled, soundEnabled, ini
       </>}
 
       {tab === 'crates' && <>
-        <div className="arcade-crates">{CRATES.map((crate, index) => <article key={crate.id} className={`arcade-crate crate-${index}`}>
+        <div className="arcade-crates">{CRATES.map((crate, index) => <article key={crate.id} className={`arcade-crate crate-${crate.id === MASTER_CRATE_ID ? 'master' : index}`}>
           <div className="crate-art" aria-hidden="true"><div className="crate-halo"/><CrateArtwork crateId={crate.id}/></div>
-          <div className="crate-heading"><h3>{crate.name}</h3><CrateOdds name={crate.name} odds={crate.odds}/></div>
+          <div className="crate-heading"><h3>{crate.name}</h3>{crate.id !== MASTER_CRATE_ID && <CrateOdds name={crate.name} odds={crate.odds}/>}</div>
+          {crate.id === MASTER_CRATE_ID && <div className="master-crate-odds" aria-label="Probabilidades de rareza">{(Object.keys(RARITIES) as Rarity[]).filter(rarity => crate.odds[rarity] > 0).map(rarity => <span key={rarity} style={rarityStyle(rarity)}>{RARITIES[rarity].label} <strong>{crate.odds[rarity]} %</strong></span>)}</div>}
           <button className="arcade-primary" disabled={busy || Boolean(game.pendingOpening) || balance < crate.cost} onClick={() => void buyCrate(crate.id)}>
-            <span>{busy ? 'Guardando…' : balance < crate.cost ? 'Faltan créditos' : 'Abrir cofre'}</span><strong>{fmt(crate.cost)} <CreditCoin alt="créditos"/></strong>
+            <span>{busy ? 'Guardando…' : balance < crate.cost ? 'Faltan créditos' : 'Abrir cofre'}</span><strong>{cratePrice.format(crate.cost)} <CreditCoin alt="créditos"/></strong>
           </button>
         </article>)}</div>
         {allLevelCrates.some(crate => !crate.claimed) && <LevelRewards compact crates={allLevelCrates} busy={busy || Boolean(game.pendingOpening)} onOpen={(level, season) => void buyCrate('level:' + level, level, season)} />}

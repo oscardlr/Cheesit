@@ -33,7 +33,7 @@ async function seed(page: Page, data: AppData) {
   await page.getByRole('button', { name: 'Continuar como invitado' }).click();
   await expect(page.getByRole('heading', { name: 'Inicio', exact: true })).toBeVisible();
 }
-async function progress(page: Page, tab: 'Marcas' | 'Cuerpo') {
+async function progress(page: Page, tab: 'Marcas' | 'Cuerpo' | 'Peso') {
   await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Progreso', exact: true }).click();
   await page.getByRole('button', { name: tab, exact: true }).click();
 }
@@ -45,7 +45,7 @@ async function record(page: Page, date: string, weight: string) {
   await expect(page.getByText('Peso guardado.', { exact: true })).toBeVisible();
 }
 
-test('body shows muscular activity first and keeps goal editing in the profile', async ({ page }) => {
+test('weight has its own mobile tab, retains measurements and keeps goal editing in the profile', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.clock.setFixedTime(new Date('2026-11-01T12:00:00Z'));
@@ -64,7 +64,12 @@ test('body shows muscular activity first and keeps goal editing in the profile',
   await progress(page, 'Cuerpo');
   const muscle = page.getByRole('heading', { name: 'Actividad por músculo', exact: true });
   const body = page.getByRole('region', { name: 'Peso corporal', exact: true });
-  expect(await muscle.evaluate(element => Boolean(element.compareDocumentPosition(document.getElementById('body-weight-title')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+  await expect(muscle).toBeVisible();
+  await expect(body).toHaveCount(0);
+  const tabs = page.getByRole('navigation', { name: 'Vistas de progreso' }).getByRole('button');
+  await expect(tabs).toHaveText(['Historial', 'Marcas', 'Cuerpo', 'Peso']);
+  await page.getByRole('button', { name: 'Peso', exact: true }).click();
+  await expect(muscle).toHaveCount(0);
   await expect(body.getByText('70 kg', { exact: true })).toBeVisible();
   await expect(body.getByRole('button', { name: 'Guardar objetivo' })).toHaveCount(0);
   await expect(body.getByLabel('Objetivo de peso (kg)')).toHaveCount(0);
@@ -85,10 +90,17 @@ test('body shows muscular activity first and keeps goal editing in the profile',
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    for (const tab of await tabs.all()) {
+      const box = (await tab.boundingBox())!;
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(box.x + box.width).toBeLessThanOrEqual(width);
+      await tab.click();
+      await expect(tab).toHaveAttribute('aria-current', 'page');
+    }
     await body.screenshot({ path: `artifacts/progress-weight/body-${width}.png` });
   }
-  await enter(page);
-  await progress(page, 'Cuerpo');
+  await page.reload();
+  await expect(page).toHaveURL(/tab=weight/);
   await expect(body.getByText('73 kg', { exact: true }).first()).toBeVisible();
   expect((await stored(page)).profile?.weightTracking).toMatchObject({ goalKg: 80, rewards: [{ date: '2026-11-01', xp: 200 }] });
   expect(errors).toEqual([]);
@@ -174,10 +186,10 @@ test('collection uses all original objects, category icons and a larger static c
 
 test('crate rewards show the original object, persist once and equip the registered layer', async ({ page }) => {
   await seed(page, { ...emptyData(), game: normalizeGame(), preferences: { effects: false, sound: false } });
-  await page.getByRole('button', { name: 'Personalizar personaje', exact: true }).click();
-  await page.getByRole('tab', { name: 'Cofres', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Arcade', exact: true }).click();
+  await page.getByRole('button', { name: 'Cofres', exact: true }).click();
   await page.evaluate(() => { crypto.getRandomValues = (array: ArrayBufferView | null) => { if (array instanceof Uint32Array) array.fill(0); return array; }; });
-  await page.locator('.arcade-crate').first().getByRole('button').click();
+  await page.locator('.arcade-crate').first().getByRole('button', { name: /Abrir cofre/ }).click();
   await expect(page.getByRole('heading', { name: 'Recompensa obtenida' })).toBeVisible({ timeout: 15000 });
   const result = page.locator('.opening-result-art .gear-catalog');
   await expect(result).toBeVisible();
@@ -185,12 +197,93 @@ test('crate rewards show the original object, persist once and equip the registe
   await expect(result.locator('image')).toHaveAttribute('href', GEAR_CATALOG_ART[id].src);
   await page.screenshot({ path: 'artifacts/progress-weight/crate-result.png' });
   await page.getByRole('button', { name: 'Usar aspecto', exact: true }).click();
-  await page.getByRole('tab', { name: 'Colección', exact: true }).click();
-  await page.getByRole('navigation', { name: 'Organizar colección' }).getByRole('button', { name: 'Aspectos', exact: true }).click();
+  await page.getByRole('button', { name: 'Inicio de Arcade', exact: true }).click();
+  await page.getByRole('button', { name: 'Personaje', exact: true }).click();
   await expect(page.locator(`.wardrobe-character-preview .character-equipped[data-gear-id="${id}"]`)).toBeVisible();
   const data = await stored(page);
   expect(data.game?.inventory).toHaveLength(1); expect(data.game?.transactions).toHaveLength(1);
   expect(data.game?.pendingOpening).toBeNull();
   await enter(page);
   expect((await stored(page)).game?.inventory).toHaveLength(1);
+});
+
+test('Entrenar resumes the same draft as Inicio after a reload', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-11-03T12:00:00Z'));
+  const bench = CATALOG.find(exercise => exercise.id === 'press-banca-barra')!;
+  const workout = {
+    ...newWorkout(),
+    name: 'Empuje pendiente',
+    exercises: [{
+      ...exerciseSnapshot(bench),
+      id: newId(),
+      sets: [{ ...newSet(), weight: 62.5, reps: 8, confirmed: true }, { ...newSet(), weight: 55, reps: 6 }],
+    }],
+  };
+  const older = { ...newWorkout(), name: 'Sesión anterior', updatedAt: '2026-11-02T10:00:00Z' };
+  await seed(page, { ...emptyData(), workouts: [older, workout] });
+  const navigation = page.getByRole('navigation', { name: 'Navegación principal' });
+  await expect(page.locator('.next-session')).toContainText(workout.name);
+  await navigation.getByRole('button', { name: 'Entrenar', exact: true }).click();
+  const notice = page.getByRole('region', { name: 'Entrenamiento pendiente' });
+  await expect(notice).toContainText(workout.name);
+  await page.reload();
+  await notice.getByRole('button', { name: 'Continuar entrenamiento', exact: true }).click();
+  const checkEditor = async () => {
+    await expect(page).toHaveURL(new RegExp(`view=editor&id=${workout.id}`));
+    await expect(page.getByLabel(`Carga en kg, serie 1 de ${bench.name}`)).toHaveValue('62.5');
+    await expect(page.getByLabel(`Repeticiones, serie 2 de ${bench.name}`)).toHaveValue('6');
+    await expect(page.getByRole('button', { name: 'Realizada 1', exact: true })).toBeDisabled();
+  };
+  await checkEditor();
+  await page.reload();
+  await checkEditor();
+});
+
+test('Cofre Maestro blocks insufficient credit and resumes one reserved prize at 1.000 credits', async ({ page }, info) => {
+  const grant = { season: '2026', xp: 0, credits: 1100, grantedAt: '2026-11-01T12:00:00Z', charges: {} };
+  await seed(page, { ...emptyData(), game: { ...normalizeGame(), arcadeGrant: grant }, preferences: { effects: true, sound: false } });
+  const navigation = page.getByRole('navigation', { name: 'Navegación principal' });
+  await navigation.getByRole('button', { name: 'Entrenar', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Entrenamiento pendiente' })).toHaveCount(0);
+  await navigation.getByRole('button', { name: 'Arcade', exact: true }).click();
+  await page.getByRole('button', { name: 'Cofres', exact: true }).click();
+  const card = page.getByRole('article').filter({ has: page.getByRole('heading', { name: 'Cofre Maestro', exact: true }) });
+  const buy = card.getByRole('button', { name: /Abrir cofre/ });
+  await expect(card).toContainText('Rara 25 %');
+  await expect(card).toContainText('Épica 50 %');
+  await expect(card).toContainText('Legendaria 25 %');
+  await expect(buy).toHaveAccessibleName(/1\.?000 créditos/);
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const artwork = card.locator('img.crate-illustration');
+    await expect.poll(() => artwork.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
+    await card.screenshot({ path: info.outputPath(`master-card-${width}.png`), animations: 'disabled' });
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await buy.click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByText('COFRE MAESTRO', { exact: true })).toBeVisible();
+  const reserved = (await stored(page)).game!;
+  expect(reserved.inventory).toHaveLength(1);
+  expect(reserved.transactions).toHaveLength(1);
+  expect(reserved.transactions[0].amount).toBe(-1000);
+  expect(reserved.pendingOpening?.itemId).toBe(reserved.inventory[0].id);
+  await page.reload();
+  await expect(dialog.getByText('COFRE MAESTRO', { exact: true })).toBeVisible();
+  await expect(dialog.locator('img.opening-master-art')).toBeVisible();
+  const quick = dialog.getByRole('button', { name: /Revelar ahora/ });
+  if (await quick.isVisible()) await quick.click();
+  await expect(dialog.getByRole('heading', { name: 'Recompensa obtenida' })).toBeVisible();
+  await dialog.screenshot({ path: info.outputPath('master-opening-390.png'), animations: 'disabled' });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await dialog.screenshot({ path: info.outputPath('master-opening-1440.png'), animations: 'disabled' });
+  await dialog.getByRole('button', { name: 'Guardar en colección' }).click();
+  await expect(card.getByRole('button', { name: /Faltan créditos/ })).toBeDisabled();
+  await expect(page.getByRole('button', { name: '200 créditos disponibles' })).toBeVisible();
+  await page.reload();
+  const revealed = (await stored(page)).game!;
+  expect(revealed.pendingOpening).toBeNull();
+  expect(revealed.inventory).toEqual(reserved.inventory);
+  expect(revealed.transactions).toEqual(reserved.transactions);
 });

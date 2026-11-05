@@ -147,8 +147,8 @@ test('all 15 abilities apply real balanced rewards only to their intended exerci
         if (!abilityMatches(ability, exercise) || ability.target === 'credits') assert.equal(bonus, 0, `${gear.id}: ${exercise.group}`);
       }
     }
-    const previousMuscles = muscleActivity([session], session.date, 7);
-    const nextMuscles = muscleActivity([result.workout], session.date, 7);
+    const previousMuscles = muscleActivity([session], session.date);
+    const nextMuscles = muscleActivity([result.workout], session.date);
     for (const [group, , muscle] of groups) {
       if (!abilityMatches(ability, { group }) || ability.target === 'credits') {
         assert.equal(nextMuscles.find(item => item.id === muscle)?.xp, previousMuscles.find(item => item.id === muscle)?.xp, `${gear.id} must not boost ${muscle}`);

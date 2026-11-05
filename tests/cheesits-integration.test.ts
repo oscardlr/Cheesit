@@ -42,6 +42,7 @@ test('all eight cheesits use existing rarity and reward odds; both entries of ea
     { common: 70, rare: 23, epic: 6, legendary: 1 },
     { common: 35, rare: 43, epic: 18, legendary: 4 },
     { common: 0, rare: 55, epic: 35, legendary: 10 },
+    { common: 0, rare: 25, epic: 50, legendary: 25 },
   ]);
   for (const rarity of ['common', 'rare', 'epic', 'legendary'] as Rarity[]) {
     const pool = COMPANIONS.filter(value => value.rarity === rarity);

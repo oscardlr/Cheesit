@@ -50,7 +50,7 @@ test('one eligible completion spends one charge and its frozen reward cannot be 
   assert.equal(getAbilityCharges(game,'lime-shorts'),0);
   assert.equal(workoutReward(awarded.workout,[awarded.workout]).totalXp,base.totalXp+awarded.reward!.bonusXp);
   assert.ok(rewardSetIndex([awarded.workout]).get(workout.exercises[0].sets[0].id)!.abilityXp!>0);
-  const muscle=muscleActivity([awarded.workout],'2026-10-27',7).find(item=>item.id==='quads')!;
+  const muscle=muscleActivity([awarded.workout],'2026-10-27').find(item=>item.id==='quads')!;
   assert.equal(muscle.xp,base.setXp+awarded.reward!.bonusXp);
   const repeated=applyWorkoutAbility(game,{...workout,abilityId:'plasma-blaster'},[awarded.workout]);
   assert.equal(repeated.game.abilityUses?.length,1);

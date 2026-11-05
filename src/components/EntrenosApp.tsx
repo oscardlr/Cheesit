@@ -73,8 +73,8 @@ const GROUPS = ['Pecho', 'Espalda', 'Pierna y glúteo', 'Hombro', 'Bíceps', 'Tr
 const EMPTY: AppData = { routines: [], workouts: [], customExercises: [] };
 type Screen = 'summary' | 'feed' | 'train' | 'plans' | 'publish' | 'routines' | 'start' | 'editor' | 'routine' | 'settings' | 'detail' | 'progress' | 'game' | 'catalog' | 'profile' | 'objectives' | 'social' | 'notifications';
 type GameTab=ArcadeView;
-type ProgressView = 'history' | 'records' | 'body';
-const progressViews = [{ id: 'history', label: 'Historial' }, { id: 'records', label: 'Marcas' }, { id: 'body', label: 'Cuerpo' }] as const;
+type ProgressView = 'history' | 'records' | 'body' | 'weight';
+const progressViews = [{ id: 'history', label: 'Historial' }, { id: 'records', label: 'Marcas' }, { id: 'body', label: 'Cuerpo' }, { id: 'weight', label: 'Peso' }] as const;
 const sectionFor = (screen: Screen) => {
   if (['start', 'editor', 'routine', 'routines', 'catalog', 'plans'].includes(screen)) return 'train';
   if (screen === 'detail' || screen === 'publish') return 'progress';
@@ -396,7 +396,7 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
   }
   if(view==='progress'){
    const tab=params.get('tab'),date=params.get('date');
-   setProgressView(tab==='body'?'body':tab==='records'||id?'records':'history');
+   setProgressView(tab==='body'||tab==='weight'?tab:tab==='records'||id?'records':'history');
    setProgressId(id);
    if(date&&isCivilDate(date)){setSelectedDate(date);setMonth(`${date.slice(0,7)}-01`)}
   }
@@ -490,6 +490,13 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
  </section>}
  {screen==='train' && <>
   <header className="home-header"><PageTitle>Entrenar</PageTitle></header>
+  {draft && <section className="next-session training-resume" aria-label="Entrenamiento pendiente">
+    <div className="next-session-copy">
+      <span className="eyebrow">SESIÓN EN CURSO</span>
+      <h2>{draft.name || 'Entrenamiento pendiente'}</h2>
+      <button className="primary summary-start" onClick={()=>continueDraft(draft.id)}>Continuar entrenamiento<ArrowRight size={18}/></button>
+    </div>
+  </section>}
   <SectionCards label="Apartados de Entrenar" cards={[
    {label:'Empezar entreno',icon:Play,artwork:'training-start-card-3d',open:()=>openStart()},
    {label:'Mis rutinas',icon:ClipboardList,artwork:'training-routines-card-3d',open:()=>navigate('routines')},
@@ -515,10 +522,9 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
   <Back title="Publicación" onClick={()=>navigate(detailReturn==='feed'?'feed':'detail')}/>
   <PublicationEditor owner={accountOwner} workout={detail} onSave={publication=>savePublication(detail.id,publication)}/>
  </>}
- {screen==='progress' && progressView==='body' && <>
-  <MuscleProgress data={data} today={today}/>
-  <BodyWeightProgress profile={data.profile} onChange={transform=>persistConfirmedData(captureMoments(currentData.current,{...currentData.current,profile:transform(currentData.current.profile)}))}/>
- </>}
+ {screen==='progress' && progressView==='body' && <MuscleProgress data={data} today={today}/>}
+ {screen==='progress' && progressView==='weight' &&
+  <BodyWeightProgress profile={data.profile} onChange={transform=>persistConfirmedData(captureMoments(currentData.current,{...currentData.current,profile:transform(currentData.current.profile)}))}/>}
  {screen==='progress' && progressView==='records' && <section className={progressId?'progress-details':'progress-details progress-overview'} aria-label="Estadísticas de progreso"><ProgressPanel data={data} history={finished} exercises={exercises} selectedId={progressId} onSelect={id=>{setProgressReturn('progress');setProgressId(id)}} onWorkout={id=>{setDetailReturn('progress');setDetailId(id);setScreen('detail')}} onBack={()=>{if(progressReturn==='editor'&&editing)setScreen('editor');else if(progressReturn==='detail'&&detail)setScreen('detail');else setProgressId(null)}} /></section>}
  {screen==='catalog' && <><Back title="Catálogo de ejercicios" onClick={()=>navigate('train')} /><ExerciseLibrary exercises={exercises} onSave={ex=>persistData({...currentData.current,customExercises:currentData.current.customExercises.some(item=>item.id===ex.id)?currentData.current.customExercises.map(item=>item.id===ex.id?ex:item):[...currentData.current.customExercises,ex]})} /></>}
  {screen==='settings' && <>{accountOwner&&!guest&&<ActivityPrivacy owner={accountOwner}/>}<GymSettings gym={data.personalProfile?.gym} onSave={gym=>persistConfirmedData({...currentData.current,personalProfile:{...(currentData.current.personalProfile??EMPTY_PERSONAL_PROFILE),gym}})}/><section className="settings-section experience-settings"><h2>Sonido y efectos</h2><div className="settings-card preference-row"><div><strong>Efectos y confeti</strong><p>Celebraciones al confirmar series y terminar sesiones.</p></div><button className={`toggle ${effectsEnabled?'on':''}`} role="switch" aria-label="Efectos y confeti" aria-checked={effectsEnabled} onClick={()=>{preferencesDirty.current=true;setEffectsEnabled(v=>!v)}}><span/></button></div><div className="settings-card preference-row"><div><strong>Sonido de victoria</strong><p>Sonidos en botones, series y recompensas.</p></div><button className={`toggle ${soundEnabled?'on':''}`} role="switch" aria-label="Sonido de victoria" aria-checked={soundEnabled} onClick={()=>{preferencesDirty.current=true;setSoundEnabled(v=>!v)}}><span/></button></div><p className="settings-fineprint">El modo de movimiento reducido de tu dispositivo se respeta automáticamente.</p></section><section className="settings-section"><span className="eyebrow">TUS DATOS</span><h2>Almacenamiento</h2><div className="settings-card"><strong>{guest?'En este navegador':'En tu cuenta'}</strong><p>{guest?'Modo invitado: tu actividad permanece en este navegador, sin cuenta ni sincronización.':'Guardado automático en la nube, con copia local para entrenar sin cobertura. Consulta el estado de sincronización y gestiona tu sesión en los ajustes de cuenta. Las copias JSON son opcionales.'}</p><p className="storage-status"><span>●</span> {saveError ? saveState : syncLabel}</p></div><button className="settings-action" onClick={exportData}><span><strong>Exportar datos</strong><small>Descargar una copia JSON</small></span><span className="arrow">↓</span></button><button className="settings-action" onClick={()=>importRef.current?.click()}><span><strong>Importar datos</strong><small>Restaurar una copia de Cheesit</small></span><span className="arrow">↑</span></button><input ref={importRef} type="file" accept="application/json,.json" hidden onChange={e=>{const f=e.target.files?.[0];if(f)void importData(f)}}/>{message&&<p role="status" className="notice">{message}</p>}</section><section className="settings-section"><span className="eyebrow">ACERCA DE</span><h2>Cheesit</h2><p>Registra tus entrenamientos y consulta tu progreso.</p></section><section className="settings-section account-reset-section" aria-label="Resetear cuenta"><span className="eyebrow">EMPEZAR DE NUEVO</span><h2>Resetear cuenta</h2><p>Borra tus entrenos, rutinas, ejercicios propios y todo el progreso del juego. Volverás a empezar con 100 créditos. Tu acceso, perfil y preferencias se conservan.</p><button type="button" className="account-reset-button" disabled={busy} onClick={()=>void resetAccount()}><RotateCcw size={18}/>{busy?'Reseteando cuenta…':'Resetear cuenta'}</button><p className="account-reset-warning">Esta acción no se puede deshacer. Te pediremos confirmación antes de borrar.</p>{resetNotice&&<p className="notice" role="status">{resetNotice}</p>}</section></>}

@@ -1,6 +1,8 @@
+import { MASTER_CRATE_ID } from '@/lib/game';
 import './crate-artwork.css';
 
 const artwork = {
+  [MASTER_CRATE_ID]: '/assets/grind-chest-master.webp',
   starter: '/assets/grind-chest-iron.png',
   charged: '/assets/grind-chest-energy.png',
   legend: '/assets/grind-chest-legend.png',
@@ -11,5 +13,6 @@ export default function CrateArtwork({ crateId, className = '' }: { crateId: str
   const level = Number(crateId.split(':').at(-1));
   const tier = crateId.startsWith('level:') ? level % 10 === 0 ? 'legend' : level % 5 === 0 ? 'charged' : 'starter' : crateId;
   const src = artwork[tier as keyof typeof artwork] ?? artwork.starter;
-  return <img className={`crate-illustration ${className}`} src={src} alt="" width={1254} height={1254} decoding="async" draggable={false} />;
+  const isMaster = tier === MASTER_CRATE_ID;
+  return <img className={`crate-illustration ${isMaster ? 'crate-illustration-master ' : ''}${className}`} src={src} alt="" width={isMaster ? 640 : 1254} height={isMaster ? 427 : 1254} decoding="async" draggable={false} />;
 }

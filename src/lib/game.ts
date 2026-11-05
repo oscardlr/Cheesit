@@ -39,10 +39,12 @@ export const QUOTES: Quote[] = [
   { id: 'iron', text: 'El hierro tiene un límite. Lo que aprendes de ti, no.', rarity: 'legendary' },
 ];
 export type Crate = { id: string; name: string; description: string; cost: number; odds: Record<Rarity, number> };
+export const MASTER_CRATE_ID = 'master';
 export const CRATES: Crate[] = [
   { id: 'starter', name: 'Cofre de hierro', description: 'Equipo con cargas de habilidad o un cheesit para tu colección.', cost: 100, odds: { common: 70, rare: 23, epic: 6, legendary: 1 } },
   { id: 'charged', name: 'Cofre de energía', description: 'Más posibilidades de conseguir equipo épico.', cost: 250, odds: { common: 35, rare: 43, epic: 18, legendary: 4 } },
   { id: 'legend', name: 'Cofre de leyenda', description: 'Una recompensa rara o mejor, garantizada.', cost: 500, odds: { common: 0, rare: 55, epic: 35, legendary: 10 } },
+  { id: MASTER_CRATE_ID, name: 'Cofre Maestro', description: 'Una pieza de equipo o un cheesit, de rareza rara o superior.', cost: 1000, odds: { common: 0, rare: 25, epic: 50, legendary: 25 } },
 ];
 export type InventoryItem = { id: string; kind?: 'quote' | 'gear' | 'companion'; quoteId?: string; gearId?: string; companionId?: string; rarity: Rarity; acquiredAt: string; crateId: string; sold: boolean };
 export type GameTransaction = { id: string; kind: 'crate' | 'sale' | 'level-crate'; itemId: string; amount: number; createdAt: string; sourceLevel?: number; sourceSeason?: string; testFunded?:boolean };

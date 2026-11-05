@@ -107,7 +107,13 @@
 .weekly-goal-editor { margin-bottom: 24px; }
 .screen-progress .view-body { margin-top: 24px; }
 
+.training-resume { margin-bottom: var(--section-gap); }
+.training-resume h2 { overflow-wrap: anywhere; }
+.training-resume .summary-start { margin-top: 12px; }
+
 @media (max-width: 760px) {
+  .progress-views { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .progress-views button { padding-inline: 3px; }
   .section-card { padding: 12px; min-height: 110px; }
   .section-card:has(> .section-card-art) { min-height: 127px; }
   .section-card-art {
