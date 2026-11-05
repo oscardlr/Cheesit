@@ -473,11 +473,11 @@ test('locked aspects show grayscale gear and companion artwork without equip act
 });
 
 test('each purchasable chest displays its own loaded illustration',async({page},info)=>{
-  await seed(page,owned([]));await collection(page);
-  await page.getByRole('tab',{name:'Cofres',exact:true}).click();
+  await page.addInitScript(() => sessionStorage.setItem('cheesit-access-mode', 'guest'));
+  await page.goto('/#view=game&tab=crates');
   const cards=page.locator('.arcade-crates .arcade-crate');
-  await expect(cards).toHaveCount(3);
-  const sources=['/assets/grind-chest-iron.png','/assets/grind-chest-energy.png','/assets/grind-chest-legend.png'];
+  await expect(cards).toHaveCount(4);
+  const sources=['/assets/grind-chest-iron.png','/assets/grind-chest-energy.png','/assets/grind-chest-legend.png','/assets/grind-chest-master.webp'];
   for(let index=0;index<sources.length;index++){
     const art=cards.nth(index).locator('.crate-art img');
     await expect(art).toHaveCount(1);

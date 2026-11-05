@@ -43,17 +43,19 @@ test('an open app refreshes on timer, focus, visibility and pageshow after month
   stop(); surface.dispatchEvent(new Event('focus')); assert.equal(days.length, 5); assert.equal(cleared, true);
 });
 
-test('monthly map, XP, direct/secondary counts and detail reset together while annual XP and lifetime stats remain', () => {
+test('muscles keep each group’s cumulative activity and XP through month changes', () => {
   const jan = representativeWorkout('2026-01-31'), feb = representativeWorkout('2026-02-01');
   const history = [jan, feb];
-  const january = muscleActivity(history, '2026-02-01', '2026-01');
-  const february = muscleActivity(history, '2026-02-01', '2026-02');
-  const march = muscleActivity(history, '2026-03-01', '2026-03');
+  const january = muscleActivity(history, '2026-01-31');
+  const february = muscleActivity(history, '2026-02-01');
+  const march = muscleActivity(history, '2026-03-01');
   const chest = (list: typeof january) => list.find(muscle => muscle.id === 'chest')!;
-  assert.equal(chest(january).sets, 3); assert.equal(chest(february).sets, 3);
-  assert.equal(chest(march).level, 1); assert.equal(chest(march).xp, 0); assert.equal(chest(march).weightedSets, 0); assert.equal(chest(march).lastDate, null);
-  assert.equal(chest(march).lifetimeSets, 6);
-  assert.equal(january.find(muscle => muscle.id === 'triceps')!.secondarySets, 6);
+  assert.equal(chest(january).sets, 3);
+  assert.equal(chest(february).sets, 6);
+  assert.equal(chest(march).lastDate, '2026-02-01');
+  assert.ok(chest(february).xp > chest(january).xp);
+  assert.deepEqual(march, february);
+  assert.equal(march.find(muscle => muscle.id === 'triceps')!.secondarySets, 12);
   assert.equal(gameProgress(normalizeGame(), history, undefined, '2026').xp, rewardProgress(history).xp);
   assert.equal(gameProgress(normalizeGame(), history, undefined, '2027').xp, 0);
 });
@@ -143,7 +145,7 @@ test('migration is idempotent, preserves legacy claims/dates and grants only old
   } finally { time.mock.restore(); }
 });
 
-test('new curve adoption does not retroactively grant annual crates and date edits move annual/monthly XP only', () => {
+test('new curve adoption does not retroactively grant annual crates and date edits move annual XP but preserve cumulative muscle XP', () => {
   const time = clock('2026-11-02T12:00:00Z');
   try {
     const history = Array.from({ length: 4 }, (_, i) => representativeWorkout(addDays('2026-10-20',i)));
@@ -154,7 +156,7 @@ test('new curve adoption does not retroactively grant annual crates and date edi
     const moved = history.map(workout => ({ ...workout, date: workout.date.replace('2026-10','2025-09') }));
     assert.equal(gameProgress(game,moved,undefined,'2026').xp,0);
     assert.equal(gameProgress(game,moved,undefined,'2025').xp,rewardProgress(moved).xp);
-    assert.equal(muscleActivity(moved,'2026-11-02','2026-10')[0].xp,0);
+    assert.equal(muscleActivity(moved,'2026-11-02')[0].xp,muscleActivity(history,'2026-11-02')[0].xp);
     assert.equal(gameBalance(game,moved),beforeCredits);
     assert.deepEqual(getLevelCrates(reconcileSeasonProgression(game,moved),moved),crates);
     assert.equal(workoutReward(moved[1],moved).records,workoutReward(history[1],history).records);

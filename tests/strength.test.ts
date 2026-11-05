@@ -142,35 +142,36 @@ test('bulk XP and single series previews agree independent of history order, and
   assert.deepEqual(rewardProgress([sessions[0], sessions[0]]), rewardProgress([sessions[0]]));
 });
 
-test('muscle levels and heatmap activity use the same month with separate historical sets', () => {
+test('muscle levels and heatmap retain earned XP and partial progress across months', () => {
   const older = workout([exercise(Array.from({ length: 9 }, () => series(50, 8)))], '2026-10-01');
-  const seven = muscleActivity([older], '2026-10-27', 7);
-  const thirty = muscleActivity([older], '2026-10-27', 30);
-  const chest = seven.find(muscle => muscle.id === 'chest')!, triceps = seven.find(muscle => muscle.id === 'triceps')!;
+  const october = muscleActivity([older], '2026-10-31');
+  const november = muscleActivity([older], '2026-11-01');
+  const chest = october.find(muscle => muscle.id === 'chest')!, triceps = october.find(muscle => muscle.id === 'triceps')!;
   assert.equal(chest.sets, 9);
-  assert.equal(chest.lifetimeSets, 9);
+  assert.equal(chest.weightedSets, 9);
   assert.equal(chest.xp, 540);
   assert.equal(chest.level, 2);
   assert.equal(chest.levelXp, 40);
   assert.equal(chest.nextLevelXp, 600);
   assert.equal(triceps.xp, 270);
-  assert.equal(triceps.lifetimeSets, 4.5);
-  assert.equal(thirty.find(muscle => muscle.id === 'chest')!.sets, 9);
-  assert.equal(thirty.find(muscle => muscle.id === 'chest')!.level, chest.level);
+  assert.equal(triceps.weightedSets, 4.5);
+  assert.deepEqual(november, october);
+  assert.equal(muscleLevelFromXp(1e9).level, 99);
+  assert.equal(muscleLevelFromXp(1e9).percent, 100);
   assert.equal(muscleLevelFromXp(1100).level, 3);
 });
 
 test('muscle XP follows heavier work and edits, respects half XP and excludes removed or future activity', () => {
   const light = workout([exercise([series(10, 8)])]);
-  const chestLight = muscleActivity([light], '2026-10-27', 7).find(muscle => muscle.id === 'chest')!;
-  const tricepsLight = muscleActivity([light], '2026-10-27', 7).find(muscle => muscle.id === 'triceps')!;
+  const chestLight = muscleActivity([light], '2026-10-27').find(muscle => muscle.id === 'chest')!;
+  const tricepsLight = muscleActivity([light], '2026-10-27').find(muscle => muscle.id === 'triceps')!;
   assert.equal(tricepsLight.xp, chestLight.xp / 2);
   const heavy = structuredClone(light); heavy.exercises[0].sets[0].weight = 100;
-  assert.ok(muscleActivity([heavy], '2026-10-27', 7).find(muscle => muscle.id === 'chest')!.xp > chestLight.xp);
+  assert.ok(muscleActivity([heavy], '2026-10-27').find(muscle => muscle.id === 'chest')!.xp > chestLight.xp);
   heavy.exercises[0].sets[0].confirmed = false;
-  assert.equal(muscleActivity([heavy], '2026-10-27', 7).find(muscle => muscle.id === 'chest')!.xp, 0);
-  assert.equal(muscleActivity([{ ...light, status: 'deleted' }], '2026-10-27', 7).find(muscle => muscle.id === 'chest')!.xp, 0);
-  assert.equal(muscleActivity([{ ...light, date: '2026-11-01' }], '2026-10-27', 7).find(muscle => muscle.id === 'chest')!.xp, 0);
+  assert.equal(muscleActivity([heavy], '2026-10-27').find(muscle => muscle.id === 'chest')!.xp, 0);
+  assert.equal(muscleActivity([{ ...light, status: 'deleted' }], '2026-10-27').find(muscle => muscle.id === 'chest')!.xp, 0);
+  assert.equal(muscleActivity([{ ...light, date: '2026-11-01' }], '2026-10-27').find(muscle => muscle.id === 'chest')!.xp, 0);
   const duplicated = structuredClone(light); duplicated.exercises[0].sets.push(duplicated.exercises[0].sets[0]);
-  assert.equal(muscleActivity([duplicated], '2026-10-27', 7).find(muscle => muscle.id === 'chest')!.xp, chestLight.xp);
+  assert.equal(muscleActivity([duplicated], '2026-10-27').find(muscle => muscle.id === 'chest')!.xp, chestLight.xp);
 });

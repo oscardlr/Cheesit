@@ -27,7 +27,7 @@ function fixedRolls(rolls: number[]) {
 test('exact renormalized weights and rarity boundaries agree with UI and all catalog pools', () => {
   assert.equal(GEAR_DROP_CHANCE, .55 / .75); assert.equal(COMPANION_DROP_CHANCE, .20 / .75); assert.equal(QUOTE_DROP_CHANCE, 0);
   assert.equal(REWARD_CATEGORY_LABEL, '73,33% equipo · 26,67% cheesits');
-  assert.deepEqual(CRATES.map(crate => [crate.cost, Object.values(crate.odds)]), [[100,[70,23,6,1]],[250,[35,43,18,4]],[500,[0,55,35,10]]]);
+  assert.deepEqual(CRATES.map(crate => [crate.cost, Object.values(crate.odds)]), [[100,[70,23,6,1]],[250,[35,43,18,4]],[500,[0,55,35,10]],[1000,[0,25,50,25]]]);
   for (const rarity of rarities) {
     const pools = rewardPools(rarity);
     assert.ok(pools.gear.length); assert.equal(pools.companions.length, 2);

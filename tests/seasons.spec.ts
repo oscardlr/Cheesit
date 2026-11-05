@@ -32,7 +32,7 @@ async function noOverflow(page: Page) {
   expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
 }
 for (const width of [390,1440]) {
-  test(`permanent level through New Year, monthly body selection and late focus at ${width}px`,async({page},info)=>{
+  test(`permanent level through New Year, cumulative muscle activity and late focus at ${width}px`,async({page},info)=>{
     test.setTimeout(90000);
     const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
     await page.setViewportSize({width,height:width===390?844:1000});
@@ -47,19 +47,23 @@ for (const width of [390,1440]) {
     await noOverflow(page);await page.screenshot({path:info.outputPath(`summary-${width}.png`),fullPage:true,animations:'disabled'});
     await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Progreso', exact: true }).click();
     await page.getByRole('button', { name: 'Cuerpo', exact: true }).click();
-    await expect(page.locator('.body-detail')).toContainText('diciembre de 2026');
-    await expect(page.locator('.body-detail-total strong')).toHaveText('3');
-    await expect(page.getByRole('button',{name:'7 días',exact:true})).toHaveCount(0);
-    await noOverflow(page);await page.screenshot({path:info.outputPath(`body-${width}.png`),fullPage:true,animations:'disabled'});
+    await expect(page.locator('.body-detail-total strong')).toHaveText('9');
+    const level = page.locator('.muscle-level-panel strong');
+    const progressBar = page.getByRole('progressbar', { name: 'Nivel muscular de Pecho' });
+    const earnedLevel = await level.innerText();
+    const earnedProgress = await progressBar.getAttribute('aria-valuenow');
+    expect(earnedLevel).toBe('NIVEL 2');
+    expect(Number(earnedProgress)).toBeGreaterThan(0);
+    await expect(page.getByLabel('Mes muscular', { exact: true })).toHaveCount(0);
+    await noOverflow(page);
     await page.clock.setSystemTime(new Date('2026-12-31T23:00:00Z'));
     await page.clock.fastForward(1100);
-    await expect(page.locator('.body-detail')).toContainText('enero de 2027');
-    await expect(page.locator('.body-detail-total strong')).toHaveText('0');
-    await expect(page.locator('.muscle-level-panel')).toContainText('NIVEL 1');
-    await page.getByLabel('Mes muscular',{exact:true}).selectOption('2026-12');
-    await expect(page.locator('.body-detail-total strong')).toHaveText('3');
-    await expect(page.locator('.muscle-level-panel')).toContainText('TEMPORADA HISTÓRICA');
-    await page.screenshot({path:info.outputPath(`body-history-${width}.png`),fullPage:true,animations:'disabled'});
+    await expect(page.locator('.body-detail-total strong')).toHaveText('9');
+    await expect(level).toHaveText(earnedLevel);
+    await expect(progressBar).toHaveAttribute('aria-valuenow', earnedProgress!);
+    await page.reload();
+    await expect(level).toHaveText(earnedLevel);
+    await expect(progressBar).toHaveAttribute('aria-valuenow', earnedProgress!);
     await arcade();
     await page.getByRole('button', { name: 'Nivel y recompensas', exact: true }).click();
     await expect(page.locator('.arcade-ascent-hero')).toContainText('XP acumulada');

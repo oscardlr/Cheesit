@@ -1,6 +1,6 @@
 import { mock, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeGame, isGameState, gameBalance, openCrate, sellItem, equipItem, equipGearItem, equipCompanion, unequipGear, getItemDefinition, itemLabel, getLevelCrates, openLevelCrate, levelCrate, rewardForRoll, setOpeningStage, completeOpening, SPIN_DURATION_MS, REVEAL_DURATION_MS, getDailyQuote, getMissions, CRATES, QUOTES, RARITIES, rarityForRoll, type GameState, type InventoryItem } from '../src/lib/game';
+import { MASTER_CRATE_ID, revealReservedOpening, normalizeGame, isGameState, gameBalance, openCrate, sellItem, equipItem, equipGearItem, equipCompanion, unequipGear, getItemDefinition, itemLabel, getLevelCrates, openLevelCrate, levelCrate, rewardForRoll, setOpeningStage, completeOpening, SPIN_DURATION_MS, REVEAL_DURATION_MS, getDailyQuote, getMissions, CRATES, QUOTES, RARITIES, rarityForRoll, type GameState, type InventoryItem } from '../src/lib/game';
 import { GEAR } from '../src/lib/gear';
 import { rewardProgress } from '../src/lib/rewards';
 import { createBackup, previewBackup } from '../src/lib/backup';
@@ -25,6 +25,42 @@ function revealedCrate(game: GameState, history: Workout[], crateId: string) {
   const result = openCrate(game, history, crateId)!;
   return { ...result, game: reveal(result.game) };
 }
+
+test('master crate rolls 25/50/25, debits exactly 1000 and reserves one catalog item', () => {
+  const crate = CRATES.find(crate => crate.id === MASTER_CRATE_ID)!;
+  assert.equal(crate.cost, 1000);
+  const distribution = { common: 0, rare: 0, epic: 0, legendary: 0 };
+  for (let roll = 0; roll < 10000; roll++) distribution[rarityForRoll(crate, roll / 10000)]++;
+  assert.deepEqual(distribution, { common: 0, rare: 2500, epic: 5000, legendary: 2500 });
+
+  const grant = { season: '2026', xp: 0, credits: 900, grantedAt: '2026-11-01T12:00:00Z', charges: {} };
+  assert.equal(openCrate({ ...normalizeGame(), arcadeGrant: { ...grant, credits: 899 } }, [], crate.id), null);
+  for (const [roll, rarity] of [[0, 'rare'], [0.25, 'epic'], [0.75, 'legendary']] as const) {
+    const random = mock.method(crypto, 'getRandomValues', (bytes: Uint32Array) => {
+      bytes[0] = roll * 2 ** 32;
+      return bytes;
+    });
+    try {
+      const result = openCrate({ ...normalizeGame(), arcadeGrant: grant }, [], crate.id)!;
+      assert.equal(result.item.rarity, rarity);
+      assert.equal(getItemDefinition(result.item)?.rarity, rarity);
+      assert.equal(result.game.inventory.length, 1);
+      assert.equal(result.game.transactions.length, 1);
+      assert.equal(result.game.transactions[0].amount, -1000);
+      assert.equal(result.game.transactions[0].itemId, result.item.id);
+      assert.equal(gameBalance(result.game, []), 0);
+      const reloaded = normalizeGame(JSON.parse(JSON.stringify(result.game)));
+      assert.equal(reloaded.pendingOpening?.itemId, result.item.id);
+      assert.equal(openCrate(reloaded, [], crate.id), null);
+      const revealed = revealReservedOpening(reloaded);
+      assert.equal(revealReservedOpening(revealed), revealed);
+      assert.deepEqual(revealed.inventory, result.game.inventory);
+      assert.deepEqual(revealed.transactions, result.game.transactions);
+    } finally {
+      random.mock.restore();
+    }
+  }
+});
 
 test('opening spends and awards atomically; blocked sales and reloading preserve the item and balance', () => {
   const original = normalizeGame();
@@ -104,24 +140,24 @@ test('rarity boundaries and visible probabilities agree, and daily motivation is
   assert.ok(QUOTES.some(quote => quote.text === getDailyQuote('2026-10-27')));
 });
 
-test('missions use finished activity and count distinct days while the body map includes valid drafts', () => {
+test('missions use finished activity and count distinct days while the body map uses finished workouts', () => {
   const history = [workout([exercise('press-banca-barra')], '2026-11-02'), workout([exercise('press-banca-barra')], '2026-11-02'),
     workout([exercise('curl-barra', 'Bíceps')], '2026-11-02', 'draft'),
     workout([exercise('sentadilla-barra', 'Pierna y glúteo')], '2026-11-01')];
   const missions = getMissions(history, '2026-11-03', normalizeGame());
   assert.equal(missions[0].current, 1);
   assert.equal(missions[1].current, 2);
-  const muscles = muscleActivity(history, '2026-11-03', 7);
+  const muscles = muscleActivity(history, '2026-11-03');
   assert.equal(muscles.find(muscle => muscle.id === 'chest')!.sets, 2);
   assert.equal(muscles.find(muscle => muscle.id === 'triceps')!.secondarySets, 2);
   assert.equal(muscles.find(muscle => muscle.id === 'triceps')!.weightedSets, 1);
-  assert.equal(muscles.find(muscle => muscle.id === 'biceps')!.sets, 1);
+  assert.equal(muscles.find(muscle => muscle.id === 'biceps')!.sets, 0);
   assert.equal(muscles.find(muscle => muscle.id === 'quads')!.weightedSets, 1);
-  const custom = muscleActivity([workout([exercise('custom', 'Pierna y glúteo')], '2026-11-02')], '2026-11-03', 7);
+  const custom = muscleActivity([workout([exercise('custom', 'Pierna y glúteo')], '2026-11-02')], '2026-11-03');
   assert.equal(custom.find(muscle => muscle.id === 'quads')!.approximate, true);
   const invalid = workout([exercise('press-banca-barra')], '2026-11-02');
   invalid.exercises[0].sets[0].confirmed = false;
-  assert.ok(muscleActivity([invalid], '2026-11-03', 7).every(muscle => muscle.weightedSets === 0));
+  assert.ok(muscleActivity([invalid], '2026-11-03').every(muscle => muscle.weightedSets === 0));
 });
 
 test('backups preserve old data, reject fabricated ledgers and reconcile only direct economic continuations', () => {

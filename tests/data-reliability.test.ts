@@ -143,7 +143,7 @@ test('prescription validates ordered integer ranges and initializes values witho
 test('custom anatomy is snapshotted and does not attribute calf work to every leg muscle', () => {
   const custom = { id: crypto.randomUUID(), name: 'Mi gemelo', group: 'Pierna y glúteo', mode: 'external_load_reps' as const, loadConvention: 'total' as const, primaryMuscles: ['calves' as const], secondaryMuscles: [] };
   const ex = { ...block(), ...exerciseSnapshot(custom) };
-  const activity = muscleActivity([session(ex)], newWorkout().date, 7);
+  const activity = muscleActivity([session(ex)], newWorkout().date);
   assert.equal(activity.find(muscle => muscle.id === 'calves')!.sets, 1);
   assert.equal(activity.find(muscle => muscle.id === 'quads')!.sets, 0);
   assert.equal(activity.find(muscle => muscle.id === 'calves')!.approximate, false);

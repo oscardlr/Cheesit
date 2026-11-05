@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
 import { emptyData } from '../src/lib/model';
 import { blankDocument } from '../src/lib/remote/document';
-import { normalizeGame } from '../src/lib/game';
+import { normalizeGame, openCrate } from '../src/lib/game';
 
 // PostgreSQL WASM, not a mock of RLS or PL/pgSQL. Auth users/JWT claims are
 // supplied locally; actual Supabase mail/JWT issuance has a separate live suite.
@@ -48,4 +48,25 @@ test('PostgreSQL: migration, RLS isolation, anonymous denial, idempotence, CAS, 
   const forged=structuredClone(legacy);forged.game.missionRewards[0].xp+=1;
   await assert.rejects(db.query('select public.cheesit_validate_data($1::jsonb)',[JSON.stringify(forged)]), /invalid mission reward/);
   await db.close();
+});
+
+test('PostgreSQL account validator accepts one master prize at its fixed price', async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(`create role anon; create role authenticated; create schema auth; create table auth.users(id uuid primary key); create function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;`);
+    await db.exec(readFileSync('supabase/migrations/202611020001_accounts.sql', 'utf8'));
+    await db.exec(readFileSync('supabase/migrations/20261105234124_master_crate.sql', 'utf8'));
+    const original = { ...normalizeGame(), arcadeGrant: { season: '2026', xp: 0, credits: 900, grantedAt: '2026-11-01T12:00:00Z', charges: {} } };
+    const { game } = openCrate(original, [], 'master')!;
+    const validate = (value: typeof game) => db.query('select public.cheesit_validate_data($1::jsonb)', [JSON.stringify({ ...emptyData(), game: value })]);
+    await validate(game);
+    const wrongPrice = structuredClone(game);
+    wrongPrice.transactions[0].amount = -999;
+    await assert.rejects(validate(wrongPrice), /invalid purchase/);
+    const duplicateDebit = structuredClone(game);
+    duplicateDebit.transactions.push({ ...game.transactions[0], id: crypto.randomUUID() });
+    await assert.rejects(validate(duplicateDebit), /invalid purchase history/);
+  } finally {
+    await db.close();
+  }
 });
