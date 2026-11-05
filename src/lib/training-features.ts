@@ -5,12 +5,13 @@ import { isWorkSet, validSet, type AppData, type Workout, type WorkoutExercise, 
 import { effectiveLoad } from './strength';
 import { CHARACTER_ART, CHARACTER_ATLAS, CHARACTER_MASTER, CHARACTER_SLOT_ORDER } from './character-art';
 import { CHEESIT_ART } from './cheesit-art';
+import { validExerciseGoals, type ExerciseGoal } from './exercise-goals';
 
 export type Appearance = { base: string; atlas: string; atlasWidth: number; atlasHeight: number; layers: { id: string; order: number; source: number[]; target: number[]; replacesHand?: boolean; foregroundMask?: string }[]; companion?: string; level: number };
 export type Moment = { id: string; kind: 'first-session' | 'weekly-goal' | 'record' | 'level'; date: string; title: string; description: string; workoutIds: string[]; appearance: Appearance | null };
 export type RoutineCycle = { id: string; name: string; routineIds: string[]; position: number; completedWorkoutIds: string[] };
 export type WeeklyGoal = { week: string; days: number; sets: number; observedOn: string };
-export type TrainingFeatures = { moments: Moment[]; cycles: RoutineCycle[]; weeklyGoals: WeeklyGoal[] };
+export type TrainingFeatures = { moments: Moment[]; cycles: RoutineCycle[]; weeklyGoals: WeeklyGoal[]; exerciseGoals?: ExerciseGoal[] };
 export const trainingFeatures = (data: AppData): TrainingFeatures => data.training ?? { moments: [], cycles: [], weeklyGoals: [] };
 export const hasWorkSets = (w: Workout) => w.exercises.some(e => e.sets.some(s => isWorkSet(s) && s.confirmed && validSet(s, e.mode)));
 const chronological = (a: Workout, b: Workout) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id);
@@ -178,6 +179,7 @@ export function validTrainingFeatures(value: unknown): value is TrainingFeatures
   const unique = (values: { id: string }[]) => new Set(values.map(v => v.id)).size === values.length;
   const asset = (v: unknown) => text(v, 300) && /^\/assets\/[a-zA-Z0-9_./-]+$/.test(v) && !v.includes('..');
   if (!list(f.moments, 50000) || !list(f.cycles, 100) || !list(f.weeklyGoals, 10000)) return false;
+  if (f.exerciseGoals !== undefined && !validExerciseGoals(f.exerciseGoals)) return false;
   if (!f.moments.every(m => m && text(m.id, 300) && ['first-session', 'weekly-goal', 'record', 'level'].includes(m.kind) && isCivilDate(m.date) && text(m.title, 200) && text(m.description) && list(m.workoutIds, 100) && m.workoutIds.every(id => text(id, 100)) && (m.appearance === null || (m.appearance && asset(m.appearance.base) && asset(m.appearance.atlas) && Number.isFinite(m.appearance.atlasWidth) && Number.isFinite(m.appearance.atlasHeight) && m.appearance.atlasWidth > 0 && m.appearance.atlasWidth <= 20000 && m.appearance.atlasHeight > 0 && m.appearance.atlasHeight <= 20000 && (m.appearance.companion === undefined || asset(m.appearance.companion)) && Number.isInteger(m.appearance.level) && m.appearance.level >= 1 && m.appearance.level <= 99 && list(m.appearance.layers, 5) && m.appearance.layers.every(l => l && text(l.id, 100) && Number.isInteger(l.order) && l.order >= 0 && l.order <= 10 && list(l.source, 4) && l.source.length === 4 && list(l.target, 4) && l.target.length === 4 && [...l.source, ...l.target].every(n => Number.isFinite(n) && n >= -10000 && n <= 10000) && (l.replacesHand === undefined || typeof l.replacesHand === 'boolean') && (l.foregroundMask === undefined || text(l.foregroundMask, 3000))))))) return false;
   return unique(f.moments) && f.cycles.every(c => c && text(c.id, 100) && text(c.name, 80) && !!c.name.trim() && list(c.routineIds, 100) && c.routineIds.every(id => text(id, 100)) && Number.isInteger(c.position) && c.position >= 0 && (c.routineIds.length === 0 ? c.position === 0 : c.position < c.routineIds.length) && list(c.completedWorkoutIds, 50000) && c.completedWorkoutIds.every(id => text(id, 100))) && unique(f.cycles) && f.weeklyGoals.every(g => g && isCivilDate(g.week) && weekStart(g.week) === g.week && isCivilDate(g.observedOn) && weekStart(g.observedOn) === g.week && Number.isInteger(g.days) && g.days >= 1 && g.days <= 7 && Number.isInteger(g.sets) && g.sets >= 1 && g.sets <= 200) && new Set(f.weeklyGoals.map(g => g.week)).size === f.weeklyGoals.length;
 }

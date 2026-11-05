@@ -119,21 +119,6 @@ export default function GameHub({ data, today, effectsEnabled, soundEnabled, ini
       {tab==='overview' && <SectionCards label="Apartados de Arcade" cards={destinations.map(({ id, label, icon }) => ({ label, icon, open: () => selectTab(id) }))}/>}
 
       {tab === 'goals' && <>
-        <form className="form-card weekly-goal-editor" key={`${game.weeklyWorkoutGoal}:${game.weeklySetGoal}`} onSubmit={event => {
-          event.preventDefault();
-          const values = new FormData(event.currentTarget);
-          const days = Number(values.get('days'));
-          const sets = Number(values.get('sets'));
-          if (!Number.isInteger(days) || days < 1 || days > 7 || !Number.isInteger(sets) || sets < 1 || sets > 200) return;
-          void updateGame(current => ({ ...current, weeklyWorkoutGoal: days, weeklySetGoal: sets }))
-            .then(() => setNotice('Objetivo semanal guardado.'))
-            .catch(() => setNotice('Reintenta el guardado del objetivo semanal.'));
-        }}>
-          <h2>Tu objetivo semanal</h2>
-          <label>Días de entrenamiento<input name="days" type="number" min={1} max={7} required defaultValue={game.weeklyWorkoutGoal}/></label>
-          <label>Series de trabajo<input name="sets" type="number" min={1} max={200} required defaultValue={game.weeklySetGoal}/></label>
-          <button className="secondary" type="submit">Guardar objetivo semanal</button>
-        </form>
         <div className="arcade-section-head"><div><span className="eyebrow">OBJETIVOS</span><h2>Objetivos de actividad</h2></div><span className="arcade-tag"><Check size={13} /> {missions.filter(mission => mission.complete).length}/{missions.length} completas</span></div>
         <fieldset className={filterStyles.groupFilter}><legend>Mostrar objetivos</legend><div className={filterStyles.groupButtons}>{([{ value: 'all', label: 'Todos' }, { value: 'pending', label: 'Pendientes' }, { value: 'rewarded', label: 'Recompensados' }] as const).map(({ value, label }) => <button type="button" key={value} aria-pressed={missionFilter === value} onClick={() => setMissionFilter(value)}>{label}</button>)}</div></fieldset>
         {(['weekly','career'] as const).map(scope => <MissionCategory key={scope} scope={scope} missions={missions.filter(mission => mission.scope === scope && (missionFilter === 'all' || (missionFilter === 'rewarded' ? mission.rewarded : !mission.rewarded)))}/>)}

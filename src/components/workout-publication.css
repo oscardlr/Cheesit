@@ -32,3 +32,10 @@
 .finish-dialog footer{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-top:22px}
 .finish-dialog footer button{min-height:46px}
 @media(max-width:600px){.finish-dialog{padding:20px}.finish-dialog footer{display:grid;grid-template-columns:1fr 1fr}.finish-dialog footer .primary{padding:12px;font-size:13px}}
+
+.caption-mentions{display:grid;list-style:none;margin:5px 0 0;padding:4px;max-height:230px;overflow:auto;background:var(--surface,#211c2b);border:1px solid var(--line);border-radius:12px}
+.caption-mentions button{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:6px 8px;text-align:left;background:none;border-radius:8px}
+.caption-mentions button:is(:hover,:focus-visible,[aria-selected=true]){background:#b8a0ff24}
+.caption-mentions button>span:last-child{display:grid;min-width:0;overflow-wrap:anywhere}
+.caption-mentions .personal-avatar{width:32px;height:32px;flex:none}
+.caption-mentions .personal-avatar :is(img,svg){width:100%;height:100%;object-fit:cover}

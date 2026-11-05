@@ -12,7 +12,17 @@ export type SocialProfile = {
 };
 export const SOCIAL_PAGE_SIZE = 20;
 export const validSocialQuery = (value: string) => /^[a-z0-9_][a-z0-9._]{0,29}$/.test(normalizeUsername(value));
+export type MentionSuggestion = Pick<SocialProfile, 'owner_id' | 'username' | 'display_name' | 'photo'>;
 const failure = 'No se ha podido confirmar la operación. Comprueba la conexión y reintenta para consultar el estado del servidor.';
+
+export async function suggestMentions(query: string, signal: AbortSignal): Promise<MentionSuggestion[]> {
+  const client = remoteClient();
+  if (!client) return [];
+  const { data, error } = await client.rpc('cheesit_suggest_mentions', { p_query: query })
+    .abortSignal(AbortSignal.any([signal, AbortSignal.timeout(10000)]));
+  if (error || !Array.isArray(data)) throw new Error(failure);
+  return data as MentionSuggestion[];
+}
 
 export async function readSocial(route: SocialRoute, offset = 0, signal?: AbortSignal): Promise<SocialProfile[]> {
   const client = remoteClient();

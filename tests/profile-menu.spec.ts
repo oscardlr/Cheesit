@@ -24,7 +24,7 @@ test('profile disclosure replaces the toolbar and keeps account controls in Sett
   await expect(menu.locator('img')).toHaveCount(0);
   await expect(menu.locator('svg')).toBeVisible();
   await menu.click();
-  await expect(page.locator('.profile-nav-options > button')).toHaveText(['Mi perfil', 'Ajustes', 'Cerrar sesión']);
+  await expect(page.locator('.profile-nav-options > button')).toHaveText(['Mi perfil', 'Objetivos', 'Ajustes', 'Cerrar sesión']);
   await expect(page).toHaveURL(/view=summary/);
   await expect(page.getByRole('group', { name: 'Opciones de perfil' })).toBeVisible();
   await page.getByRole('heading', { name: 'Inicio', exact: true }).click();

@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type MouseEvent, type ReactNode, type RefObject } from 'react';
+import { Fragment, useCallback, useEffect, useId, useRef, useState, type FormEvent, type MouseEvent, type ReactNode, type RefObject } from 'react';
 import { flushSync } from 'react-dom';
 import { ArrowUpRight, Check, Dumbbell, Heart, ImageOff, LockKeyhole, MessageCircle, RefreshCw, Search, Send, Share2, Trash2, Users, X } from 'lucide-react';
+import { captionMentions } from '@/lib/post-mentions';
 import { totals } from '@/lib/metrics';
 import {
   addPostComment, deletePostComment, downloadWorkoutPhoto, readFeed, readPostComments, setPostLike,
@@ -28,6 +29,20 @@ const number = (value: number) => value.toLocaleString('es-ES', { maximumFractio
 const message = (error: unknown, fallback: string) => error instanceof Error ? error.message : fallback;
 const dateLabel = (value: string) => new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'UTC' }).format(new Date(`${value.slice(0, 10)}T12:00:00Z`));
 const unique = <T extends { id: string }>(items: T[]) => [...new Map(items.map(item => [item.id, item])).values()];
+
+function FeedCaption({ caption, mentions, name, onProfile }: {
+  caption: string; mentions: FeedPost['mentions']; name: string; onProfile: FeedProps['onProfile'];
+}) {
+  const links = captionMentions(caption, mentions);
+  return <p className="feed-caption"><strong>{name}</strong>{' '}{links.map(({ start, end, owner }, index) => <Fragment key={start}>
+    {caption.slice(links[index - 1]?.end ?? 0, start)}
+    <a href={`#view=social&person=${encodeURIComponent(owner)}`} onClick={event => {
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      onProfile(owner);
+    }}>{caption.slice(start, end)}</a>
+  </Fragment>)}{caption.slice(links.at(-1)?.end ?? 0)}</p>;
+}
 
 /** Photos are fetched through authenticated Storage policies, never a public URL. */
 function WorkoutPhoto({ path, name, onOpen, onLike }: { path: string; name: string; onOpen: () => void; onLike: () => void }) {
@@ -211,7 +226,7 @@ function PostCard({ post, viewer, detail, onProfile, onWorkout, onUpdate, onUnav
     <header className="feed-post-header"><button className="feed-author" onClick={() => onProfile(post.owner_id)} aria-label={`Ver perfil de ${name}`}><PersonalAvatar photo={post.photo} name={name}/><span><strong>{name}</strong><span>@{post.username}</span></span></button><time dateTime={post.workout.date}>{dateLabel(post.workout.date)}</time></header>
     {post.photo_path && <WorkoutPhoto path={post.photo_path} name={name} onOpen={() => onWorkout(post.owner_id, post.workout_id)} onLike={() => void like(true)}/>}
     <div className="feed-actions"><button className={liked ? 'feed-liked' : ''} aria-label={liked ? 'Quitar me gusta' : 'Dar me gusta'} aria-pressed={liked} disabled={pendingLike !== null} onClick={() => void like(!liked)}><Heart size={23} fill={liked ? 'currentColor' : 'none'}/><span>{number(likes)}<span className="feed-action-label"> Me gusta</span></span></button><button ref={commentsButton} aria-expanded={comments} onClick={toggleComments} aria-label={`${post.comments} comentarios`}><MessageCircle size={23}/><span>{number(post.comments)}<span className="feed-action-label"> Comentarios</span></span></button><button className="feed-share" aria-label="Compartir entrenamiento" onClick={() => void share()}><Share2 size={22}/><span className="feed-action-label">Compartir</span></button></div>
-    {post.caption && <p className="feed-caption"><strong>{name}</strong> {post.caption}</p>}
+    {post.caption && <FeedCaption caption={post.caption} mentions={post.mentions} name={name} onProfile={onProfile}/>}
     {!detail && <div className={`feed-post-summary${post.photo_path ? '' : ' feed-post-without-photo'}`}><div className="feed-workout-label"><Dumbbell size={17}/><span>ENTRENAMIENTO COMPLETADO</span></div><h2 className="feed-workout-heading"><button className="feed-workout-title" onClick={() => onWorkout(post.owner_id, post.workout_id)}><span>{post.workout.name}</span><ArrowUpRight size={21}/></button></h2><div className="feed-workout-metrics"><span><strong>{post.workout.exercises.length}</strong> ejercicios</span><span><strong>{stats.sets}</strong> series</span><span><strong>{number(stats.volume)}</strong> kg × reps</span>{minutes !== null && <span><strong>{minutes}</strong> min</span>}</div><p className="feed-exercise-preview">{post.workout.exercises.slice(0, 3).map(exercise => exercise.name).join(' · ')}{post.workout.exercises.length > 3 && ` · +${post.workout.exercises.length - 3} más`}</p></div>}
     {error && <p className="feed-error" role="alert">{error}</p>}
     {notice && <p className="feed-notice" role="status">{notice}</p>}

@@ -65,11 +65,11 @@ export default function Notifications({ feed, guest, onBack, onAccount, onNaviga
   useEffect(() => { heading.current?.focus(); }, []);
   async function open(n: SocialNotification) {
     if (!n.read_at && !await feed.mark(n.id)) return;
-    const postOwner = n.kind === 'like' || n.kind === 'comment' ? n.workout_owner : n.actor_id;
-    onNavigate({ owner: postOwner ?? n.actor_id, list: null, query: '', workout: n.kind === 'follow' ? null : n.workout_id, source: 'notifications' });
+    onNavigate({ owner: n.workout_owner ?? n.actor_id, list: null, query: '', workout: n.kind === 'follow' ? null : n.workout_id, source: 'notifications' });
   }
   function notificationText(n: SocialNotification) {
     if (n.kind === 'follow') return ' ha empezado a seguirte.';
+    if (n.kind === 'mention') return n.workout_label ? ' te mencionó en una publicación.' : ' te mencionó en una publicación que ya no está disponible.';
     if (n.kind === 'like') return n.workout_label ? ' le ha dado me gusta a tu publicación.' : ' le ha dado me gusta a una publicación que ya no está disponible.';
     if (n.kind === 'comment') return n.workout_label ? ' ha comentado en tu publicación.' : ' ha comentado en una publicación que ya no está disponible.';
     return n.workout_label ? ` ha publicado un entrenamiento de ${n.workout_label.toLocaleLowerCase('es-ES')}.` : ' ha publicado un entrenamiento que ya no está disponible.';

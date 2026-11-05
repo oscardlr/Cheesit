@@ -20,6 +20,8 @@ import SessionEditor from './SessionEditor';
 import RoutineEditor from './RoutineEditor';
 import RoutineIcon from './RoutineIcon';
 import PersonalProfile from './PersonalProfile';
+import ObjectivesPanel from './ObjectivesPanel';
+import { same } from '@/lib/remote/document';
 import ProfileMenu from './ProfileMenu';
 import SocialPanel from './SocialPanel';
 import WorkoutFeed from './WorkoutFeed';
@@ -68,7 +70,7 @@ import type { AppStore } from '@/lib/guest-store';
 
 const GROUPS = ['Pecho', 'Espalda', 'Pierna y glúteo', 'Hombro', 'Bíceps', 'Tríceps', 'Abdominales'];
 const EMPTY: AppData = { routines: [], workouts: [], customExercises: [] };
-type Screen = 'summary' | 'feed' | 'train' | 'plans' | 'publish' | 'routines' | 'start' | 'editor' | 'routine' | 'settings' | 'detail' | 'progress' | 'game' | 'catalog' | 'profile' | 'social' | 'notifications';
+type Screen = 'summary' | 'feed' | 'train' | 'plans' | 'publish' | 'routines' | 'start' | 'editor' | 'routine' | 'settings' | 'detail' | 'progress' | 'game' | 'catalog' | 'profile' | 'objectives' | 'social' | 'notifications';
 type GameTab=ArcadeView;
 type ProgressView = 'history' | 'records' | 'body';
 const progressViews = [{ id: 'history', label: 'Historial' }, { id: 'records', label: 'Marcas' }, { id: 'body', label: 'Cuerpo' }] as const;
@@ -82,7 +84,7 @@ const pageTitles: Record<Screen, string> = {
   summary: 'Inicio', feed: 'Comunidad', train: 'Entrenar', plans: 'Planes de entrenamiento',
   publish: 'Publicación', routines: 'Mis rutinas', start: 'Empezar entreno', editor: 'En sesión',
   routine: 'Tu rutina', detail: 'Entrenamiento', progress: 'Progreso', game: 'Arcade',
-  catalog: 'Catálogo de ejercicios', settings: 'Ajustes', profile: 'Mi perfil', social: 'Personas', notifications: 'Notificaciones',
+  catalog: 'Catálogo de ejercicios', settings: 'Ajustes', profile: 'Mi perfil', objectives: 'Objetivos', social: 'Personas', notifications: 'Notificaciones',
 };
 
 const dateLabel = (s: string, options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' }) => isCivilDate(s)?new Intl.DateTimeFormat('es-ES', { ...options, timeZone: 'UTC' }).format(new Date(`${s}T12:00:00Z`)):'Fecha pendiente';
@@ -303,8 +305,8 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
   busyRef.current=true;
   setBusy(true);
   try {
-   const same=workout.publication?.published===publication.published&&workout.publication?.caption===publication.caption&&workout.publication?.photoPath===publication.photoPath;
-   if(!same)await persistData({...latest,workouts:latest.workouts.map(item=>item.id===id?{...item,publication,updatedAt:new Date().toISOString()}:item)});
+   const unchanged=same(workout.publication,publication);
+   if(!unchanged)await persistData({...latest,workouts:latest.workouts.map(item=>item.id===id?{...item,publication,updatedAt:new Date().toISOString()}:item)});
    await store.flushData();
    await store.synchronize();
    if(store.hasUnsynced())throw new Error('Reintenta cuando recuperes la conexión.');
@@ -423,6 +425,7 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
  <footer className="dashboard-footer"><p className="storage-status" role="status"><span>●</span> {saveError ? saveState : syncLabel}</p></footer>
  </>}
  {screen==='profile' && <PersonalProfile onPublication={(owner,workout)=>guardNavigation(()=>{setSocialRoute({owner,workout,list:null,query:''});setScreen('social')})} accountOwner={accountOwner} onSocial={list=>guardNavigation(()=>{setSocialRoute({owner:accountOwner??null,list,query:''});setScreen('social')})} username={username} guest={guest} data={data} level={rewards.level} xp={rewards.xp} onSave={personalProfile=>persistConfirmedData({...currentData.current,personalProfile})} onWorkout={id=>{setDetailReturn('profile');setDetailId(id);setScreen('detail')}} onStart={()=>openStart()} onBack={()=>navigate('summary')}/>}
+ {screen==='objectives' && <><Back title="Objetivos" onClick={()=>navigate('summary')}/><ObjectivesPanel data={data} exercises={exercises} today={today} onSave={update=>persistData(update(currentData.current))}/></>}
  {screen==='game' && <GameHub initialTab={gameTab} onTabChange={setGameTab} data={data} onPersist={persistData} onSettings={()=>navigate('settings')} today={today} effectsEnabled={effectsEnabled} soundEnabled={soundEnabled}/>}
  {screen==='notifications' && <Notifications feed={notificationFeed} guest={guest||!accountOwner} onBack={()=>navigate('feed')} onAccount={()=>navigate('settings')} onNavigate={route=>guardNavigation(()=>{setSocialRoute(route);setScreen('social')})}/>}
  {screen==='social' && <SocialPanel key={`${accountOwner??'guest'}:${socialRoute.owner??''}:${socialRoute.list??''}`} owner={accountOwner} guest={guest} route={socialRoute} onNavigate={route=>guardNavigation(()=>setSocialRoute(route))} onBack={()=>{if(socialRoute.source==='notifications')navigate('notifications');else if(socialRoute.list)setSocialRoute({...socialRoute,list:null});else if(socialRoute.source==='people')navigate('feed',()=>setPeopleQuery(socialRoute.query));else if(socialRoute.owner)setSocialRoute({owner:null,list:null,query:socialRoute.query});else navigate('feed')}} onAccount={()=>navigate('settings')}/>}

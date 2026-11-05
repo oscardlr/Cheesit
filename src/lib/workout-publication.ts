@@ -1,4 +1,5 @@
 import type { WorkoutPublication } from './model';
+import { isPostMentions } from './post-mentions';
 
 const uuid = '[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
 const photoPath = new RegExp(`^${uuid}/(${uuid})/${uuid}\\.jpg$`, 'i');
@@ -6,8 +7,9 @@ const photoPath = new RegExp(`^${uuid}/(${uuid})/${uuid}\\.jpg$`, 'i');
 export function isWorkoutPublication(value: unknown, workoutId?: unknown): value is WorkoutPublication {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const publication = value as Record<string, unknown>;
-  if (typeof publication.published !== 'boolean' || Object.keys(publication).some(key => !['published', 'photoPath', 'caption'].includes(key))) return false;
+  if (typeof publication.published !== 'boolean' || Object.keys(publication).some(key => !['published', 'photoPath', 'caption', 'mentions'].includes(key))) return false;
   if (publication.caption !== undefined && (typeof publication.caption !== 'string' || publication.caption.length > 1000)) return false;
+  if (publication.mentions !== undefined && !isPostMentions(publication.mentions)) return false;
   if (publication.photoPath === undefined) return true;
   if (typeof publication.photoPath !== 'string') return false;
   const match = publication.photoPath.match(photoPath);

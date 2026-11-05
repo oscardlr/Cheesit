@@ -27,6 +27,7 @@ export async function accountsHarness(port = Number(process.env.CHEESIT_ACCOUNTS
   await db.exec(readFileSync('supabase/migrations/20261104192645_workout_publication_caption.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/20261104192654_profile_gym.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/20261104192712_social_interactions.sql','utf8'));
+  await db.exec(readFileSync('supabase/migrations/20261105111035_workout_post_mentions.sql','utf8'));
   const buckets = (await db.query<{id:string;file_size_limit:number;allowed_mime_types:string[]}>('select id,file_size_limit,allowed_mime_types from storage.buckets')).rows;
   const objects = new Map<string,{bytes:Buffer;type:string}>();
   const users = new Map<string, { id: string; email: string; password: string; confirmed: boolean }>();
@@ -121,6 +122,7 @@ export async function accountsHarness(port = Number(process.env.CHEESIT_ACCOUNTS
             order by p.username limit $3 offset $4`,[url.searchParams.get('owner_id')?.slice(4),literal?JSON.parse(literal):null,Number(url.searchParams.get('limit')??21),Number(url.searchParams.get('offset')??0)])).rows;
         }
         if(url.pathname==='/rest/v1/cheesit_social_profiles' && req.method==='GET')return (await tx.query('select username,display_name,photo from public.cheesit_social_profiles where owner_id=$1',[url.searchParams.get('owner_id')?.replace('eq.','')??owner])).rows[0]??null;
+        if(url.pathname==='/rest/v1/rpc/cheesit_suggest_mentions') return (await tx.query<{result:unknown}>('select public.cheesit_suggest_mentions($1) result',[input.p_query])).rows[0].result;
         if(url.pathname==='/rest/v1/rpc/cheesit_read_social') return (await tx.query<{result:unknown}>('select public.cheesit_read_social($1,$2,$3,$4) result',[input.p_query,input.p_owner,input.p_list,input.p_offset])).rows[0].result;
         if(url.pathname==='/rest/v1/cheesit_follows'){
           if(req.method==='POST')return (await tx.query('insert into public.cheesit_follows(follower_id,followed_id) values($1,$2) returning *',[input.follower_id,input.followed_id])).rows;
