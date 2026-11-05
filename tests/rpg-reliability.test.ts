@@ -46,21 +46,22 @@ test('a legacy sold phrase is retired while sale and credit history remain uncha
 });
 
 test('weekly missions use distinct dates and explain a changed target after its reward was frozen',()=>{
-  const history=[session(),session(),session()];
+  const weeklyDay = '2026-11-04';
+  const history=[session(weeklyDay),session(weeklyDay),session(weeklyDay)];
   const initial=normalizeGame();
-  const personal=getMissions(history,day,initial).find(mission=>mission.id==='sessions:2026-10-26')!;
+  const personal=getMissions(history,weeklyDay,initial).find(mission=>mission.id==='sessions:2026-11-02')!;
   assert.equal(personal.current,1);
   assert.equal(personal.complete,false);
-  const paid=awardMissionRewards({...initial,weeklyWorkoutGoal:1},history,day);
+  const paid=awardMissionRewards({...initial,weeklyWorkoutGoal:1},history,weeklyDay);
   const changed={...paid,weeklyWorkoutGoal:5};
-  const mission=getMissions(history,day,changed).find(mission=>mission.id===personal.id)!;
+  const mission=getMissions(history,weeklyDay,changed).find(mission=>mission.id===personal.id)!;
   assert.equal(mission.target,1);
   assert.equal(mission.current,1);
   assert.ok(mission.rewarded&&mission.complete);
   assert.match(mission.rewardNote!,/meta actual es 5/);
-  assert.match(mission.rewardNote!,/próxima semana/);
-  assert.strictEqual(awardMissionRewards(changed,history,day),changed);
-  const deleted=getMissions(history.map(value=>({...value,status:'deleted' as const})),day,changed).find(value=>value.id===personal.id)!;
+  assert.match(mission.rewardNote!,/cuando vuelva este objetivo/);
+  assert.strictEqual(awardMissionRewards(changed,history,weeklyDay),changed);
+  const deleted=getMissions(history.map(value=>({...value,status:'deleted' as const})),weeklyDay,changed).find(value=>value.id===personal.id)!;
   assert.equal(deleted.current,0);
   assert.ok(deleted.complete&&deleted.rewarded);
 });

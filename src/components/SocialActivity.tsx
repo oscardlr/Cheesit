@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { LockKeyhole } from 'lucide-react';
 import { readActivity, shareActivity, type SocialActivity as Activity } from '@/lib/remote/social';
-import { annualLevelProgress, currentSeasons } from '@/lib/seasons';
+import { levelProgress } from '@/lib/rewards';
 import { ProfileStats, ProfileWorkouts } from './ProfileActivity';
 import WorkoutDetailContent from './WorkoutDetailContent';
 
@@ -56,7 +56,7 @@ export default function SocialActivity({ owner, workout, own = false, onWorkout 
     return () => controller.abort();
   }, [owner, workout, own, offset, revision]);
   const summary = activity?.summary;
-  const progress = annualLevelProgress(summary?.seasons[currentSeasons().year] ?? 0);
+  const progress = levelProgress(Object.values(summary?.seasons ?? {}).reduce((total, xp) => total + xp, 0));
   return <section className="social-activity" aria-label={workout ? 'Detalle del entrenamiento' : 'Actividad compartida'}>
     {loading && <p role="status">Cargando {workout ? 'entrenamiento' : 'actividad'}…</p>}
     {error && <div className="social-error" role="alert"><p>{error}</p><button className="secondary" onClick={() => setRevision(n => n + 1)}>Reintentar actividad</button></div>}

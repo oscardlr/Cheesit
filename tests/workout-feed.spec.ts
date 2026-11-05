@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { accountsHarness } from './accounts-harness';
 import { CATALOG } from '../src/lib/catalog';
+import { addDays, todayMadrid } from '../src/lib/dates';
 import { emptyData, newWorkout, newSet, exerciseSnapshot, type AppData, type Workout } from '../src/lib/model';
 
 test.skip(process.env.CHEESIT_ACCOUNTS_FIXTURE !== '1', 'Requires isolated Auth/Postgres account fixture.');
@@ -24,7 +25,79 @@ function workout(name: string, status: Workout['status'] = 'finished'): Workout 
     publication: { published: true }, notes: 'NOTA PRIVADA DE LA SESIÓN',
     exercises: [{ id: crypto.randomUUID(), ...exerciseSnapshot(CATALOG.find(e => e.id === 'press-banca-barra')!), notes: 'NOTA PRIVADA DEL EJERCICIO', sets: [{ ...newSet(), weight: 40, reps: 10, confirmed: true }] }] };
 }
+test('today and calendar starts preserve the intended date and make old archives usable', async ({ page }) => {
+  const email = 'training-simplification@example.test';
+  const exercise = { ...CATALOG.find(item => item.id === 'press-banca-barra')!, id: crypto.randomUUID(), name: 'Ejercicio antes archivado', archived: true };
+  const routine = { id: crypto.randomUUID(), name: 'Rutina antes archivada', color: '#B8A0FF', archived: true,
+    exercises: [{ id: crypto.randomUUID(), exerciseId: exercise.id, sets: 1, repsMin: 10, targetWeight: 40 }] };
+  await harness.seed(email, undefined, { ...account('Atleta'), customExercises: [exercise], routines: [routine], preferences: { effects: false, sound: false } });
+  await login(page, email);
+  await nav(page, 'Entrenar').click();
+  await page.getByRole('button', { name: 'Empezar entreno', exact: true }).click();
+  await expect(page.getByLabel('Fecha', { exact: true })).toHaveCount(0);
+  await page.getByLabel('Rutina', { exact: true }).selectOption(routine.id);
+  await page.getByRole('button', { name: 'Empezar con esta rutina', exact: true }).click();
+  await expect(page.locator('.exercise-card')).toContainText(exercise.name);
+  await expect(page.getByRole('group', { name: /Tipo de serie/ })).toHaveCount(0);
+  await expect(page.getByRole('switch', { name: /Superserie/ })).toHaveCount(0);
+  await expect(page.getByText('Esfuerzo opcional', { exact: false })).toHaveCount(0);
+  await page.getByText('Notas del ejercicio', { exact: true }).click();
+  await page.getByLabel(`Notas de ${exercise.name}`, { exact: true }).fill('Mantener el control.');
+  await expect(page.getByLabel(/Descanso del ejercicio/)).toHaveCount(0);
+  await expect.poll(async () => ((await harness.account(email)).data as AppData).workouts[0]?.date).toBe(todayMadrid());
+
+  const past = addDays(todayMadrid(), -1);
+  await page.goto(`/#view=progress&tab=history&date=${past}`);
+  await expect(page.getByText('No hay entrenamientos este día.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Crear entrenamiento', exact: false })).toHaveCount(0);
+  const add = page.getByRole('button', { name: 'Añadir entrenamiento en este día', exact: true });
+  await expect(add).toHaveCount(1);
+  await expect(add).toHaveClass(/primary/);
+  await add.click();
+  await page.getByLabel('Rutina', { exact: true }).selectOption(routine.id);
+  await page.getByLabel('Nombre', { exact: true }).fill('Sesión pasada');
+  await page.getByRole('button', { name: 'Empezar con esta rutina', exact: true }).click();
+  await page.getByRole('button', { name: 'Confirmar serie 1', exact: true }).click();
+  await page.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Finalizar entrenamiento' }).getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
+  await expect.poll(async () => ((await harness.account(email)).data as AppData).workouts.find(item => item.name === 'Sesión pasada')).toMatchObject({ date: past, status: 'finished' });
+  const celebration = page.getByRole('button', { name: 'Continuar', exact: true });
+  if (await celebration.isVisible()) await celebration.click();
+  await expect(page.getByRole('button', { name: 'Publicar en Comunidad', exact: true })).toHaveClass(/primary/);
+});
+
 const account = (displayName: string, workouts: Workout[] = []): AppData => ({ ...emptyData(), workouts, personalProfile: { displayName, photo: null, bio: 'Cada rep cuenta.' } });
+
+test('retrying a failed save and publish opens the editor with a single private session', async ({ page }) => {
+  const email = 'retry-workout-publication@example.test';
+  const draft = workout('Sesión para reintentar', 'draft');
+  draft.publication = undefined;
+  await harness.seed(email, undefined, account('Atleta', [draft]));
+  await login(page, email);
+  await page.goto(`/#view=editor&id=${draft.id}`);
+  await page.evaluate(id => {
+    const put = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (value, key) {
+      const workouts = value?.draft?.data?.workouts as AppData['workouts'] | undefined;
+      if (this.name === 'accounts' && workouts?.some(item => item.id === id && item.status === 'finished')) {
+        const request = this.get(key!);
+        this.transaction.abort();
+        return request;
+      }
+      return key === undefined ? put.call(this, value) : put.call(this, value, key);
+    };
+    window.addEventListener('restore-test-storage', () => { IDBObjectStore.prototype.put = put; }, { once: true });
+  }, draft.id);
+  await page.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Finalizar entrenamiento' }).getByRole('button', { name: 'Guardar y publicar', exact: true }).click();
+  await expect(page.getByText('Cambios pendientes de guardar', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Publicación', exact: true })).toHaveCount(0);
+  expect(((await harness.account(email)).data as AppData).workouts[0].status).toBe('draft');
+  await page.evaluate(() => window.dispatchEvent(new Event('restore-test-storage')));
+  await page.getByRole('button', { name: 'Reintentar guardado', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Publicación', exact: true })).toBeVisible();
+  await expect.poll(async () => ((await harness.account(email)).data as AppData).workouts).toMatchObject([{ id: draft.id, status: 'finished', publication: { published: false } }]);
+});
 
 test('selecting a caption mention notifies the recipient once and opens the published workout', async ({ page, browser }) => {
   test.setTimeout(60000);
@@ -41,9 +114,9 @@ test('selecting a caption mention notifies the recipient once and opens the publ
     await page.goto(`/#view=editor&id=${draft.id}`);
     await page.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
     const finish = page.getByRole('dialog', { name: 'Finalizar entrenamiento', exact: true });
-    await finish.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
-    await page.getByRole('button', { name: 'Continuar', exact: true }).click();
-    await page.getByRole('button', { name: 'Publicar en Comunidad', exact: true }).click();
+    await finish.getByRole('button', { name: 'Guardar y publicar', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Publicación', exact: true })).toBeVisible();
+    await expect.poll(async () => ((await harness.account('mention-author@example.test')).data as AppData).workouts.filter(item => item.id === draft.id)).toMatchObject([{ status: 'finished', publication: { published: false } }]);
     const dialog = page.getByRole('main');
     const caption = dialog.getByRole('textbox', { name: /Descripción de la publicación/ });
     await caption.fill('Entrenando con @Bru');
@@ -61,9 +134,20 @@ test('selecting a caption mention notifies the recipient once and opens the publ
     const notice = other.locator('.notification-item').filter({ hasText: 'Ana te mencionó en una publicación.' });
     await expect(notice).toHaveCount(1);
     await expect(other.locator('.notification-item')).toHaveCount(1);
+    await nav(page, 'Comunidad').click();
+    const ownPost = page.locator('.feed-post').filter({ hasText: draft.name });
+    const actions = ownPost.getByLabel(`Opciones de la publicación: ${draft.name}`);
+    await actions.press('Enter');
+    await ownPost.getByRole('button', { name: 'Editar post', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Publicación', exact: true })).toBeVisible();
+    await caption.fill(`Actualizado con @${username} y otra vez @${username}. @sin_cuenta`);
+    await dialog.getByRole('button', { name: 'Publicar en Comunidad', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Comunidad', exact: true })).toBeVisible();
+    await expect(ownPost.locator('.feed-caption')).toContainText('Actualizado con');
     await notice.click();
     await expect(other).toHaveURL(new RegExp(`person=${author.id}.*workout=${draft.id}`));
     await expect(other.locator('.detail-hero h2')).toHaveText('Entreno con Bruno');
+    await expect(other.getByLabel(`Opciones de la publicación: ${draft.name}`)).toHaveCount(0);
     const postCaption = other.locator('.feed-caption');
     await expect(postCaption.getByRole('link', { name: `@${username}`, exact: true })).toHaveCount(2);
     await expect(postCaption.getByRole('link', { name: '@sin_cuenta' })).toHaveCount(0);
@@ -242,9 +326,9 @@ test('finish saves public/photo and private sessions, settings owns privacy, and
   } finally { await viewerContext.close(); }
 });
 
-test('training starts real routines and split progression survives reload, archiving and calendar relocation', async ({ page }) => {
+test('training starts real routines and split progression survives reload with a formerly archived routine', async ({ page }) => {
   test.setTimeout(120000);
-  const routines = ['Rutina A', 'Rutina B'].map(name => ({ id: crypto.randomUUID(), name, color: '#B8A0FF', archived: false, exercises: [{ id: crypto.randomUUID(), exerciseId: 'press-banca-barra', sets: 1, repsMin: 10, repsMax: 10, targetWeight: 40 }] }));
+  const routines = ['Rutina A', 'Rutina B'].map(name => ({ id: crypto.randomUUID(), name, color: '#B8A0FF', archived: name === 'Rutina B', exercises: [{ id: crypto.randomUUID(), exerciseId: 'press-banca-barra', sets: 1, repsMin: 10, repsMax: 10, targetWeight: 40 }] }));
   await harness.seed('split-author@example.test', undefined, { ...account('Persona Split'), routines });
   await login(page, 'split-author@example.test'); await nav(page, 'Entrenar').click();
   await page.getByRole('button', { name: 'Empezar entreno', exact: true }).click();
@@ -254,11 +338,9 @@ test('training starts real routines and split progression survives reload, archi
   await page.getByRole('button', { name: 'Mis rutinas', exact: true }).click();
   const routineBox = await page.locator('.routine-list').boundingBox(), createBox = await page.getByRole('button', { name: 'Crear rutina', exact: true }).boundingBox();
   expect(createBox!.y).toBeGreaterThanOrEqual(routineBox!.y + routineBox!.height);
-  page.once('dialog', dialog => void dialog.accept());
-  await page.getByRole('button', { name: 'Archivar Rutina B', exact: true }).click();
-  await expect(page.locator('.routine-list .routine-card')).toHaveCount(1);
-  await page.getByRole('button', { name: 'Restaurar', exact: true }).click();
   await expect(page.locator('.routine-list .routine-card')).toHaveCount(2);
+  await expect(page.getByRole('button', { name: 'Archivar Rutina B', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Archivadas', exact: true })).toHaveCount(0);
   await nav(page, 'Entrenar').click();
   await page.getByRole('button', { name: 'Planes de entrenamiento', exact: true }).click();
   await page.getByRole('button', { name: '＋ Crear split', exact: true }).click();
@@ -282,7 +364,7 @@ test('training starts real routines and split progression survives reload, archi
   const stored = (await harness.account('split-author@example.test')).data as AppData;
   expect(stored.training!.cycles[0].position).toBe(1);
   expect(stored.training!.cycles[0].completedWorkoutIds).toHaveLength(1);
-  expect(stored.routines).toHaveLength(2); expect(stored.routines.every(routine => !routine.archived)).toBe(true);
+  expect(stored.routines.map(routine => [routine.id, routine.archived])).toEqual(routines.map(routine => [routine.id, routine.archived]));
   await nav(page, 'Progreso').click();
   await expect(page.locator('.day.today')).toHaveAccessibleName(/1 entrenamiento/);
   await page.locator('.progress-calendar .list-row').first().filter({ hasText: 'Rutina A' }).click();

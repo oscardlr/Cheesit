@@ -49,7 +49,7 @@ export function completesRound(workout: Workout, exercise: WorkoutExercise, set:
 export function nextCycleRoutine(data: AppData, cycle: RoutineCycle) {
   for (let i = 0; i < cycle.routineIds.length; i++) {
     const position = (cycle.position + i) % cycle.routineIds.length;
-    const routine = data.routines.find(r => r.id === cycle.routineIds[position] && !r.archived && r.exercises.length > 0);
+    const routine = data.routines.find(r => r.id === cycle.routineIds[position] && r.exercises.length > 0);
     if (routine) return { routine, position };
   }
   return null;

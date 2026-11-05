@@ -2,7 +2,7 @@ import { addDays, isCivilDate, todayMadrid, weekStart } from './dates';
 import { isWorkSet, validSet, type Workout } from './model';
 
 export type MissionReward = { id: string; xp: number; target: number; awardedAt: string };
-export type Mission = { id: string; title: string; description: string; current: number; target: number; complete: boolean; unit: string; xp: number; scope: 'weekly' | 'career'; rewarded: boolean; rewardNote?: string };
+export type Mission = { id: string; title: string; description: string; current: number; target: number; complete: boolean; unit: string; xp: number; credits: number; scope: 'weekly' | 'career'; rewarded: boolean; rewardNote?: string };
 type MissionState = { weeklyWorkoutGoal: number; missionRewards?: MissionReward[] };
 type Stats = { days: number; sessions: number; sets: number; reps: number; exercises: number; groups: number; byGroup: Map<string, number> };
 type Metric = Exclude<keyof Stats, 'byGroup'> | `group:${string}`;
@@ -34,6 +34,18 @@ const career: Definition[] = [
   ...groups.flatMap((group, index) => [10, 25].map((target): Definition => ({ key: `career-group-${index}-${target}`, title: `${group} · ${target} series`, description: `Acumula ${target} series de ${group.toLocaleLowerCase('es-ES')} en tu historial.`, target, unit: 'series', xp: target === 10 ? 120 : 220, metric: `group:${group}`, scope: 'career' }))),
 ];
 const definitions = [...weekly, ...career];
+// Advance three positions each Madrid Monday. The catalog contains at least
+// six distinct entries, so adjacent windows never overlap, including at wraparound.
+const rotationMonday = Date.parse('2026-11-02');
+function weeklyDefinitions(monday: string): Definition[] {
+  const elapsedWeeks = (Date.parse(monday) - rotationMonday) / (7 * 24 * 60 * 60 * 1000);
+  const offset = ((3 * elapsedWeeks % weekly.length) + weekly.length) % weekly.length;
+  return Array.from({ length: 3 }, (_, index) => weekly[(offset + index) % weekly.length]);
+}
+
+// Every mission payout is divisible by five. Preserve the existing XP-to-credit
+// rate and account for the credits directly on each unique reward.
+const creditsForMission = (xp: number): number => xp / 5;
 const byKey = new Map(definitions.map(definition => [definition.key, definition]));
 
 function stats(history: Workout[], start: string, end: string): Stats {
@@ -56,15 +68,15 @@ function stats(history: Workout[], start: string, end: string): Stats {
 export function getObjectiveMissions(history: Workout[], day: string, game: MissionState): Mission[] {
   const start = weekStart(day), thisWeek = stats(history, start, day), lifetime = stats(history, '1000-01-01', day);
   const earned = new Map((game.missionRewards ?? []).map(reward => [reward.id, reward]));
-  return definitions.map(definition => {
+  return [...weeklyDefinitions(start), ...career].map(definition => {
     const id = definition.scope === 'weekly' ? `${definition.key}:${start}` : definition.key;
     const reward = earned.get(id), target = reward?.target ?? (definition.personal ? game.weeklyWorkoutGoal : definition.target);
     const source = definition.scope === 'weekly' ? thisWeek : lifetime;
     const current = definition.metric.startsWith('group:') ? source.byGroup.get(definition.metric.slice(6)) ?? 0 : source[definition.metric as Exclude<keyof Stats, 'byGroup'>];
     const rewardNote = reward && definition.personal && target !== game.weeklyWorkoutGoal
-      ? `Recompensa obtenida con ${target} ${target === 1 ? 'día' : 'días'}. Tu meta actual es ${game.weeklyWorkoutGoal}; se usará para la recompensa de la próxima semana. Esta semana no se cobra otra vez.`
+      ? `Recompensa obtenida con ${target} ${target === 1 ? 'día' : 'días'}. Tu meta actual es ${game.weeklyWorkoutGoal}; se usará cuando vuelva este objetivo. Esta semana no se cobra otra vez.`
       : reward ? 'Recompensa conservada aunque edites o borres actividad. El contador refleja el historial actual.' : undefined;
-    return { id, title: definition.title, description: definition.description, current, target, unit: definition.unit, xp: definition.xp, scope: definition.scope, complete: Boolean(reward) || current >= target, rewarded: Boolean(reward), ...(rewardNote ? { rewardNote } : {}) };
+    return { id, title: definition.title, description: definition.description, current, target, unit: definition.unit, xp: definition.xp, credits: creditsForMission(definition.xp), scope: definition.scope, complete: Boolean(reward) || current >= target, rewarded: Boolean(reward), ...(rewardNote ? { rewardNote } : {}) };
   });
 }
 
@@ -86,6 +98,17 @@ export function validMissionRewards(value: unknown): value is MissionReward[] {
 }
 
 export const missionRewardXp = (game: Pick<MissionState, 'missionRewards'>, season?: string): number => validMissionRewards(game.missionRewards ?? []) ? (game.missionRewards ?? []).reduce((total, reward) => total + (!season || todayMadrid(new Date(reward.awardedAt)).startsWith(season) ? reward.xp : 0), 0) : 0;
+
+export const missionRewardCredits = (game: Pick<MissionState, 'missionRewards'>): number => creditsForMission(missionRewardXp(game));
+
+/** The first receipt for each ID is authoritative, even if another device used a different goal. */
+export function mergeMissionRewards(...sources: (MissionReward[] | undefined)[]): MissionReward[] {
+  const byId = new Map<string, MissionReward>();
+  for (const source of sources) {
+    for (const reward of source ?? []) if (!byId.has(reward.id)) byId.set(reward.id, reward);
+  }
+  return [...byId.values()];
+}
 
 /** Freeze each completed reward once; edits, reloads and changing targets cannot replay it. */
 export function awardObjectiveMissions<T extends MissionState>(game: T, history: Workout[], day = todayMadrid(), changedDate?: string): T {

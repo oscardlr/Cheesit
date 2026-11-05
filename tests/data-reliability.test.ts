@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createBackup, previewBackup } from '../src/lib/backup';
 import { copyPreviousSets, copiedName, emptyData, exerciseSnapshot, newWorkout, newSet, snapshotLoadConventions, validPlannedSets, validRoutinePrescription, type AppData, type Routine, type WorkoutExercise } from '../src/lib/model';
 import { DEFAULT_PROFILE, effectiveLoad } from '../src/lib/strength';
-import { comparableSets, totals, workoutExerciseSessions } from '../src/lib/metrics';
+import { comparableSets, exerciseProgressSessions, totals, workoutExerciseSessions } from '../src/lib/metrics';
 import { muscleActivity } from '../src/lib/muscles';
 import { normalizeGame, openCrate } from '../src/lib/game';
 
@@ -84,6 +84,32 @@ test('duplicate blocks form one session and same-day ordering is deterministic',
   assert.deepEqual(matches.map(value => value.w.id), [second.id, first.id]);
   assert.equal(matches[1].e.sets.length, 2);
   assert.equal(first.exercises.length, 2);
+});
+
+test('exercise progress uses one comparable external-load result per session and marks only strict records', () => {
+  const workoutOn = (day: number, exercise: WorkoutExercise) => ({
+    ...session(exercise), date: `2026-10-2${day}`, createdAt: `2026-10-2${day}T10:00:00Z`,
+  });
+  const first = workoutOn(0, { ...block(40.5), loadConvention: 'total' });
+  const tie = workoutOn(1, { ...block(20.25), loadConvention: 'per_unit_bilateral' });
+  const best = workoutOn(2, { ...block(22), loadConvention: 'per_unit_bilateral' });
+  best.exercises.push({ ...block(43), loadConvention: 'total' });
+  best.exercises[0].sets.push({ ...block(70).sets[0], kind: 'warmup' }, { ...block(60).sets[0], confirmed: false });
+  const lighter = workoutOn(3, block(21));
+  const noLoad = workoutOn(4, { ...block(0), mode: 'bodyweight_reps' });
+  const draft = { ...workoutOn(5, block(100)), status: 'draft' as const };
+
+  assert.deepEqual(
+    exerciseProgressSessions([tie, noLoad, best, draft, lighter, first], best.exercises[0].exerciseId)
+      .map(({ workout, kgReps, newRecord }) => [workout.id, kgReps, newRecord]),
+    [
+      [noLoad.id, null, false],
+      [lighter.id, 420, false],
+      [best.id, 440, true],
+      [tie.id, 405, false],
+      [first.id, 405, false],
+    ],
+  );
 });
 
 test('copy creates missing rows with new identities and never confirms copied values', () => {

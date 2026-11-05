@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useId, useRef, useState, type FormEvent, type MouseEvent, type ReactNode, type RefObject } from 'react';
 import { flushSync } from 'react-dom';
-import { ArrowUpRight, Check, Dumbbell, Forward, Heart, ImageOff, LockKeyhole, MessageCircle, RefreshCw, Search, Send, Trash2, Users, X } from 'lucide-react';
+import { ArrowUpRight, Check, Dumbbell, Forward, Heart, ImageOff, LockKeyhole, MessageCircle, MoreHorizontal, RefreshCw, Search, Send, Trash2, Users, X } from 'lucide-react';
 import { captionMentions } from '@/lib/post-mentions';
 import { totals } from '@/lib/metrics';
 import {
@@ -21,6 +21,7 @@ type FeedProps = {
   onProfile: (owner: string) => void;
   onWorkout: (owner: string, workout: string) => void;
   onAccount?: () => void;
+  onEditWorkout?: (workout: string) => void;
   onTogglePeopleSearch?: () => void;
   peopleSearch?: ReactNode;
 };
@@ -168,8 +169,8 @@ function PostComments({ post, viewer, onProfile, onCount, onClose, composer }: {
   </section>;
 }
 
-function PostCard({ post, viewer, detail, onProfile, onWorkout, onUpdate, onUnavailable }: {
-  post: FeedPost; viewer: string; detail?: boolean; onProfile: FeedProps['onProfile']; onWorkout: FeedProps['onWorkout']; onUpdate: (update: (post: FeedPost) => FeedPost) => void; onUnavailable: (id: string) => void;
+function PostCard({ post, viewer, detail, onProfile, onWorkout, onEditWorkout, onUpdate, onUnavailable }: {
+  post: FeedPost; viewer: string; detail?: boolean; onProfile: FeedProps['onProfile']; onWorkout: FeedProps['onWorkout']; onEditWorkout: FeedProps['onEditWorkout']; onUpdate: (update: (post: FeedPost) => FeedPost) => void; onUnavailable: (id: string) => void;
 }) {
   const [comments, setComments] = useState(false);
   const [pendingLike, setPendingLike] = useState<boolean | null>(null);
@@ -179,6 +180,7 @@ function PostCard({ post, viewer, detail, onProfile, onWorkout, onUpdate, onUnav
   const mutationLock = useRef(false);
   const composer = useRef<HTMLTextAreaElement>(null);
   const commentsButton = useRef<HTMLButtonElement>(null);
+  const actions = useRef<HTMLDetailsElement>(null);
   const alive = useRef(true);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const liked = pendingLike ?? post.liked;
@@ -223,7 +225,29 @@ function PostCard({ post, viewer, detail, onProfile, onWorkout, onUpdate, onUnav
     }
   }
   return <article className={`feed-post${detail ? ' feed-post-detail' : ''}`} aria-label={`Entrenamiento de ${name}`} data-post-id={post.id}>
-    <header className="feed-post-header"><button className="feed-author" onClick={() => onProfile(post.owner_id)} aria-label={`Ver perfil de ${name}`}><PersonalAvatar photo={post.photo} name={name}/><span><strong>{name}</strong><span>@{post.username}</span></span></button><time dateTime={post.workout.date}>{dateLabel(post.workout.date)}</time></header>
+    <header className="feed-post-header">
+      <button className="feed-author" onClick={() => onProfile(post.owner_id)} aria-label={`Ver perfil de ${name}`}>
+        <PersonalAvatar photo={post.photo} name={name}/><span><strong>{name}</strong><span>@{post.username}</span></span>
+      </button>
+      <div className="feed-post-meta">
+        <time dateTime={post.workout.date}>{dateLabel(post.workout.date)}</time>
+        {viewer === post.owner_id && onEditWorkout && <details ref={actions} className="feed-post-options" onBlur={event => {
+          if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false;
+        }} onKeyDown={event => {
+          if (event.key !== 'Escape' || !event.currentTarget.open) return;
+          event.currentTarget.open = false;
+          event.currentTarget.querySelector('summary')?.focus();
+        }}>
+          <summary aria-label={`Opciones de la publicación: ${post.workout.name}`}><MoreHorizontal size={21} aria-hidden="true"/></summary>
+          <button type="button" className="feed-edit-post" onClick={() => {
+            if (actions.current) actions.current.open = false;
+            setError('');
+            try { onEditWorkout(post.workout_id); }
+            catch (reason) { setError(message(reason, 'No se ha podido abrir la publicación.')); }
+          }}>Editar post</button>
+        </details>}
+      </div>
+    </header>
     {post.photo_path && <WorkoutPhoto path={post.photo_path} name={name} onOpen={() => onWorkout(post.owner_id, post.workout_id)} onLike={() => void like(true)}/>}
     <div className="feed-actions"><button className={liked ? 'feed-liked' : ''} aria-label={liked ? 'Quitar me gusta' : 'Dar me gusta'} aria-pressed={liked} disabled={pendingLike !== null} onClick={() => void like(!liked)}><Heart size={23} fill={liked ? 'currentColor' : 'none'}/><span>{number(likes)}<span className="feed-action-label"> Me gusta</span></span></button><button ref={commentsButton} aria-expanded={comments} onClick={toggleComments} aria-label={`${post.comments} comentarios`}><MessageCircle size={23}/><span>{number(post.comments)}<span className="feed-action-label"> Comentarios</span></span></button><button className="feed-share" aria-label="Compartir entrenamiento" onClick={() => void share()}>
       <Forward size={22} aria-hidden="true"/>
@@ -239,7 +263,7 @@ function PostCard({ post, viewer, detail, onProfile, onWorkout, onUpdate, onUnav
   </article>;
 }
 
-function FeedStream({ viewer, owner, workout, onProfile, onWorkout, onTogglePeopleSearch, peopleSearch, following = false, onFollowingChange }: FeedProps & { viewer: string; following?: boolean; onFollowingChange: (following: boolean) => void }) {
+function FeedStream({ viewer, owner, workout, onProfile, onWorkout, onEditWorkout, onTogglePeopleSearch, peopleSearch, following = false, onFollowingChange }: FeedProps & { viewer: string; following?: boolean; onFollowingChange: (following: boolean) => void }) {
   const [items, setItems] = useState<FeedPost[]>([]);
   const [cursor, setCursor] = useState<FeedCursor | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -290,7 +314,7 @@ function FeedStream({ viewer, owner, workout, onProfile, onWorkout, onTogglePeop
     {peopleSearch}
     <div hidden={Boolean(peopleSearch)}>
     {notice && <p className="feed-notice" role="status">{notice}</p>}
-    <div className="feed-posts">{items.map(post => <PostCard key={post.id} post={post} viewer={viewer} detail={!!workout} onProfile={onProfile} onWorkout={onWorkout} onUpdate={update => setItems(previous => previous.map(item => item.id === post.id ? update(item) : item))} onUnavailable={id => { setItems(previous => previous.filter(item => item.id !== id)); setNotice('Esta publicación ya no está disponible.'); }}/>)}</div>
+    <div className="feed-posts">{items.map(post => <PostCard key={post.id} post={post} viewer={viewer} detail={!!workout} onProfile={onProfile} onWorkout={onWorkout} onEditWorkout={onEditWorkout} onUpdate={update => setItems(previous => previous.map(item => item.id === post.id ? update(item) : item))} onUnavailable={id => { setItems(previous => previous.filter(item => item.id !== id)); setNotice('Esta publicación ya no está disponible.'); }}/>)}</div>
     {loading && <p className="feed-status" role="status">{loaded ? 'Cargando más entrenamientos…' : 'Cargando publicaciones…'}</p>}
     {error && <div className="feed-error" role="alert"><p>{error}</p><button className="secondary" onClick={() => void load(failedCursor.current)}>Reintentar publicaciones</button></div>}
     {loaded && !loading && !error && items.length === 0 && <div className="feed-empty"><LockKeyhole size={32}/><h2>{workout ? 'Entrenamiento no disponible.' : following ? 'Todavía no hay publicaciones de las personas a las que sigues.' : 'Todavía no hay publicaciones.'}</h2><p>{workout ? 'Puede haberse eliminado, ser privado o no estar disponible para tu cuenta.' : owner ? 'Aquí aparecerán los entrenamientos publicados que tengas permiso para ver. La privacidad del perfil también se aplica a sus publicaciones.' : following ? 'Puedes descubrir a más personas en «Buscar personas» y seguirlas desde su perfil.' : 'Cuando alguien publique un entrenamiento, lo encontrarás aquí. Puedes publicar el tuyo desde el historial después de guardarlo.'}</p></div>}

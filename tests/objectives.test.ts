@@ -1,15 +1,16 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { addDays } from '../src/lib/dates';
 import { createBackup, previewBackup } from '../src/lib/backup';
 import {
   awardMissionRewards, gameBalance, gameProgress, getLevelCrates, getMissions,
-  isGameState, normalizeGame, openLevelCrate, type GameState,
+  isGameState, normalizeGame, openCrate, openLevelCrate, type GameState,
 } from '../src/lib/game';
 import type { AppData, Workout, WorkoutExercise } from '../src/lib/model';
-import { missionRewardXp, validMissionRewards } from '../src/lib/objectives';
+import { missionRewardCredits, missionRewardXp, validMissionRewards } from '../src/lib/objectives';
 import { levelProgress, rewardProgress } from '../src/lib/rewards';
 
-const day = '2026-10-21', monday = '2026-10-19';
+const day = '2026-11-04', monday = '2026-11-02';
 const data = (game?: GameState, workouts: Workout[] = []): AppData => ({
   routines: [], customExercises: [], workouts, ...(game ? { game } : {}),
 });
@@ -24,32 +25,45 @@ function workout(date: string, exercises = [exercise()], status: Workout['status
     createdAt: `${date}T12:00:00Z`, updatedAt: `${date}T12:00:00Z`, exercises };
 }
 
-const completedWeek = (dates = ['2026-10-19', '2026-10-20', '2026-10-21']) =>
+const completedWeek = (dates = ['2026-11-02', '2026-11-03', '2026-11-04']) =>
   dates.map(date => workout(date, [exercise('press-banca-barra', 'Pecho', 10)]));
 
-test('the 52 objectives include 17 weekly and 35 career challenges with distinct stable IDs and meaningful targets and XP', () => {
+test('three weekly and 35 career objectives show stable IDs, targets, XP and credits', () => {
   const game = normalizeGame(), missions = getMissions([], day, game);
-  assert.equal(missions.length, 52);
-  assert.equal(missions.filter(mission => mission.scope === 'weekly').length, 17);
+  assert.equal(missions.length, 38);
+  assert.equal(missions.filter(mission => mission.scope === 'weekly').length, 3);
   assert.equal(missions.filter(mission => mission.scope === 'career').length, 35);
-  assert.equal(new Set(missions.map(mission => mission.id)).size, 52);
+  assert.equal(new Set(missions.map(mission => mission.id)).size, 38);
   assert.ok(missions.every(mission => Number.isInteger(mission.target) && mission.target > 0 &&
-    Number.isInteger(mission.xp) && mission.xp >= 50 && mission.title && mission.description &&
+    Number.isInteger(mission.xp) && mission.xp >= 50 && mission.credits === mission.xp / 5 && mission.title && mission.description &&
     mission.current === 0 && !mission.complete && !mission.rewarded));
-  assert.deepEqual(new Set(missions.map(mission => mission.unit)), new Set(['días', 'series', 'grupos', 'reps', 'ejercicios', 'entrenamientos', 'repeticiones', 'grupos musculares', 'ejercicios distintos']));
-  const sunday = getMissions([], '2026-10-25', game);
+  assert.deepEqual(new Set(missions.map(mission => mission.unit)), new Set(['días', 'series', 'grupos', 'entrenamientos', 'repeticiones', 'grupos musculares', 'ejercicios distintos']));
+  const sunday = getMissions([], '2026-11-08', game);
   assert.deepEqual(sunday.map(mission => mission.id), missions.map(mission => mission.id));
-  const nextWeek = getMissions([], '2026-10-28', game);
+  const nextWeek = getMissions([], '2026-11-11', game);
   assert.deepEqual(nextWeek.filter(mission => mission.scope === 'career').map(mission => mission.id), missions.filter(mission => mission.scope === 'career').map(mission => mission.id));
   assert.ok(missions.filter(mission => mission.scope === 'weekly').every(mission => mission.id.endsWith(`:${monday}`)));
-  assert.ok(nextWeek.filter(mission => mission.scope === 'weekly').every(mission => mission.id.endsWith(':2026-10-26')));
+  assert.ok(nextWeek.filter(mission => mission.scope === 'weekly').every(mission => mission.id.endsWith(':2026-11-09')));
+  const seen = new Set<string>();
+  let previous = new Set<string>();
+  for (let index = 0; index < 60; index++) {
+    const week = addDays(monday, index * 7);
+    const keys = new Set(getMissions([], week, game).filter(mission => mission.scope === 'weekly').map(mission => mission.id.split(':')[0]));
+    assert.equal(keys.size, 3);
+    for (const key of keys) {
+      assert.ok(!previous.has(key), `${key} repeated in consecutive weeks`);
+      seen.add(key);
+    }
+    previous = keys;
+  }
+  assert.equal(seen.size, 17, 'all weekly definitions rotate, including across a year boundary');
 });
 
 test('objective counters use finished valid unique work only and exclude drafts, deleted sessions, invalid dates and future activity', () => {
-  const first = workout('2026-10-19', [exercise('press-banca-barra', 'Pecho', 3, 10), exercise('sentadilla-barra', 'Pierna y glúteo', 2, 8)]);
-  const second = workout('2026-10-20', [exercise('press-banca-barra', 'Pecho', 2, 6)]);
+  const first = workout('2026-11-02', [exercise('press-banca-barra', 'Pecho', 3, 10), exercise('sentadilla-barra', 'Pierna y glúteo', 2, 8)]);
+  const second = workout('2026-11-03', [exercise('press-banca-barra', 'Pecho', 2, 6)]);
   const third = workout(day, [exercise('remo-barra', 'Espalda', 1, 12)]);
-  const priorWeek = workout('2026-10-18', [exercise('curl-barra', 'Bíceps', 4, 5)]);
+  const priorWeek = workout('2026-11-01', [exercise('curl-barra', 'Bíceps', 4, 5)]);
   const duplicatedSet = workout(day, [{ ...exercise('curl-barra', 'Bíceps'), sets: [{ ...first.exercises[0].sets[0] }] }]);
   const invalid = exercise();
   invalid.sets = [
@@ -61,9 +75,9 @@ test('objective counters use finished valid unique work only and exclude drafts,
   const invalidBodyweight = { ...exercise('dominadas', 'Espalda'), mode: 'bodyweight_reps' as const };
   const history = [first, second, third, priorWeek, structuredClone(first), duplicatedSet,
     workout(day, [invalid, invalidBodyweight]),
-    workout('2026-10-20', [exercise('curl-barra', 'Bíceps', 50)], 'draft'),
-    workout('2026-10-20', [exercise('curl-barra', 'Bíceps', 50)], 'deleted'),
-    workout('2026-10-22', [exercise('curl-barra', 'Bíceps', 50)]),
+    workout('2026-11-03', [exercise('curl-barra', 'Bíceps', 50)], 'draft'),
+    workout('2026-11-03', [exercise('curl-barra', 'Bíceps', 50)], 'deleted'),
+    workout('2026-11-05', [exercise('curl-barra', 'Bíceps', 50)]),
     workout('2026-02-30', [exercise('curl-barra', 'Bíceps', 50)]),
   ];
   const missions = new Map(getMissions(history, day, normalizeGame()).map(mission => [mission.id, mission]));
@@ -71,12 +85,6 @@ test('objective counters use finished valid unique work only and exclude drafts,
   assert.equal(current(`sessions:${monday}`), 3);
   assert.equal(current(`sets:${monday}`), 8);
   assert.equal(current(`variety:${monday}`), 3);
-  assert.equal(current(`week-reps-100:${monday}`), 70);
-  assert.equal(current(`week-exercises-5:${monday}`), 3);
-  assert.equal(current(`week-group-0:${monday}`), 5);
-  assert.equal(current(`week-group-1:${monday}`), 1);
-  assert.equal(current(`week-group-2:${monday}`), 2);
-  assert.equal(current(`week-group-4:${monday}`), 0);
   assert.equal(current('career-sessions-1'), 4);
   assert.equal(current('career-sets-10'), 12);
   assert.equal(current('career-reps-100'), 90);
@@ -89,9 +97,10 @@ test('completed objectives award once per stable ID and changing a personal goal
   const history = completedWeek(), original = normalizeGame(), before = structuredClone(original);
   const expected = getMissions(history, day, original).filter(mission => mission.complete);
   const awarded = awardMissionRewards(original, history, day);
-  assert.ok(expected.length > 10);
+  assert.ok(expected.length > 5);
   assert.deepEqual(new Set(awarded.missionRewards!.map(reward => reward.id)), new Set(expected.map(mission => mission.id)));
   assert.equal(missionRewardXp(awarded), expected.reduce((sum, mission) => sum + mission.xp, 0));
+  assert.equal(missionRewardCredits(awarded), expected.reduce((sum, mission) => sum + mission.credits, 0));
   assert.ok(validMissionRewards(awarded.missionRewards));
   assert.ok(isGameState(awarded));
   assert.deepEqual(original, before);
@@ -105,31 +114,35 @@ test('completed objectives award once per stable ID and changing a personal goal
   assert.deepEqual(awarded.transactions, original.transactions);
 });
 
-test('a new Madrid week grants new weekly IDs while career IDs never repeat', () => {
+test('a new Madrid week grants new weekly IDs while career IDs never repeat', t => {
+  t.mock.method(Date, 'now', () => Date.parse('2026-11-11T12:00:00Z'));
   const firstHistory = completedWeek(), first = awardMissionRewards(normalizeGame(), firstHistory, day);
-  const history = [...firstHistory, ...completedWeek(['2026-10-26', '2026-10-27', '2026-10-28'])];
-  const second = awardMissionRewards(first, history, '2026-10-28');
+  const history = [...firstHistory, ...completedWeek(['2026-11-09', '2026-11-10', '2026-11-11'])];
+  const second = awardMissionRewards(first, history, '2026-11-11');
   const ids = second.missionRewards!.map(reward => reward.id);
-  assert.ok(ids.includes('sessions:2026-10-19'));
-  assert.ok(ids.includes('sessions:2026-10-26'));
+  assert.ok(ids.includes('sessions:2026-11-02'));
+  assert.ok(ids.includes('week-sets-10:2026-11-09'));
+  assert.ok(!ids.includes('sessions:2026-11-09'));
   assert.equal(ids.filter(id => id === 'career-sessions-1').length, 1);
   assert.ok(ids.includes('career-sessions-5'));
   assert.equal(new Set(ids).size, ids.length);
   assert.deepEqual(second.missionRewards!.slice(0, first.missionRewards!.length), first.missionRewards);
-  assert.strictEqual(awardMissionRewards(second, history, '2026-10-28', day), second);
+  assert.strictEqual(awardMissionRewards(second, history, '2026-11-11', day), second);
   assert.ok(isGameState(second));
 });
 
-test('editing an earlier week can award its missed objectives without duplicating the current week or career milestones', () => {
-  const earlier = completedWeek(), current = completedWeek(['2026-10-26', '2026-10-27', '2026-10-28']);
+test('editing an earlier week can award its missed objectives without duplicating the current week or career milestones', t => {
+  t.mock.method(Date, 'now', () => Date.parse('2026-11-11T12:00:00Z'));
+  const earlier = completedWeek(), current = completedWeek(['2026-11-09', '2026-11-10', '2026-11-11']);
   const history = [...earlier, ...current];
-  const awarded = awardMissionRewards(normalizeGame(), history, '2026-10-28', '2026-10-20');
+  const awarded = awardMissionRewards(normalizeGame(), history, '2026-11-11', '2026-11-03');
   const ids = awarded.missionRewards!.map(reward => reward.id);
-  assert.ok(ids.includes('sessions:2026-10-19'));
-  assert.ok(ids.includes('sessions:2026-10-26'));
+  assert.ok(ids.includes('sessions:2026-11-02'));
+  assert.ok(ids.includes('week-sets-10:2026-11-09'));
+  assert.ok(!ids.includes('sessions:2026-11-09'));
   assert.equal(ids.filter(id => id === 'career-sessions-1').length, 1);
   assert.equal(new Set(ids).size, ids.length);
-  assert.strictEqual(awardMissionRewards(awarded, history, '2026-10-28', '2026-10-20'), awarded);
+  assert.strictEqual(awardMissionRewards(awarded, history, '2026-11-11', '2026-11-03'), awarded);
 });
 
 test('reload, backup restore, reimport and older backups preserve one permanent objective reward ledger', () => {
@@ -151,6 +164,18 @@ test('reload, backup restore, reimport and older backups preserve one permanent 
   const before = older.merged.game!;
   assert.strictEqual(awardMissionRewards(before, older.merged.workouts, day), before);
   assert.equal(missionRewardXp(before), missionRewardXp(earned));
+});
+
+test('selecting a conflicting backup purchase keeps previously earned objective rewards', () => {
+  const [session] = completedWeek();
+  const earned = awardMissionRewards(normalizeGame(), [session], day);
+  const first = openCrate(earned, [session], 'starter')!.game;
+  const second = openCrate(normalizeGame(), [], 'starter')!.game;
+  const snapshot = createBackup(data(second));
+  const merged = previewBackup(snapshot, data(first, [session]), { 'game:ledger': 'incoming' }).merged;
+  assert.deepEqual(merged.game?.missionRewards, earned.missionRewards);
+  assert.deepEqual(merged.game?.transactions, second.transactions);
+  assert.equal(missionRewardCredits(merged.game!), missionRewardCredits(earned));
 });
 
 test('permanent objective XP raises levels, credits and level-crate access while edits and deletion recalculate only training XP', () => {
@@ -195,10 +220,10 @@ test('unknown objective IDs, altered XP or targets, non-Monday weekly IDs and du
     [{ ...weekly, xp: weekly.xp + 1 }],
     [{ ...weekly, target: weekly.target + 1 }],
     [{ ...personal, target: 8 }],
-    [{ ...weekly, id: 'sets:2026-10-20' }],
+    [{ ...weekly, id: 'sets:2026-11-03' }],
     [{ ...weekly, id: 'sets' }],
-    [{ ...career, id: 'career-sessions-1:2026-10-19' }],
-    [{ ...weekly, awardedAt: '2026-10-18T12:00:00Z' }],
+    [{ ...career, id: 'career-sessions-1:2026-11-02' }],
+    [{ ...weekly, awardedAt: '2026-11-01T12:00:00Z' }],
     [weekly, { ...weekly }],
   ];
   for (const missionRewards of invalid) {

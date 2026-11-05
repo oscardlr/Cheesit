@@ -70,3 +70,36 @@ export function workoutExerciseSessions(history: Workout[], exerciseId: string, 
 export function workoutCopySessions(history: Workout[], exerciseId: string, mode?: WorkoutExercise['mode']) {
   return workoutExerciseSessions(history, exerciseId, mode, { includeWarmups: true });
 }
+
+export type ExerciseProgressSession = {
+  workout: Workout;
+  kgReps: number | null;
+  newRecord: boolean;
+};
+
+/** Track the best single work set per session using recorded external load. */
+export function exerciseProgressSessions(history: Workout[], exerciseId: string): ExerciseProgressSession[] {
+  const sessions = new Map<string, ExerciseProgressSession>();
+  for (const { w, e } of workoutExerciseSessions(history, exerciseId, undefined, { includeWarmups: true })) {
+    const session = sessions.get(w.id) ?? { workout: w, kgReps: null, newRecord: false };
+    if (e.mode === 'external_load_reps') {
+      for (const set of e.sets) {
+        if (!isWorkSet(set)) continue;
+        const loadCents = Math.round(effectiveLoad(e, set.weight!) * 100);
+        session.kgReps = Math.max(session.kgReps ?? 0, loadCents * set.reps! / 100);
+      }
+    }
+    sessions.set(w.id, session);
+  }
+
+  // The grouped entries arrive newest first. Compare each session against all earlier sessions.
+  const latestFirst = [...sessions.values()];
+  let best: number | null = null;
+  for (let i = latestFirst.length - 1; i >= 0; i--) {
+    const session = latestFirst[i];
+    if (session.kgReps === null || session.kgReps === 0) continue;
+    session.newRecord = best !== null && session.kgReps > best;
+    best = Math.max(best ?? 0, session.kgReps);
+  }
+  return latestFirst;
+}

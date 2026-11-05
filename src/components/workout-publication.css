@@ -31,7 +31,7 @@
 .finish-dialog fieldset{border:0;padding:0;margin:0;min-width:0}
 .finish-dialog footer{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-top:22px}
 .finish-dialog footer button{min-height:46px}
-@media(max-width:600px){.finish-dialog{padding:20px}.finish-dialog footer{display:grid;grid-template-columns:1fr 1fr}.finish-dialog footer .primary{padding:12px;font-size:13px}}
+@media(max-width:600px){.finish-dialog{padding:20px}.finish-dialog footer{display:grid;grid-template-columns:1fr 1fr}.finish-dialog footer button{padding:12px;font-size:13px}.finish-dialog footer .finish-publish{grid-column:1/-1}}
 
 .caption-mentions{display:grid;list-style:none;margin:5px 0 0;padding:4px;max-height:230px;overflow:auto;background:var(--surface,#211c2b);border:1px solid var(--line);border-radius:12px}
 .caption-mentions button{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:6px 8px;text-align:left;background:none;border-radius:8px}

@@ -105,23 +105,23 @@ test('rarity boundaries and visible probabilities agree, and daily motivation is
 });
 
 test('missions use finished activity and count distinct days while the body map includes valid drafts', () => {
-  const history = [workout([exercise('press-banca-barra')]), workout([exercise('press-banca-barra')]),
-    workout([exercise('curl-barra', 'Bíceps')], '2026-10-26', 'draft'),
-    workout([exercise('sentadilla-barra', 'Pierna y glúteo')], '2026-10-10')];
-  const missions = getMissions(history, '2026-10-27', normalizeGame());
+  const history = [workout([exercise('press-banca-barra')], '2026-11-02'), workout([exercise('press-banca-barra')], '2026-11-02'),
+    workout([exercise('curl-barra', 'Bíceps')], '2026-11-02', 'draft'),
+    workout([exercise('sentadilla-barra', 'Pierna y glúteo')], '2026-11-01')];
+  const missions = getMissions(history, '2026-11-03', normalizeGame());
   assert.equal(missions[0].current, 1);
   assert.equal(missions[1].current, 2);
-  const muscles = muscleActivity(history, '2026-10-27', 7);
+  const muscles = muscleActivity(history, '2026-11-03', 7);
   assert.equal(muscles.find(muscle => muscle.id === 'chest')!.sets, 2);
   assert.equal(muscles.find(muscle => muscle.id === 'triceps')!.secondarySets, 2);
   assert.equal(muscles.find(muscle => muscle.id === 'triceps')!.weightedSets, 1);
   assert.equal(muscles.find(muscle => muscle.id === 'biceps')!.sets, 1);
   assert.equal(muscles.find(muscle => muscle.id === 'quads')!.weightedSets, 1);
-  const custom = muscleActivity([workout([exercise('custom', 'Pierna y glúteo')])], '2026-10-27', 7);
+  const custom = muscleActivity([workout([exercise('custom', 'Pierna y glúteo')], '2026-11-02')], '2026-11-03', 7);
   assert.equal(custom.find(muscle => muscle.id === 'quads')!.approximate, true);
-  const invalid = workout([exercise('press-banca-barra')]);
+  const invalid = workout([exercise('press-banca-barra')], '2026-11-02');
   invalid.exercises[0].sets[0].confirmed = false;
-  assert.ok(muscleActivity([invalid], '2026-10-27', 7).every(muscle => muscle.weightedSets === 0));
+  assert.ok(muscleActivity([invalid], '2026-11-03', 7).every(muscle => muscle.weightedSets === 0));
 });
 
 test('backups preserve old data, reject fabricated ledgers and reconcile only direct economic continuations', () => {

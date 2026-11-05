@@ -28,7 +28,7 @@ test('season and phrase migrations commute, preserve economic XP, and remain ide
   assert.deepEqual(seasonThenQuote.inventory, legacy.inventory);
 });
 
-test('a committed seasonal chest crosses January with its original reward while the next year can claim the same level', t => {
+test('a committed seasonal chest crosses January with its original reward and only the next level unlocks another chest', t => {
   t.mock.method(Date, 'now', () => Date.parse('2025-12-31T20:00:00Z'));
   const legacy = legacyPhraseGame(), first = training('2025-12-31');
   let game = reconcileSeasonProgression(normalizeGame(legacy), [], undefined, '2025-12-01');
@@ -43,12 +43,14 @@ test('a committed seasonal chest crosses January with its original reward while 
   assert.deepEqual(january.inventory, opened.game.inventory);
   assert.equal(january.transactions.at(-1)?.sourceSeason, '2025');
   assert.equal(gameBalance(january, [first], undefined, 0), previousBalance);
-  assert.equal(gameProgress(january, [first]).level, 1);
-  assert.equal(gameProgress(january, [first]).xp, 0);
+  const level = gameProgress(opened.game, [first]).level;
+  assert.equal(gameProgress(january, [first]).level, level);
+  assert.equal(gameProgress(january, [first]).xp, gameProgress(opened.game, [first]).xp);
   assert.equal(openLevelCrate(january, [first], 2, undefined, '2026'), null);
   const second = training('2026-01-01'), history = [first, second];
   game = reconcileSeasonProgression(revealReservedOpening(january), history, undefined, '2026-01-01');
-  const next = openLevelCrate(game, history, 2, undefined, '2026');
+  assert.equal(openLevelCrate(game, history, 2, undefined, '2026'), null);
+  const next = openLevelCrate(game, history, level + 1, undefined, '2026');
   assert.ok(next); assert.equal(next.item.kind, 'gear');
   assert.deepEqual(next.game.transactions.filter(tx => tx.kind === 'level-crate').map(tx => tx.sourceSeason), ['2025', '2026']);
   assert.equal(next.game.quoteConversions?.length, 1);
