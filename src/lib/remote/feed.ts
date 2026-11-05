@@ -1,4 +1,5 @@
 import type { Workout } from '../model';
+import type { PostMentions } from '../post-mentions';
 import { remoteClient, verifiedUser } from './auth';
 
 export const FEED_PAGE_SIZE = 20;
@@ -7,7 +8,7 @@ export type FeedCursor = { created_at: string; id: string };
 export type FeedPost = {
   id: string; owner_id: string; workout_id: string; created_at: string;
   username: string; display_name: string; photo: string | null;
-  workout: Workout; photo_path: string | null; caption?: string | null; likes: number; comments: number; liked: boolean;
+  workout: Workout; photo_path: string | null; caption?: string | null; mentions?: PostMentions; likes: number; comments: number; liked: boolean;
 };
 export type FeedPage = { items: FeedPost[]; next: FeedCursor | null };
 export type FeedComment = {

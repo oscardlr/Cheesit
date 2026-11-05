@@ -1,7 +1,7 @@
 import { remoteClient, verifiedUser } from './auth';
 
 export type SocialNotification = {
-  id: string; actor_id: string; kind: 'follow' | 'workout' | 'like' | 'comment'; workout_owner: string | null; workout_id: string | null; comment_id?: string | null;
+  id: string; actor_id: string; kind: 'follow' | 'workout' | 'like' | 'comment' | 'mention'; workout_owner: string | null; workout_id: string | null; comment_id?: string | null;
   created_at: string; read_at: string | null; username: string; display_name: string; photo: string | null; workout_label: string | null;
 };
 export type NotificationPage = { unread: number; items: SocialNotification[] };

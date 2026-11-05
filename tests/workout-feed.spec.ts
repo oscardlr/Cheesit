@@ -26,6 +26,54 @@ function workout(name: string, status: Workout['status'] = 'finished'): Workout 
 }
 const account = (displayName: string, workouts: Workout[] = []): AppData => ({ ...emptyData(), workouts, personalProfile: { displayName, photo: null, bio: 'Cada rep cuenta.' } });
 
+test('selecting a caption mention notifies the recipient once and opens the published workout', async ({ page, browser }) => {
+  test.setTimeout(60000);
+  const draft = workout('Entreno con Bruno', 'draft');
+  const author = await harness.seed('mention-author@example.test', undefined, account('Ana', [draft]));
+  const recipient = await harness.seed('mention-recipient@example.test', undefined, account('Bruno'));
+  const { username } = await harness.social('mention-recipient@example.test');
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  try {
+    const other = await context.newPage();
+    await other.addInitScript(() => sessionStorage.setItem('grind-intro-v1', '1'));
+    await login(other, 'mention-recipient@example.test');
+    await login(page, 'mention-author@example.test');
+    await page.goto(`/#view=editor&id=${draft.id}`);
+    await page.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
+    const finish = page.getByRole('dialog', { name: 'Finalizar entrenamiento', exact: true });
+    await finish.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
+    await page.getByRole('button', { name: 'Continuar', exact: true }).click();
+    await page.getByRole('button', { name: 'Publicar en Comunidad', exact: true }).click();
+    const dialog = page.getByRole('main');
+    const caption = dialog.getByRole('textbox', { name: /Descripción de la publicación/ });
+    await caption.fill('Entrenando con @Bru');
+    const suggestion = dialog.getByRole('option').filter({ hasText: `@${username}` });
+    await expect(suggestion).toContainText('Bruno');
+    await expect(suggestion.getByRole('img')).toBeVisible();
+    await caption.press('ArrowDown');
+    await expect(suggestion).toHaveAttribute('aria-selected', 'true');
+    await caption.press('Enter');
+    await expect(caption).toHaveValue(`Entrenando con @${username} `);
+    await caption.fill(`Entrenando con @${username} y otra vez @${username}. @sin_cuenta`);
+    await dialog.getByRole('button', { name: 'Publicar en Comunidad', exact: true }).click();
+    await expect.poll(async () => ((await harness.account('mention-author@example.test')).data as AppData).workouts.find(item => item.id === draft.id)?.publication?.mentions).toEqual({ [username]: recipient.id });
+    await other.getByRole('button', { name: /^Notificaciones/ }).click();
+    const notice = other.locator('.notification-item').filter({ hasText: 'Ana te mencionó en una publicación.' });
+    await expect(notice).toHaveCount(1);
+    await expect(other.locator('.notification-item')).toHaveCount(1);
+    await notice.click();
+    await expect(other).toHaveURL(new RegExp(`person=${author.id}.*workout=${draft.id}`));
+    await expect(other.locator('.detail-hero h2')).toHaveText('Entreno con Bruno');
+    const postCaption = other.locator('.feed-caption');
+    await expect(postCaption.getByRole('link', { name: `@${username}`, exact: true })).toHaveCount(2);
+    await expect(postCaption.getByRole('link', { name: '@sin_cuenta' })).toHaveCount(0);
+    await expect(postCaption).toContainText('@sin_cuenta');
+    await postCaption.getByRole('link', { name: `@${username}`, exact: true }).first().click();
+    await expect(other).toHaveURL(new RegExp(`person=${recipient.id}`));
+    await expect(other.getByRole('heading', { name: 'Bruno', exact: true })).toBeVisible();
+  } finally { await context.close(); }
+});
+
 test('global feed paginates real rows, persists likes/comments, opens profiles and respects private direct links', async ({ page, context }) => {
   test.setTimeout(150000);
   const posts = Array.from({ length: 23 }, (_, i) => workout(`Entrenamiento publicado ${i + 1}`));

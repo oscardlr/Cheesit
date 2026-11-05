@@ -19,7 +19,7 @@ export type WorkoutSet = { kind?: SetKind; id: string; weight: number | null; re
 export type ExercisePrescription = { repsMin?: number | null; repsMax?: number | null; targetWeight?: number | null; restSeconds?: number | null; notes?: string };
 export type WorkoutExercise = { supersetId?: string } & ExerciseMetadata & ExercisePrescription & { id: string; exerciseId: string; name: string; group: string; mode: ExerciseMode; sets: WorkoutSet[] };
 /** Historical sessions without this field remain unpublished. */
-export type WorkoutPublication = { published: boolean; photoPath?: string; caption?: string };
+export type WorkoutPublication = { published: boolean; photoPath?: string; caption?: string; mentions?: import('./post-mentions').PostMentions };
 export type Workout = { publication?: WorkoutPublication; routineId?: string; cycleLink?: { cycleId: string; position: number; routineId: string }; id: string; date: string; name: string; color: string; status: 'draft' | 'finished' | 'deleted'; createdAt: string; updatedAt: string; exercises: WorkoutExercise[]; abilityId?:string|null; abilityReward?:AbilityUse; companionPassive?: CompanionPassiveSnapshot | null; companionReward?: CompanionPassiveAward; notes?: string; startedAt?: string; finishedAt?: string; autoRest?: boolean; defaultRestSeconds?: number; restTimer?: { endsAt: string | null; remainingSeconds: number; durationSeconds: number } };
 export type RoutineExercise = { setKinds?: SetKind[]; supersetId?: string } & ExercisePrescription & { id: string; exerciseId: string; sets: number };
 export const ROUTINE_ICONS = ['dumbbell', 'biceps-flexed', 'target', 'flame', 'activity', 'timer', 'mountain', 'heart-pulse'] as const;

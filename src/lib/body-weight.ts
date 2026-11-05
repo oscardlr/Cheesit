@@ -39,6 +39,13 @@ export function setWeightGoal(profile: AthleteProfile | undefined, goalKg: numbe
   next.weightTracking.bestDistanceKg = profile ? Math.abs(next.weightKg - goalKg) : undefined;
   return next;
 }
+export function removeWeightGoal(profile: AthleteProfile | undefined): AthleteProfile {
+  const next = editableProfile(profile);
+  delete next.weightTracking.goalKg;
+  delete next.weightTracking.baselineKg;
+  delete next.weightTracking.bestDistanceKg;
+  return next;
+}
 /** 100 XP/kg of new approach. Only a new latest day can earn: corrections,
  * backfills, oscillations and changing goals never replay a credited interval. */
 export function recordBodyWeight(profile: AthleteProfile | undefined, entry: WeightEntry, today = todayMadrid()): AthleteProfile {

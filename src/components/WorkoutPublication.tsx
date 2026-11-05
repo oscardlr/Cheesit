@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Camera, Globe, ImagePlus, Trash2 } from 'lucide-react';
 import type { WorkoutPublication as Publication } from '@/lib/model';
 import { prepareWorkoutPhoto } from '@/lib/workout-publication';
 import { downloadWorkoutPhoto, uploadWorkoutPhoto } from '@/lib/remote/feed';
 import WorkoutCamera from './WorkoutCamera';
+import PublicationCaption from './PublicationCaption';
 import './workout-publication.css';
 import './training-controls.css';
 
@@ -15,7 +16,6 @@ export default function WorkoutPublication({ owner, workoutId, value, onChange, 
   onBusy: (busy: boolean) => void; onCameraOpen?: (open: boolean) => void; disabled?: boolean;
 }) {
   const input = useRef<HTMLInputElement>(null);
-  const captionId = useId();
   const nativeCamera = useRef<HTMLInputElement>(null);
   const cameraButton = useRef<HTMLButtonElement>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -60,7 +60,7 @@ export default function WorkoutPublication({ owner, workoutId, value, onChange, 
     <div className="workout-publish-setting"><div><strong><Globe size={18}/>Publicar en Comunidad</strong><p>{owner ? 'La publicación respeta la privacidad de tu perfil en Ajustes. Tus notas siempre son privadas.' : 'Necesitas una cuenta para publicar. Tu entrenamiento se guardará en este navegador.'}</p></div>
       <button type="button" role="switch" className="superset-switch workout-publish-switch" aria-label="Publicar en Comunidad" aria-checked={!!owner && value.published} disabled={!owner || disabled || preparing || cameraOpen} onClick={() => onChange({ ...value, published: !value.published })}><span className="superset-switch-track" aria-hidden="true"><span/></span><span className="superset-switch-state" aria-hidden="true">{owner && value.published ? 'Sí' : 'No'}</span></button>
     </div>
-    <div className="workout-caption-setting"><label htmlFor={captionId}>Descripción de la publicación <small>Opcional</small></label><textarea id={captionId} rows={3} maxLength={1000} placeholder="Escribe una descripción" value={value.caption ?? ''} disabled={!owner || disabled || preparing || cameraOpen} onChange={event => onChange({ ...value, caption: event.target.value })}/><div><p>Este texto aparecerá en tu publicación.</p><small>{value.caption?.length ?? 0}/1000</small></div></div>
+    <PublicationCaption value={value} onChange={onChange} disabled={!owner || disabled || preparing || cameraOpen}/>
     <div className="workout-photo-setting"><strong><Camera size={18}/>Foto del entrenamiento <small>Opcional</small></strong>
       {preview && <img className="workout-photo-preview" src={preview} alt="Vista previa de la foto del entrenamiento" width={600} height={450}/>}
       <div className="workout-photo-actions"><button type="button" className="secondary" disabled={!owner || disabled || preparing || cameraOpen} onClick={() => input.current?.click()}><ImagePlus size={17}/>{value.photoPath ? 'Cambiar foto' : 'Añadir foto'}</button>
