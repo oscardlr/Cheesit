@@ -1,5 +1,7 @@
 'use client';
 
+import PageTitle from './PageTitle';
+
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ArrowLeft, ArrowUpRight, Camera, Check, Dumbbell, LockKeyhole, MapPin, Pencil, Trash2, X, Zap } from 'lucide-react';
 import type { AppData } from '@/lib/model';
@@ -89,7 +91,7 @@ export default function PersonalProfile({ data, level, xp, onSave, onWorkout, on
   const recent = recentProfileWorkouts(data.workouts);
   const name = profile.displayName || 'Tu perfil';
   return <div className="personal-profile-page">
-    <header className="profile-page-heading"><button className="icon-button" aria-label="Volver al resumen" onClick={onBack}><ArrowLeft size={21}/></button><h1>Mi perfil</h1><span><LockKeyhole size={13}/>Tu perfil</span></header>
+    <header className="profile-page-heading"><button className="icon-button" aria-label="Volver al resumen" onClick={onBack}><ArrowLeft size={21}/></button><PageTitle>Mi perfil</PageTitle><span><LockKeyhole size={13}/>Tu perfil</span></header>
     <section className="personal-profile-card" aria-label="Tu perfil personal">
       <div className="profile-cover" aria-hidden="true"><span>BUILT BY YOU.</span><ArrowUpRight/></div>
       <div className="profile-identity"><PersonalAvatar photo={profile.photo} name={name}/><div className="profile-name"><span className="eyebrow">CADA REP CUENTA</span><h2>{name}</h2>{username && <p className="profile-username">@{username}</p>}<span className="profile-rank"><Zap size={13}/>Nivel {number(level)} · {levelRank(level)}</span>{accountOwner && onSocial && <OwnSocialSummary owner={accountOwner} onOpen={onSocial}/>}</div><button className="secondary profile-edit-button" onClick={() => { setSaved(false); setEditing(true); }}><Pencil size={15}/>Editar perfil</button></div>

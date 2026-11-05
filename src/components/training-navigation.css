@@ -11,7 +11,7 @@
 .training-split-action { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; font-size: 12px; }
 .training-create-routine { margin-top: 20px; }
 .progress-calendar > h2 { margin: 0 0 18px; font-size: 22px; }
-.progress-calendar { margin-bottom: 38px; }
+.progress-calendar { margin-bottom: var(--section-gap); }
 .progress-overview > .page-header { display: none; }
 
 @media (max-width: 760px) {
@@ -43,9 +43,10 @@
 .section-cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  grid-auto-rows: 1fr;
+  gap: var(--card-gap);
   max-width: 900px;
-  margin-bottom: 24px;
+  margin-bottom: var(--section-gap);
 }
 .section-card {
   min-height: 124px;
@@ -90,8 +91,7 @@
   background: #d8ff3e14;
   font-weight: 700;
 }
-.home-secondary-links, .progress-views { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 24px; }
-.home-secondary-links { margin-top: 18px; }
+.home-secondary-links, .progress-views { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 var(--section-gap); }
 .progress-views button {
   min-height: 44px;
   padding: 9px 13px;
@@ -108,7 +108,6 @@
 .screen-progress .view-body { margin-top: 24px; }
 
 @media (max-width: 760px) {
-  .section-cards { gap: 9px; }
   .section-card { padding: 12px; min-height: 110px; }
   .section-card:has(> .section-card-art) { min-height: 127px; }
   .section-card-art {
@@ -118,6 +117,5 @@
   }
   .ux-shell.product-redesign .training-navigation button.active { box-shadow: inset 0 -3px var(--lime); }
   .ux-shell.product-redesign[class*=screen-] .app-content { padding-bottom: calc(130px + env(safe-area-inset-bottom)); }
-  .ux-shell.product-redesign .arcade-redesign .arcade-header h1 { font-size: clamp(25px, 7vw, 40px); overflow-wrap: anywhere; }
   .session-fields .set-row input { font-size: 16px; }
 }

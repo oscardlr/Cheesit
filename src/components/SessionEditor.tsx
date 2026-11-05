@@ -1,5 +1,7 @@
 'use client';
 
+import PageTitle from './PageTitle';
+
 import { useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, Check, Plus, Settings2, Timer } from 'lucide-react';
 import { copyPreviousSets, newSet, parseWeight, validSet, type Workout, type WorkoutExercise, type WorkoutSet } from '@/lib/model';
@@ -59,7 +61,7 @@ export default function SessionEditor({ workout, history, profile, game, histori
   const reorder = (index: number, delta: number) => { const list = [...workout.exercises]; [list[index], list[index + delta]] = [list[index + delta], list[index]]; change({ ...workout, exercises: list }); };
 
   return <>
-    <header className="page-header"><button className="icon-button back" aria-label="Volver" onClick={onBack}>‹</button><h1>{historical ? 'Editar entrenamiento' : 'Entrenamiento'}</h1><span className="header-spacer" /></header>
+    <header className="page-header"><button className="icon-button back" aria-label="Volver" onClick={onBack}>‹</button><PageTitle>{historical ? 'Editar entrenamiento' : 'Entrenamiento'}</PageTitle><span className="header-spacer" /></header>
     <section className="session-compact" aria-label="Estado de la sesión"><div><strong>{confirmed} / {planned} series</strong><span>{historical&&(!workout.startedAt||!workout.finishedAt)?'Duración no registrada':`Duración · ${elapsed(duration)}`}</span></div><div className="progress-track" role="progressbar" aria-label="Series completadas" aria-valuenow={confirmed} aria-valuemin={0} aria-valuemax={planned||1}><span style={{ width: `${planned ? confirmed / planned * 100 : 0}%` }} /></div></section>
     <SessionCheesitPassive workout={workout}/><SessionAbilityNote workout={workout} game={game} /><fieldset className="session-fields" disabled={busy}>
     {!historical && <section className="rest-timer rest-compact" aria-label="Descanso"><div className="rest-main"><Timer size={19} /><strong>{rest ? (remaining ? elapsed(remaining) : 'Descanso completado') : `Descanso · ${elapsed(workout.defaultRestSeconds ?? 90)}`}</strong><button className="secondary" onClick={() => startRest(workout.defaultRestSeconds ?? 90)}>Iniciar descanso</button></div>

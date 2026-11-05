@@ -10,6 +10,7 @@ import { scrollViewToTop } from '@/lib/scroll-view';
 import BodyWeightProgress from './BodyWeightProgress';
 import MuscleProgress from './MuscleProgress';
 import PublicationEditor from './PublicationEditor';
+import PageTitle from './PageTitle';
 import SectionCards from './SectionCards';
 import CyclePanel from './CyclePanel';
 import WeeklySummary from './WeeklySummary';
@@ -100,7 +101,7 @@ const STARTERS = [
  { name: 'Tren inferior', label: 'TREN INFERIOR', description: 'Pierna y glúteo, a tu ritmo', color: COLORS[1], exercises: ['sentadilla-barra', 'peso-muerto-rumano', 'hip-thrust', 'elevacion-gemelos'] },
 ];
 
-function Back({onClick, title, right}: {onClick:()=>void; title:string; right?:React.ReactNode}) { return <header className="page-header"><button className="icon-button back" aria-label="Volver" onClick={onClick}>‹</button><h1>{title}</h1>{right || <span className="header-spacer"/>}</header>; }
+function Back({onClick, title, right}: {onClick:()=>void; title:string; right?:React.ReactNode}) { return <header className="page-header"><button className="icon-button back" aria-label="Volver" onClick={onClick}>‹</button><PageTitle>{title}</PageTitle>{right || <span className="header-spacer"/>}</header>; }
 function Modal({title, onClose, children}: {title:string; onClose:()=>void; children:React.ReactNode}) {
  const modalRef=useRef<HTMLElement>(null);
  useEffect(()=>{const previous=document.activeElement as HTMLElement|null;const overflow=document.body.style.overflow;document.body.style.overflow='hidden';(modalRef.current?.querySelector<HTMLElement>('input')||modalRef.current?.querySelector<HTMLElement>('button'))?.focus();return()=>{document.body.style.overflow=overflow;previous?.focus()}},[]);
@@ -404,7 +405,7 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
  {screen==='settings' && <Back title="Ajustes" onClick={()=>{setMessage('');setScreen('summary')}}/>}
  <div hidden={screen!=='settings'}>{accountSettings}</div>
  {screen==='summary' && <>
- <header className="home-header"><div><span className="eyebrow">{dateLabel(today,{weekday:'long',day:'numeric',month:'long'})}</span><h1>Inicio<span className="home-title-dot" aria-hidden="true">.</span></h1><p>{data.personalProfile?.displayName?`${data.personalProfile.displayName}, cada rep cuenta.`:'Cada rep cuenta.'}</p></div><button className="text-action desktop-history" onClick={()=>openHistory()}>Ver historial <ArrowRight size={16}/></button></header>
+ <header className="home-header"><div><span className="eyebrow">{dateLabel(today,{weekday:'long',day:'numeric',month:'long'})}</span><PageTitle>Inicio</PageTitle><p>{data.personalProfile?.displayName?`${data.personalProfile.displayName}, cada rep cuenta.`:'Cada rep cuenta.'}</p></div><button className="text-action desktop-history" onClick={()=>openHistory()}>Ver historial <ArrowRight size={16}/></button></header>
  <div className="home-command-grid">
  <section className="next-session" aria-labelledby="next-session-title"><div className="next-session-copy"><span className="eyebrow">{draft?'SESIÓN EN CURSO':'TU PRÓXIMA SESIÓN'}</span><h2 id="next-session-title">{draft?'Sigue donde lo dejaste.':'¿Entrenamos?'}</h2><p>{draft?`${draft.name || 'Entrenamiento'} · ${dateLabel(draft.date,{day:'numeric',month:'short'})}`:'Elige una rutina o empieza con tus propios ejercicios.'}</p><div className="next-session-actions"><button className="primary summary-start" onClick={()=>draft?continueDraft(draft.id):openStart()}><Dumbbell size={19}/>{draft?'Continuar entreno':'Empezar entreno'}<ArrowRight size={18}/></button>{draft&&<button className="text-action" onClick={()=>openStart()}>Nueva sesión <Plus size={16}/></button>}</div></div><img className="next-session-art" src="/assets/grind-dumbbell.webp" alt="" aria-hidden="true" width={200} height={200}/></section>
  <section className="week-card"><div className="section-heading"><h2>Esta semana</h2><span className="week-count"><Flame size={14}/>{weekCount}<span>/ {game.weeklyWorkoutGoal}</span></span></div><div className="week-strip">{weekDays.map((day,i)=>{const complete=workFinished.some(w=>w.date===day);return <button key={day} aria-label={`${dateLabel(day)}, ${complete?'entrenamiento completado':'ver día'}`} className={`${day===today?'current':''} ${complete?'complete':''}`} onClick={()=>openHistory(day)}><span>{['L','M','X','J','V','S','D'][i]}</span><strong>{complete?<Check size={15}/>:Number(day.slice(-2))}</strong><i/></button>})}</div><p><span className="live-dot"/>{weekCount>=game.weeklyWorkoutGoal?'Meta semanal conseguida.':`${Math.max(0,game.weeklyWorkoutGoal-weekCount)} ${game.weeklyWorkoutGoal-weekCount===1?'día':'días'} para tu objetivo semanal.`}</p><button className="text-action" onClick={()=>openGame('goals')}>Ver objetivo semanal <ArrowRight size={16}/></button></section>
@@ -430,15 +431,18 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
  {screen==='notifications' && <Notifications feed={notificationFeed} guest={guest||!accountOwner} onBack={()=>navigate('feed')} onAccount={()=>navigate('settings')} onNavigate={route=>guardNavigation(()=>{setSocialRoute(route);setScreen('social')})}/>}
  {screen==='social' && <SocialPanel key={`${accountOwner??'guest'}:${socialRoute.owner??''}:${socialRoute.list??''}`} owner={accountOwner} guest={guest} route={socialRoute} onNavigate={route=>guardNavigation(()=>setSocialRoute(route))} onBack={()=>{if(socialRoute.source==='notifications')navigate('notifications');else if(socialRoute.list)setSocialRoute({...socialRoute,list:null});else if(socialRoute.source==='people')navigate('feed',()=>setPeopleQuery(socialRoute.query));else if(socialRoute.owner)setSocialRoute({owner:null,list:null,query:socialRoute.query});else navigate('feed')}} onAccount={()=>navigate('settings')}/>}
 
- {screen==='feed' && <WorkoutFeed viewer={accountOwner} guest={guest} onAccount={()=>navigate('settings')}
+ {screen==='feed' && <>
+  <header className="home-header"><PageTitle>Comunidad</PageTitle></header>
+  <WorkoutFeed viewer={accountOwner} guest={guest} onAccount={()=>navigate('settings')}
    onTogglePeopleSearch={()=>setPeopleQuery(query=>query===null?'':null)}
    peopleSearch={peopleQuery!==null?<SocialPanel embedded owner={accountOwner} guest={guest} route={{owner:null,list:null,query:peopleQuery}}
      onNavigate={route=>route.owner?guardNavigation(()=>{setSocialRoute({...route,source:'people'});setScreen('social')}):setPeopleQuery(route.query)}
      onBack={()=>setPeopleQuery(null)} onAccount={()=>navigate('settings')}/>:undefined}
    onProfile={owner=>guardNavigation(()=>{setSocialRoute({owner,list:null,query:''});setScreen('social')})}
-   onWorkout={(owner,workout)=>guardNavigation(()=>{setSocialRoute({owner,workout,list:null,query:''});setScreen('social')})}/>}
+   onWorkout={(owner,workout)=>guardNavigation(()=>{setSocialRoute({owner,workout,list:null,query:''});setScreen('social')})}/>
+ </>}
  {screen==='progress' && <>
-  <header className="home-header compact"><h1>Progreso</h1></header>
+  <header className="home-header"><PageTitle>Progreso</PageTitle></header>
   <nav className="progress-views" aria-label="Vistas de progreso">
    {progressViews.map(({id,label})=><button type="button" key={id} aria-current={progressView===id?'page':undefined} onClick={()=>guardNavigation(()=>{setProgressView(id);setProgressId(null);scrollViewToTop(contentRef.current)})}>{label}</button>)}
   </nav>
@@ -449,7 +453,7 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
  <WeeklySummary data={data} today={today} effects={effectsEnabled} onWorkout={openDetail}/>
  </section>}
  {screen==='train' && <>
-  <header className="home-header compact"><h1>Entrenar</h1></header>
+  <header className="home-header"><PageTitle>Entrenar</PageTitle></header>
   <SectionCards label="Apartados de Entrenar" cards={[
    {label:'Empezar entreno',icon:Play,artwork:'training-start-card-3d',open:()=>openStart()},
    {label:'Mis rutinas',icon:ClipboardList,artwork:'training-routines-card-3d',open:()=>navigate('routines')},
