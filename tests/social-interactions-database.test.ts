@@ -155,7 +155,7 @@ test('following is filtered before keyset paging and interaction notifications p
     main.status='deleted';await commit(a,da);
     assert.equal((await allNotifications(a)).find(n=>n.id===likeNotice.id)!.workout_label,null,'deleted post names cannot leak');
     await assert.rejects(as(null,tx=>tx.query('select public.cheesit_read_feed(null,null,null,null,true)'),'anon'),/permission denied/);
-    await db.exec(readFileSync('supabase/migrations/20261105105344_workout_post_mentions.sql','utf8'));
+    await db.exec(readFileSync('supabase/migrations/20261105111035_workout_post_mentions.sql','utf8'));
     const noticesFor = async (viewer: string, workoutId: string) => (await allNotifications(viewer)).filter(n=>n.workout_id===workoutId);
     await follow(b,a);
     const mentioned = workout('Entrenamos juntos');

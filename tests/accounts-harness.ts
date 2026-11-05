@@ -27,7 +27,7 @@ export async function accountsHarness(port = Number(process.env.CHEESIT_ACCOUNTS
   await db.exec(readFileSync('supabase/migrations/20261104192645_workout_publication_caption.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/20261104192654_profile_gym.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/20261104192712_social_interactions.sql','utf8'));
-  await db.exec(readFileSync('supabase/migrations/20261105105344_workout_post_mentions.sql','utf8'));
+  await db.exec(readFileSync('supabase/migrations/20261105111035_workout_post_mentions.sql','utf8'));
   const buckets = (await db.query<{id:string;file_size_limit:number;allowed_mime_types:string[]}>('select id,file_size_limit,allowed_mime_types from storage.buckets')).rows;
   const objects = new Map<string,{bytes:Buffer;type:string}>();
   const users = new Map<string, { id: string; email: string; password: string; confirmed: boolean }>();
