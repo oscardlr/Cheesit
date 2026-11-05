@@ -110,6 +110,16 @@ export async function accountsHarness(port = Number(process.env.CHEESIT_ACCOUNTS
         if(url.pathname==='/rest/v1/rpc/cheesit_read_notifications') return (await tx.query<{result:unknown}>('select public.cheesit_read_notifications($1,$2) result',[input.p_before,input.p_before_id])).rows[0].result;
         if(url.pathname==='/rest/v1/rpc/cheesit_mark_notifications') { await tx.query('select public.cheesit_mark_notifications($1)',[input.p_id]); return null; }
         if(url.pathname==='/rest/v1/cheesit_social_profiles' && req.method==='PATCH') return (await tx.query('update public.cheesit_social_profiles set activity_shared=$1 where owner_id=$2 returning activity_shared',[input.activity_shared,url.searchParams.get('owner_id')?.replace('eq.','')])).rows[0]??null;
+        if(url.pathname==='/rest/v1/cheesit_social_profiles' && req.method==='GET' && url.searchParams.get('owner_id')?.startsWith('neq.')) {
+          const logic=url.searchParams.get('or');
+          const literal=logic?.match(/^\(username\.imatch\.("(?:[^"\\]|\\.)*"),display_name\.imatch\.\1\)$/u)?.[1];
+          if(logic&&!literal)throw new Error('unexpected directory search filter');
+          return (await tx.query(`select p.owner_id,p.username,p.display_name,p.photo,
+            coalesce((select jsonb_agg(jsonb_build_object('follower_id',f.follower_id)) from public.cheesit_follows f where f.followed_id=p.owner_id and f.follower_id=$1), '[]') outgoing,
+            coalesce((select jsonb_agg(jsonb_build_object('followed_id',f.followed_id)) from public.cheesit_follows f where f.follower_id=p.owner_id and f.followed_id=$1), '[]') incoming
+            from public.cheesit_social_profiles p where p.owner_id<>$1 and ($2::text is null or p.username ~* $2 or p.display_name ~* $2)
+            order by p.username limit $3 offset $4`,[url.searchParams.get('owner_id')?.slice(4),literal?JSON.parse(literal):null,Number(url.searchParams.get('limit')??21),Number(url.searchParams.get('offset')??0)])).rows;
+        }
         if(url.pathname==='/rest/v1/cheesit_social_profiles' && req.method==='GET')return (await tx.query('select username,display_name,photo from public.cheesit_social_profiles where owner_id=$1',[url.searchParams.get('owner_id')?.replace('eq.','')??owner])).rows[0]??null;
         if(url.pathname==='/rest/v1/rpc/cheesit_read_social') return (await tx.query<{result:unknown}>('select public.cheesit_read_social($1,$2,$3,$4) result',[input.p_query,input.p_owner,input.p_list,input.p_offset])).rows[0].result;
         if(url.pathname==='/rest/v1/cheesit_follows'){

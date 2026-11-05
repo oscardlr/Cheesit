@@ -5,7 +5,6 @@ import { GROUPS } from '@/lib/catalog';
 import { totals, workoutExerciseSessions } from '@/lib/metrics';
 import { validSet, type AppData, type Exercise, type Workout } from '@/lib/model';
 import ProgressWords from './ProgressWords';
-import BodyWeightProgress from './BodyWeightProgress';
 import ExerciseThumbnail from './ExerciseThumbnail';
 import InfoPopup from './InfoPopup';
 import type { AthleteProfile } from '@/lib/strength';
@@ -24,9 +23,8 @@ const METRICS = [
 ] as const;
 type Metric = (typeof METRICS)[number]['id'];
 
-export default function ProgressPanel({ history, exercises, selectedId, onSelect, onWorkout, onBack, profile, onWeightChange, data }: {
+export default function ProgressPanel({ history, exercises, selectedId, onSelect, onWorkout, onBack, data }: {
   data?: AppData;
-  profile?: AthleteProfile; onWeightChange: (transform: (p?: AthleteProfile) => AthleteProfile) => Promise<void>;
   history: Workout[]; exercises: Exercise[]; selectedId: string | null; onSelect: (id: string) => void; onWorkout: (id: string) => void; onBack: () => void;
 }) {
   const [search, setSearch] = useState('');
@@ -46,8 +44,7 @@ export default function ProgressPanel({ history, exercises, selectedId, onSelect
   const plotted = points.filter(point => point[metric] !== null);
   const max = Math.max(1, ...plotted.map(point => point[metric] ?? 0));
   return <>
-    <header className="page-header"><button className="icon-button back" aria-label="Volver" onClick={onBack}>‹</button><h1>Progreso</h1><span /></header>
-    {!selectedId && <BodyWeightProgress profile={profile} onChange={onWeightChange}/>}
+    <header className="page-header"><button className="icon-button back" aria-label="Volver" onClick={onBack}>‹</button><h2>Marca por ejercicio</h2><span /></header>
     <fieldset className={filterStyles.groupFilter}><legend>Grupo muscular</legend><div className={filterStyles.groupButtons}>{[{ id: 'all', label: 'Todos' }, ...GROUPS.map(value => ({ id: value, label: value }))].map(option => <button type="button" key={option.id} aria-pressed={group === option.id} onClick={() => { setGroup(option.id); onSelect(''); }}>{option.label}</button>)}</div></fieldset>
     <input type="search" aria-label="Buscar ejercicio" placeholder="Buscar ejercicio" value={search} onChange={event => {setSearch(event.target.value);onSelect('')}} />
     {!selectedId && (available.length ? <div className="list-card progress-search-list" aria-label="Ejercicios encontrados">{available.map(ex => <button type="button" className="list-row" key={ex.id} onClick={() => onSelect(ex.id)}><ExerciseThumbnail exerciseId={ex.id} image={'image' in ex ? ex.image as string : undefined}/><span className="list-copy"><strong>{ex.name}</strong><small>{ex.group}</small></span><span>→</span></button>)}</div> : <p className="notice" role="status">No hay ejercicios con ese nombre en el grupo seleccionado.</p>)}

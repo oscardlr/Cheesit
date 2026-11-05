@@ -59,7 +59,10 @@ export function advanceCycle(data: AppData, workout: Workout): AppData {
   const cycles = features.cycles.map(cycle => {
     if (cycle.id !== link.cycleId || cycle.completedWorkoutIds.includes(workout.id)) return cycle;
     // Finishing an old linked draft must not undo a manual skip or a newer completion.
-    const position = cycle.position === link.position && cycle.routineIds[link.position] === link.routineId ? (link.position + 1) % Math.max(1, cycle.routineIds.length) : cycle.position;
+    const next = nextCycleRoutine(data, cycle);
+    const matchesRecordedStep = cycle.position === link.position && cycle.routineIds[link.position] === link.routineId;
+    const matchesAvailableStep = next?.position === link.position && next.routine.id === link.routineId;
+    const position = matchesRecordedStep || matchesAvailableStep ? (link.position + 1) % Math.max(1, cycle.routineIds.length) : cycle.position;
     return { ...cycle, position, completedWorkoutIds: [...cycle.completedWorkoutIds, workout.id] };
   });
   return { ...data, training: { ...features, cycles } };

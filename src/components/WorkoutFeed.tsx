@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type MouseEvent, type RefObject } from 'react';
+import { flushSync } from 'react-dom';
 import { ArrowUpRight, Check, Dumbbell, Heart, ImageOff, LockKeyhole, MessageCircle, RefreshCw, Send, Share2, Trash2, Users, X } from 'lucide-react';
 import { totals } from '@/lib/metrics';
 import {
@@ -27,14 +28,39 @@ const dateLabel = (value: string) => new Intl.DateTimeFormat('es-ES', { day: '2-
 const unique = <T extends { id: string }>(items: T[]) => [...new Map(items.map(item => [item.id, item])).values()];
 
 /** Photos are fetched through authenticated Storage policies, never a public URL. */
-function WorkoutPhoto({ path, name, onOpen }: { path: string; name: string; onOpen: () => void }) {
+function WorkoutPhoto({ path, name, onOpen, onLike }: { path: string; name: string; onOpen: () => void; onLike: () => void }) {
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
+  const [heart, setHeart] = useState<number | null>(null);
+  const pointerType = useRef('');
+  const tap = useRef<{ timer: ReturnType<typeof setTimeout>; x: number; y: number } | null>(null);
+  const heartTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const heartId = useRef(0);
+  useEffect(() => () => { clearTimeout(tap.current?.timer); tap.current = null; clearTimeout(heartTimer.current); }, [path]);
+  function activate(event: MouseEvent<HTMLButtonElement>) {
+    // Native clicks exclude swipes. Keyboard and mouse activation still open immediately.
+    if (!event.detail || pointerType.current !== 'touch') {
+      clearTimeout(tap.current?.timer); tap.current = null; onOpen(); return;
+    }
+    const { clientX: x, clientY: y } = event;
+    const first = tap.current;
+    if (first) {
+      clearTimeout(first.timer); tap.current = null;
+      if (Math.hypot(first.x - x, first.y - y) <= 40) {
+        clearTimeout(heartTimer.current);
+        setHeart(++heartId.current);
+        heartTimer.current = setTimeout(() => setHeart(null), 650);
+        onLike();
+        return;
+      }
+    }
+    tap.current = { x, y, timer: setTimeout(() => { tap.current = null; onOpen(); }, 300) };
+  }
   useEffect(() => {
     const controller = new AbortController();
     let objectUrl = '';
-    setUrl(''); setError('');
+    setUrl(''); setError(''); setHeart(null);
     void downloadWorkoutPhoto(path, controller.signal).then(blob => {
       if (controller.signal.aborted) return;
       objectUrl = URL.createObjectURL(blob); setUrl(objectUrl);
@@ -42,14 +68,14 @@ function WorkoutPhoto({ path, name, onOpen }: { path: string; name: string; onOp
     return () => { controller.abort(); if (objectUrl) URL.revokeObjectURL(objectUrl); };
   }, [path, revision]);
   return <div className="feed-photo">
-    {url ? <button type="button" onClick={onOpen} aria-label={`Ver entrenamiento de ${name}`}><img src={url} alt={`Foto del entrenamiento de ${name}`} width={960} height={960} loading="lazy" onError={() => { setUrl(''); setError('No se ha podido mostrar la foto.'); }}/></button>
+    {url ? <button type="button" onPointerDown={event => { pointerType.current = event.pointerType; }} onClick={activate} aria-label={`Ver entrenamiento de ${name}`}><img src={url} alt={`Foto del entrenamiento de ${name}`} width={960} height={960} loading="lazy" draggable={false} onError={() => { setUrl(''); setError('No se ha podido mostrar la foto.'); }}/>{heart !== null && <span key={heart} className="feed-photo-heart" aria-hidden="true"><Heart size={86} fill="currentColor"/></span>}</button>
       : error ? <div className="feed-photo-error" role="alert"><ImageOff size={26}/><p>{error}</p><button className="text-action" onClick={() => setRevision(value => value + 1)}>Reintentar foto</button></div>
         : <div className="feed-photo-loading" role="status">Cargando foto…</div>}
   </div>;
 }
 
-function PostComments({ post, viewer, onProfile, onCount, onClose }: {
-  post: FeedPost; viewer: string; onProfile: (owner: string) => void; onCount: (delta: number) => void; onClose: () => void;
+function PostComments({ post, viewer, onProfile, onCount, onClose, composer }: {
+  post: FeedPost; viewer: string; onProfile: (owner: string) => void; onCount: (delta: number) => void; onClose: () => void; composer: RefObject<HTMLTextAreaElement | null>;
 }) {
   const id = useId();
   const [items, setItems] = useState<FeedComment[]>([]);
@@ -111,7 +137,7 @@ function PostComments({ post, viewer, onProfile, onCount, onClose }: {
   }
   return <section className="feed-comments" aria-labelledby={id}>
     <div className="feed-comments-heading"><h3 id={id}>Comentarios</h3><button className="icon-button" aria-label="Cerrar comentarios" onClick={onClose}><X size={18}/></button></div>
-    <form onSubmit={submit} className="feed-comment-form"><label htmlFor={`${id}-text`}><MessageCircle size={15} aria-hidden="true"/>Añade un comentario</label><div className="feed-comment-composer" data-has-text={!!text.trim()}><textarea id={`${id}-text`} rows={2} maxLength={2000} value={text} disabled={writing} placeholder="Escribe aquí un comentario" onChange={event => setText(event.target.value)}/><button className="icon-button" type="submit" disabled={writing || !!deleting || !text.trim() || !loaded} aria-label={writing ? 'Publicando comentario' : 'Publicar comentario'}><Send size={19}/></button></div><div className="feed-comment-footer"><small>{text.length}/2000</small></div></form>
+    <form onSubmit={submit} className="feed-comment-form"><label htmlFor={`${id}-text`}><MessageCircle size={15} aria-hidden="true"/>Añade un comentario</label><div className="feed-comment-composer" data-has-text={!!text.trim()}><textarea ref={composer} id={`${id}-text`} rows={2} maxLength={2000} value={text} disabled={writing} placeholder="Escribe aquí un comentario" onChange={event => setText(event.target.value)}/><button className="icon-button" type="submit" disabled={writing || !!deleting || !text.trim() || !loaded} aria-label={writing ? 'Publicando comentario' : 'Publicar comentario'}><Send size={19}/></button></div><div className="feed-comment-footer"><small>{text.length}/2000</small></div></form>
     {writeError && <p className="feed-error" role="alert">{writeError} Tu texto se conserva para reintentar.</p>}
     <ul className="feed-comment-list">{items.map(comment => <li key={comment.id}>
       <button className="feed-comment-avatar" onClick={() => onProfile(comment.owner_id)} aria-label={`Ver perfil de ${comment.display_name || comment.username}`}><PersonalAvatar photo={comment.photo} name={comment.display_name || comment.username}/></button>
@@ -125,32 +151,44 @@ function PostComments({ post, viewer, onProfile, onCount, onClose }: {
   </section>;
 }
 
-function PostCard({ initial, viewer, detail, onProfile, onWorkout, onUpdate, onUnavailable }: {
-  initial: FeedPost; viewer: string; detail?: boolean; onProfile: FeedProps['onProfile']; onWorkout: FeedProps['onWorkout']; onUpdate: (post: FeedPost) => void; onUnavailable: (id: string) => void;
+function PostCard({ post, viewer, detail, onProfile, onWorkout, onUpdate, onUnavailable }: {
+  post: FeedPost; viewer: string; detail?: boolean; onProfile: FeedProps['onProfile']; onWorkout: FeedProps['onWorkout']; onUpdate: (update: (post: FeedPost) => FeedPost) => void; onUnavailable: (id: string) => void;
 }) {
-  const [post, setPost] = useState(initial);
   const [comments, setComments] = useState(false);
-  const [pending, setPending] = useState(false);
+  const [pendingLike, setPendingLike] = useState<boolean | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [shareUrl, setShareUrl] = useState('');
   const mutationLock = useRef(false);
+  const composer = useRef<HTMLTextAreaElement>(null);
+  const commentsButton = useRef<HTMLButtonElement>(null);
   const alive = useRef(true);
-  useEffect(() => { setPost(initial); }, [initial]);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  const liked = pendingLike ?? post.liked;
+  const likes = Math.max(0, post.likes + Number(liked) - Number(post.liked));
   const name = post.display_name || post.username;
   const stats = totals([post.workout]);
   const minutes = post.workout.startedAt && post.workout.finishedAt ? Math.max(0, Math.round((Date.parse(post.workout.finishedAt) - Date.parse(post.workout.startedAt)) / 60000)) : null;
-  function update(next: FeedPost) { setPost(next); onUpdate(next); }
-  async function like() {
-    if (mutationLock.current) return;
-    mutationLock.current = true; setPending(true); setError('');
+  function closeComments() {
+    setComments(false);
+    commentsButton.current?.focus();
+  }
+  function toggleComments() {
+    if (comments) { closeComments(); return; }
+    // iOS only opens the keyboard when focus is assigned during the original tap.
+    flushSync(() => setComments(true));
+    composer.current?.focus();
+  }
+  async function like(next: boolean) {
+    if (mutationLock.current || next === post.liked) return;
+    mutationLock.current = true; setPendingLike(next); setError('');
     try {
-      const confirmed = await setPostLike(viewer, post.owner_id, post.workout_id, !post.liked);
+      const confirmed = await setPostLike(viewer, post.owner_id, post.workout_id, next);
       if (!alive.current) return;
-      if (confirmed) update(confirmed); else onUnavailable(post.id);
+      if (confirmed) onUpdate(current => ({ ...current, liked: confirmed.liked, likes: confirmed.likes }));
+      else onUnavailable(post.id);
     } catch (reason) { if (alive.current) setError(message(reason, 'No se ha podido confirmar el like.')); }
-    finally { mutationLock.current = false; if (alive.current) setPending(false); }
+    finally { mutationLock.current = false; if (alive.current) setPendingLike(null); }
   }
   async function share() {
     setError(''); setNotice('');
@@ -169,15 +207,15 @@ function PostCard({ initial, viewer, detail, onProfile, onWorkout, onUpdate, onU
   }
   return <article className={`feed-post${detail ? ' feed-post-detail' : ''}`} aria-label={`Entrenamiento de ${name}`} data-post-id={post.id}>
     <header className="feed-post-header"><button className="feed-author" onClick={() => onProfile(post.owner_id)} aria-label={`Ver perfil de ${name}`}><PersonalAvatar photo={post.photo} name={name}/><span><strong>{name}</strong><span>@{post.username}</span></span></button><time dateTime={post.workout.date}>{dateLabel(post.workout.date)}</time></header>
-    {post.photo_path && <WorkoutPhoto path={post.photo_path} name={name} onOpen={() => onWorkout(post.owner_id, post.workout_id)}/>}
-    <div className="feed-actions"><button className={post.liked ? 'feed-liked' : ''} aria-label={post.liked ? 'Quitar me gusta' : 'Dar me gusta'} aria-pressed={post.liked} disabled={pending} onClick={() => void like()}><Heart size={23} fill={post.liked ? 'currentColor' : 'none'}/><span>{number(post.likes)}<span className="feed-action-label"> Me gusta</span></span></button><button aria-expanded={comments} onClick={() => setComments(value => !value)} aria-label={`${post.comments} comentarios`}><MessageCircle size={23}/><span>{number(post.comments)}<span className="feed-action-label"> Comentarios</span></span></button><button className="feed-share" aria-label="Compartir entrenamiento" onClick={() => void share()}><Share2 size={22}/><span className="feed-action-label">Compartir</span></button></div>
+    {post.photo_path && <WorkoutPhoto path={post.photo_path} name={name} onOpen={() => onWorkout(post.owner_id, post.workout_id)} onLike={() => void like(true)}/>}
+    <div className="feed-actions"><button className={liked ? 'feed-liked' : ''} aria-label={liked ? 'Quitar me gusta' : 'Dar me gusta'} aria-pressed={liked} disabled={pendingLike !== null} onClick={() => void like(!liked)}><Heart size={23} fill={liked ? 'currentColor' : 'none'}/><span>{number(likes)}<span className="feed-action-label"> Me gusta</span></span></button><button ref={commentsButton} aria-expanded={comments} onClick={toggleComments} aria-label={`${post.comments} comentarios`}><MessageCircle size={23}/><span>{number(post.comments)}<span className="feed-action-label"> Comentarios</span></span></button><button className="feed-share" aria-label="Compartir entrenamiento" onClick={() => void share()}><Share2 size={22}/><span className="feed-action-label">Compartir</span></button></div>
     {post.caption && <p className="feed-caption"><strong>{name}</strong> {post.caption}</p>}
     {!detail && <div className={`feed-post-summary${post.photo_path ? '' : ' feed-post-without-photo'}`}><div className="feed-workout-label"><Dumbbell size={17}/><span>ENTRENAMIENTO COMPLETADO</span></div><h2 className="feed-workout-heading"><button className="feed-workout-title" onClick={() => onWorkout(post.owner_id, post.workout_id)}><span>{post.workout.name}</span><ArrowUpRight size={21}/></button></h2><div className="feed-workout-metrics"><span><strong>{post.workout.exercises.length}</strong> ejercicios</span><span><strong>{stats.sets}</strong> series</span><span><strong>{number(stats.volume)}</strong> kg × reps</span>{minutes !== null && <span><strong>{minutes}</strong> min</span>}</div><p className="feed-exercise-preview">{post.workout.exercises.slice(0, 3).map(exercise => exercise.name).join(' · ')}{post.workout.exercises.length > 3 && ` · +${post.workout.exercises.length - 3} más`}</p></div>}
     {error && <p className="feed-error" role="alert">{error}</p>}
     {notice && <p className="feed-notice" role="status">{notice}</p>}
     {shareUrl && <label className="feed-share-link">Enlace a la publicación<input type="url" readOnly value={shareUrl} onFocus={event => event.target.select()}/></label>}
     {detail && <div className="feed-workout-detail"><WorkoutDetailContent workout={post.workout}/></div>}
-    {comments && <PostComments post={post} viewer={viewer} onProfile={onProfile} onClose={() => setComments(false)} onCount={delta => update({ ...post, comments: Math.max(0, post.comments + delta) })}/>}
+    {comments && <PostComments post={post} viewer={viewer} onProfile={onProfile} onClose={closeComments} composer={composer} onCount={delta => onUpdate(current => ({ ...current, comments: Math.max(0, current.comments + delta) }))}/>}
   </article>;
 }
 
@@ -232,12 +270,12 @@ function FeedStream({ viewer, owner, workout, onProfile, onWorkout, following = 
       const next = event.key === 'Home' ? false : event.key === 'End' ? true : !following;
       const tabs = event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]');
       tabs[next ? 1 : 0]?.focus(); onFollowingChange(next);
-    }}><button type="button" role="tab" aria-selected={!following} tabIndex={following ? -1 : 0} onClick={() => onFollowingChange(false)}>Para ti</button><button type="button" role="tab" aria-selected={following} tabIndex={following ? 0 : -1} onClick={() => onFollowingChange(true)}>Siguiendo</button></div>}<button className="text-action" disabled={loading} onClick={() => { setNotice(''); void load(null, true); }} aria-label="Actualizar publicaciones"><RefreshCw size={16}/>Actualizar</button></div>}
+    }}><button type="button" role="tab" aria-selected={!following} tabIndex={following ? -1 : 0} onClick={() => onFollowingChange(false)}>Descubrir</button><button type="button" role="tab" aria-selected={following} tabIndex={following ? 0 : -1} onClick={() => onFollowingChange(true)}>Siguiendo</button></div>}<button className="text-action" disabled={loading} onClick={() => { setNotice(''); void load(null, true); }} aria-label="Actualizar publicaciones"><RefreshCw size={16}/>Actualizar</button></div>}
     {notice && <p className="feed-notice" role="status">{notice}</p>}
-    <div className="feed-posts">{items.map(post => <PostCard key={post.id} initial={post} viewer={viewer} detail={!!workout} onProfile={onProfile} onWorkout={onWorkout} onUpdate={next => setItems(previous => previous.map(item => item.id === next.id ? next : item))} onUnavailable={id => { setItems(previous => previous.filter(item => item.id !== id)); setNotice('Esta publicación ya no está disponible.'); }}/>)}</div>
+    <div className="feed-posts">{items.map(post => <PostCard key={post.id} post={post} viewer={viewer} detail={!!workout} onProfile={onProfile} onWorkout={onWorkout} onUpdate={update => setItems(previous => previous.map(item => item.id === post.id ? update(item) : item))} onUnavailable={id => { setItems(previous => previous.filter(item => item.id !== id)); setNotice('Esta publicación ya no está disponible.'); }}/>)}</div>
     {loading && <p className="feed-status" role="status">{loaded ? 'Cargando más entrenamientos…' : 'Cargando publicaciones…'}</p>}
     {error && <div className="feed-error" role="alert"><p>{error}</p><button className="secondary" onClick={() => void load(failedCursor.current)}>Reintentar publicaciones</button></div>}
-    {loaded && !loading && !error && items.length === 0 && <div className="feed-empty"><LockKeyhole size={32}/><h2>{workout ? 'Entrenamiento no disponible.' : following ? 'Todavía no hay publicaciones de las personas a las que sigues.' : 'Todavía no hay publicaciones.'}</h2><p>{workout ? 'Puede haberse eliminado, ser privado o no estar disponible para tu cuenta.' : owner ? 'Aquí aparecerán los entrenamientos publicados que tengas permiso para ver. La privacidad del perfil también se aplica a sus publicaciones.' : following ? 'Puedes descubrir a más personas en «Para ti» y seguirlas desde su perfil.' : 'Cuando alguien publique un entrenamiento, lo encontrarás aquí. Puedes publicar el tuyo al terminar una sesión.'}</p></div>}
+    {loaded && !loading && !error && items.length === 0 && <div className="feed-empty"><LockKeyhole size={32}/><h2>{workout ? 'Entrenamiento no disponible.' : following ? 'Todavía no hay publicaciones de las personas a las que sigues.' : 'Todavía no hay publicaciones.'}</h2><p>{workout ? 'Puede haberse eliminado, ser privado o no estar disponible para tu cuenta.' : owner ? 'Aquí aparecerán los entrenamientos publicados que tengas permiso para ver. La privacidad del perfil también se aplica a sus publicaciones.' : following ? 'Puedes descubrir a más personas en «Buscar personas» y seguirlas desde su perfil.' : 'Cuando alguien publique un entrenamiento, lo encontrarás aquí. Puedes publicar el tuyo desde el historial después de guardarlo.'}</p></div>}
     <div ref={sentinel} className="feed-sentinel" aria-hidden="true"/>
     {cursor && !error && <button className="secondary feed-load-more" disabled={loading} onClick={() => void load(cursor)}>Cargar más entrenamientos</button>}
     {loaded && !loading && !error && !cursor && items.length > 0 && !workout && <p className="feed-end" role="status"><Check size={19}/>Estás al día. Has visto todos los entrenamientos disponibles.</p>}

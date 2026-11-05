@@ -30,10 +30,13 @@ async function openFinish(page: Page) {
   await page.goto('/'); await page.getByLabel('Correo electrónico').fill('camera@example.test');
   await page.getByLabel('Contraseña', { exact: true }).fill('test-password-123');
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Inicio', exact: true })).toBeVisible();
   await page.goto(`/#view=editor&id=${draftId}`);
-  await page.getByRole('button', { name: 'Finalizar entrenamiento', exact: true }).click();
-  return page.getByRole('dialog', { name: 'Finalizar entrenamiento', exact: true });
+  await page.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Finalizar entrenamiento' }).getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
+  await page.getByRole('button', { name: 'Continuar', exact: true }).click();
+  await page.getByRole('button', { name: 'Publicar en Comunidad', exact: true }).click();
+  return page.getByRole('main');
 }
 const stopped = (page: Page) => page.evaluate(() => (window as unknown as { cameraStreams: MediaStream[] }).cameraStreams.every(stream => stream.getTracks().every(track => track.readyState === 'ended')));
 
@@ -45,7 +48,7 @@ test('inline camera captures and retakes locally, uploads only on acceptance and
   await dialog.getByRole('button', { name: 'Hacer foto', exact: true }).click();
   const camera = dialog.getByRole('region', { name: 'Cámara del entrenamiento', exact: true });
   await expect(camera.getByRole('button', { name: 'Tomar foto', exact: true })).toBeEnabled();
-  await expect(dialog.getByRole('button', { name: 'Guardar entrenamiento', exact: true })).toBeDisabled();
+  await expect(dialog.getByRole('button', { name: 'Publicar en Comunidad', exact: true })).toBeDisabled();
   expect(await page.evaluate(() => (window as unknown as { cameraConstraints: MediaStreamConstraints[] }).cameraConstraints.every(value => value.audio === false))).toBe(true);
   await page.screenshot({ path: 'artifacts/workout-feed/camera-live-390.png', animations: 'disabled' });
   await camera.getByRole('button', { name: 'Tomar foto', exact: true }).click();
@@ -62,29 +65,24 @@ test('inline camera captures and retakes locally, uploads only on acceptance and
   await expect(camera).toHaveCount(0);
   expect(uploads).toHaveLength(1);
   await expect.poll(() => stopped(page)).toBe(true);
-  await expect(dialog.getByRole('button', { name: 'Guardar entrenamiento', exact: true })).toBeEnabled();
-  await dialog.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Publicar en Comunidad', exact: true })).toBeEnabled();
+  await dialog.getByRole('button', { name: 'Publicar en Comunidad', exact: true }).click();
+  await expect(page.getByText('Publicación guardada.', { exact: true })).toBeVisible();
   await expect.poll(async () => ((await harness.account('camera@example.test')).data as AppData).workouts.find(w => w.id === draftId)?.status).toBe('finished');
   const saved = ((await harness.account('camera@example.test')).data as AppData).workouts.find(w => w.id === draftId)!;
   expect(saved.publication?.photoPath).toMatch(/\.jpg$/);
   expect(saved.publication?.published).toBe(true);
 });
 
-test('closing camera or leaving finalization stops every track without losing the workout', async ({ page }) => {
+test('closing the camera stops every track and keeps the saved session available', async ({ page }) => {
   const dialog = await openFinish(page);
   await dialog.getByRole('button', { name: 'Hacer foto', exact: true }).click();
   await expect(dialog.getByRole('button', { name: 'Tomar foto', exact: true })).toBeEnabled();
   await dialog.getByRole('button', { name: 'Cerrar cámara', exact: true }).click();
   await expect.poll(() => stopped(page)).toBe(true);
-  await expect(dialog.getByRole('button', { name: 'Guardar entrenamiento', exact: true })).toBeEnabled();
-  await dialog.getByRole('button', { name: 'Hacer foto', exact: true }).click();
-  await expect(dialog.getByRole('button', { name: 'Tomar foto', exact: true })).toBeEnabled();
-  await dialog.getByRole('button', { name: 'Seguir entrenando', exact: true }).click();
-  await expect(dialog).toHaveCount(0);
-  await expect.poll(() => stopped(page)).toBe(true);
-  await page.getByRole('button', { name: 'Finalizar entrenamiento', exact: true }).click();
-  await expect(dialog.getByRole('button', { name: 'Guardar entrenamiento', exact: true })).toBeEnabled();
+  await dialog.getByRole('button', { name: 'Volver', exact: true }).click();
+  await expect(page.getByText('Entrenamiento guardado.', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Publicar en Comunidad', exact: true }).click();
   await expect(dialog.getByAltText('Vista previa de la foto del entrenamiento')).toHaveCount(0);
 });
 
@@ -95,8 +93,8 @@ test('denied permission explains recovery and allows saving without a photo', as
   await expect(dialog.getByRole('alert')).toContainText('No tenemos permiso para usar la cámara');
   await expect(dialog.getByRole('button', { name: 'Usar cámara del dispositivo', exact: true })).toBeVisible();
   await dialog.getByRole('button', { name: 'Cerrar cámara', exact: true }).click();
-  await dialog.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Publicar en Comunidad', exact: true }).click();
+  await expect(page.getByText('Publicación guardada.', { exact: true })).toBeVisible();
   await expect.poll(async () => ((await harness.account('camera@example.test')).data as AppData).workouts.find(w => w.id === draftId)?.status).toBe('finished');
   const saved = ((await harness.account('camera@example.test')).data as AppData).workouts.find(w => w.id === draftId)!;
   expect(saved.publication?.photoPath).toBeUndefined();
@@ -115,5 +113,5 @@ test('a permission request resolved after cancellation cannot leave the camera a
   await dialog.getByRole('button', { name: 'Cerrar cámara', exact: true }).click();
   await page.evaluate(() => (window as unknown as { resolveCamera: () => void }).resolveCamera());
   await expect.poll(() => page.evaluate(() => (window as unknown as { lateStream: MediaStream }).lateStream.getTracks().every(track => track.readyState === 'ended'))).toBe(true);
-  await expect(dialog.getByRole('button', { name: 'Guardar entrenamiento', exact: true })).toBeEnabled();
+  await expect(dialog.getByRole('button', { name: 'Publicar en Comunidad', exact: true })).toBeEnabled();
 });

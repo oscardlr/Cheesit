@@ -14,12 +14,12 @@ async function login(page: Page, email: string) {
   await page.goto('/'); await page.getByLabel('Correo electrónico').fill(email);
   await page.getByLabel('Contraseña', { exact: true }).fill('test-password-123');
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Inicio', exact: true })).toBeVisible();
 }
 async function search(page: Page, query: string) {
-  await page.getByLabel('Menú de perfil', { exact: true }).click();
+  await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Comunidad', exact: true }).click();
   await page.getByRole('button', { name: 'Buscar personas', exact: true }).click();
-  if(query) await page.getByLabel('Nombre de usuario', { exact: true }).fill(query);
+  if(query) await page.getByLabel('Nombre o nombre de usuario', { exact: true }).fill(query);
 }
 async function openOwn(page: Page) {
   await page.getByLabel('Menú de perfil', { exact: true }).click();
@@ -40,7 +40,7 @@ test('two people: mobile and desktop search, directed follows, lists, back/reloa
   const result = page.getByRole('list', { name: 'Resultados de personas' });
   await expect(result).toContainText('Beto Cheesit'); await expect(result).toContainText(`@${handleB}`);
   await expect(result.getByRole('img', { name: 'Foto de perfil de Beto Cheesit' })).toBeVisible();
-  await result.getByRole('button').click();
+  await result.locator('.social-person').click();
   await expect(page.getByRole('heading', { name: 'Beto Cheesit', exact: true })).toBeVisible();
   await expect(page.locator('.profile-bio')).toHaveText('Entrenando a mi ritmo.');
   await expect(page.locator('.profile-stats')).toHaveCount(0); await expect(page.locator('.profile-workout')).toHaveCount(0);
@@ -115,15 +115,15 @@ test('empty and stale searches, server errors, offline and response loss never s
   const target = (await harness.social('social-target@example.test')).username;
   await login(page, 'social-errors@example.test'); await search(page, 'nobody_matches');
   await expect(page.getByText('No encontramos a nadie.')).toBeVisible();
-  await page.route('**/rest/v1/rpc/cheesit_read_social', async route => {
-    if (route.request().postDataJSON().p_query === 'slow') await new Promise(resolve => setTimeout(resolve, 1000));
+  await page.route('**/rest/v1/cheesit_social_profiles?*', async route => {
+    if (new URL(route.request().url()).searchParams.get('or')?.includes('slow')) await new Promise(resolve => setTimeout(resolve, 1000));
     await route.continue();
   });
-  await page.getByLabel('Nombre de usuario', { exact: true }).fill('slow'); await page.waitForTimeout(350);
-  await page.getByLabel('Nombre de usuario', { exact: true }).fill(target);
+  await page.getByLabel('Nombre o nombre de usuario', { exact: true }).fill('slow'); await page.waitForTimeout(350);
+  await page.getByLabel('Nombre o nombre de usuario', { exact: true }).fill(target);
   await expect(page.locator('.social-person')).toContainText('Objetivo');
   await page.waitForTimeout(1100); await expect(page.locator('.social-person')).toHaveCount(1);
-  await page.unroute('**/rest/v1/rpc/cheesit_read_social'); await page.locator('.social-person').click();
+  await page.unroute('**/rest/v1/cheesit_social_profiles?*'); await page.locator('.social-person').click();
   await page.route('**/rest/v1/cheesit_follows*', route => route.fulfill({ status: 503, json: { message: 'unavailable' } }));
   await page.getByRole('button', { name: 'Seguir', exact: true }).click();
   await expect(page.locator('.social-page [role=alert]')).toContainText('No se ha podido confirmar');
@@ -143,17 +143,17 @@ test('empty and stale searches, server errors, offline and response loss never s
   await expect(page.getByRole('button', { name: 'Dejar de seguir', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: '1 Seguidores', exact: true })).toBeVisible();
   await search(page, target);
-  await page.route('**/rest/v1/rpc/cheesit_read_social', route => route.fulfill({ status: 503, json: { message: 'unavailable' } }));
-  await page.getByLabel('Nombre de usuario', { exact: true }).fill('retry');
+  await page.route('**/rest/v1/cheesit_social_profiles?*', route => route.fulfill({ status: 400, json: { message: 'unavailable' } }));
+  await page.getByLabel('Nombre o nombre de usuario', { exact: true }).fill('retry');
   await expect(page.locator('.social-page [role=alert]')).toContainText('No se ha podido confirmar');
-  await page.unroute('**/rest/v1/rpc/cheesit_read_social'); await page.getByRole('button', { name: 'Reintentar', exact: true }).click();
+  await page.unroute('**/rest/v1/cheesit_social_profiles?*'); await page.getByRole('button', { name: 'Reintentar', exact: true }).click();
   await expect(page.getByText('No encontramos a nadie.')).toBeVisible();
 });
 
 test('guest keeps local activity and is invited to create an account for social features', async ({ page }) => {
   await page.goto('/'); await page.getByRole('button', { name: 'Continuar como invitado' }).click();
   await search(page, ''); await expect(page.getByText('Conecta con tu gente.')).toBeVisible();
-  await expect(page.getByLabel('Nombre de usuario', { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel('Nombre o nombre de usuario', { exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Ir a mi cuenta' }).click();
   await expect(page.getByRole('heading', { name: 'Modo invitado', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Ir a iniciar sesión' }).click();
@@ -171,6 +171,6 @@ test('search paginates and browser back restores the query without revisiting ev
   expect(new Set(handles).size).toBe(handles.length);
   await page.locator('.social-person').first().click();
   await expect(page.getByRole('heading', { name: 'Perfil social', exact: true })).toBeVisible();
-  await page.goBack(); await expect(page.getByLabel('Nombre de usuario', { exact: true })).toHaveValue('u');
-  await page.goBack(); await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
+  await page.goBack(); await expect(page.getByLabel('Nombre o nombre de usuario', { exact: true })).toHaveValue('u');
+  await page.goBack(); await expect(page.getByRole('heading', { name: 'Comunidad', exact: true })).toBeVisible();
 });

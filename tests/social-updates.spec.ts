@@ -17,7 +17,7 @@ async function login(page: Page, email: string) {
   await page.getByLabel('Correo electrónico').fill(email);
   await page.getByLabel('Contraseña', { exact: true }).fill('test-password-123');
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Inicio', exact: true })).toBeVisible();
 }
 const nav = (page: Page, name: string) => page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name, exact: true });
 async function menu(page: Page, name: string) {
@@ -38,24 +38,24 @@ test('feed tabs filter followed people on the server and interaction notificatio
   const viewer = await harness.seed('updates-viewer@example.test', undefined, account('Persona Lectora'));
   const requests: { p_following?: boolean }[] = [];
   page.on('request', request => { if (request.url().endsWith('/rpc/cheesit_read_feed')) requests.push(request.postDataJSON()); });
-  await login(page, 'updates-viewer@example.test'); await nav(page, 'Feed').click();
-  await expect(page.getByRole('tab', { name: 'Para ti', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await login(page, 'updates-viewer@example.test'); await nav(page, 'Comunidad').click();
+  await expect(page.getByRole('tab', { name: 'Descubrir', exact: true })).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByRole('tab', { name: 'Siguiendo', exact: true })).toBeVisible();
   await expect(page.locator('.feed-post')).toHaveCount(2);
   await expect(page.getByRole('heading', { name: strangerPost.name, exact: true })).toBeVisible();
-  await expect(page.locator('.screen-feed .app-content > .home-header')).toHaveCount(0);
+  await expect(page.locator('.screen-feed .app-content > .home-header')).toHaveCount(1);
   await expect(page.getByText('Entrenamientos, esfuerzo y comunidad.', { exact: true })).toHaveCount(0);
   await expect(page.getByText('CADA REP CONECTA.', { exact: true })).toHaveCount(0);
   await page.getByRole('tab', { name: 'Siguiendo', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Todavía no hay publicaciones de las personas a las que sigues.', exact: true })).toBeVisible();
   await expect(page.locator('.feed-post')).toHaveCount(0);
   expect(requests.some(request => request.p_following === true)).toBe(true);
-  await page.getByRole('tab', { name: 'Para ti', exact: true }).click();
+  await page.getByRole('tab', { name: 'Descubrir', exact: true }).click();
   const post = page.locator('.feed-post').filter({ has: page.getByRole('heading', { name: followedPost.name, exact: true }) });
   await post.getByRole('button', { name: 'Ver perfil de Atleta Seguido', exact: true }).click();
   await page.getByRole('button', { name: 'Seguir', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Dejar de seguir', exact: true })).toBeVisible();
-  await nav(page, 'Feed').click();
+  await nav(page, 'Comunidad').click();
   await page.getByRole('tab', { name: 'Siguiendo', exact: true }).click();
   await expect(page.locator('.feed-post')).toHaveCount(1);
   await expect(page.locator('.feed-post h2')).toHaveText(followedPost.name);
@@ -79,7 +79,9 @@ test('feed tabs filter followed people on the server and interaction notificatio
     await authorPage.addInitScript(() => sessionStorage.setItem('grind-intro-v1', '1'));
     await login(authorPage, 'updates-author@example.test');
     const response = authorPage.waitForResponse(value => value.url().endsWith('/rpc/cheesit_read_notifications') && value.status() === 200);
-    await authorPage.getByRole('button', { name: /^Notificaciones/ }).click();
+    const heart = authorPage.getByRole('button', { name: /^Notificaciones, .* sin leer/ });
+    await expect(heart.locator('.notification-dot')).toBeVisible();
+    await heart.click();
     const payload = await (await response).json() as { items: { kind: string; actor_id: string; workout_owner: string | null; workout_id: string | null }[] };
     const interactions = payload.items.filter(item => item.kind === 'like' || item.kind === 'comment');
     expect(interactions.map(item => item.kind).sort()).toEqual(['comment', 'like']);

@@ -30,6 +30,35 @@ export async function readSocial(route: SocialRoute, offset = 0, signal?: AbortS
   } finally { clearTimeout(timer); signal?.removeEventListener('abort', abort); }
 }
 
+export type DirectoryProfile = Pick<SocialProfile, 'owner_id' | 'username' | 'display_name' | 'photo' | 'is_following' | 'follows_you'>;
+
+/** Read only the existing public profile projection and the viewer's follow edges. */
+export async function readDirectory(viewer: string, query: string, offset = 0, signal?: AbortSignal): Promise<DirectoryProfile[]> {
+  const client = remoteClient();
+  if (!client) throw new Error('Necesitas una cuenta para usar las funciones sociales.');
+  const request = client.from('cheesit_social_profiles')
+    .select('owner_id,username,display_name,photo,outgoing:cheesit_follows!cheesit_follows_followed_id_fkey(follower_id),incoming:cheesit_follows!cheesit_follows_follower_id_fkey(followed_id)')
+    .neq('owner_id', viewer)
+    .eq('outgoing.follower_id', viewer)
+    .eq('incoming.followed_id', viewer)
+    .order('username').range(offset, offset + SOCIAL_PAGE_SIZE);
+  const term = normalizeUsername(query).slice(0, 80);
+  // PostgreSQL's literal regex prefix treats the entire search as text.
+  // Quote it separately for PostgREST's logical-filter grammar.
+  if (term) {
+    const literal = JSON.stringify('***=' + term);
+    request.or(`username.imatch.${literal},display_name.imatch.${literal}`);
+  }
+  const timeout = AbortSignal.timeout(15000);
+  const { data, error } = await request.abortSignal(signal ? AbortSignal.any([signal, timeout]) : timeout);
+  if (error || !data) throw new Error(failure);
+  return data.map(({ outgoing, incoming, ...profile }) => ({
+    ...profile,
+    is_following: outgoing.length > 0,
+    follows_you: incoming.length > 0,
+  }));
+}
+
 export type SocialActivity = { shared: boolean; summary: ActivitySummary | null; workouts: Workout[] };
 
 export async function readActivity(owner: string, workout: string | null = null, offset = 0, signal?: AbortSignal): Promise<SocialActivity | null> {

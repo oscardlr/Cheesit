@@ -14,7 +14,7 @@ test('profile disclosure replaces the toolbar and keeps account controls in Sett
   await page.getByLabel('Correo electrónico').fill('profile-menu@example.test');
   await page.getByLabel('Contraseña', { exact: true }).fill('test-password-123');
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Inicio', exact: true })).toBeVisible();
   await expect(page.locator('.account-toolbar')).toHaveCount(0);
   await expect(page.locator('.account-settings')).toBeHidden();
   await expect(page.getByRole('button', { name: 'Reintentar sincronización' })).toBeHidden();
@@ -24,10 +24,10 @@ test('profile disclosure replaces the toolbar and keeps account controls in Sett
   await expect(menu.locator('img')).toHaveCount(0);
   await expect(menu.locator('svg')).toBeVisible();
   await menu.click();
-  await expect(page.locator('.profile-nav-options > button')).toHaveText(['Mi perfil', 'Buscar personas', 'Ajustes', 'Cerrar sesión']);
+  await expect(page.locator('.profile-nav-options > button')).toHaveText(['Mi perfil', 'Ajustes', 'Cerrar sesión']);
   await expect(page).toHaveURL(/view=summary/);
   await expect(page.getByRole('group', { name: 'Opciones de perfil' })).toBeVisible();
-  await page.getByRole('heading', { name: 'Resumen', exact: true }).click();
+  await page.getByRole('heading', { name: 'Inicio', exact: true }).click();
   await expect(page.locator('.profile-nav')).not.toHaveAttribute('open');
   await menu.click(); await page.keyboard.press('Escape'); await expect(menu).toBeFocused();
   await expect(page.locator('.profile-nav')).not.toHaveAttribute('open');
@@ -72,7 +72,7 @@ test('toolbar photo follows profile uploads, changes and removal', async ({ page
   await page.getByLabel('Correo electrónico').fill('toolbar-photo@example.test');
   await page.getByLabel('Contraseña', { exact: true }).fill('test-password-123');
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Inicio', exact: true })).toBeVisible();
   const menu = page.getByLabel('Menú de perfil', { exact: true });
   await expect(menu.locator('svg')).toBeVisible();
   await menu.click();
