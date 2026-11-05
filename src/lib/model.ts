@@ -108,6 +108,11 @@ export const CATALOG_LOAD_CONVENTIONS: Readonly<Record<string, LoadConvention>> 
   'pajaros-mancuernas': 'per_unit_bilateral', 'curl-martillo': 'per_unit_bilateral',
   'curl-alterno-mancuernas': 'per_unit_alternating', 'remo-mancuerna': 'per_unit_single',
   'extension-cabeza-mancuerna': 'per_unit_single',
+  'press-plano-mancuernas': 'per_unit_bilateral', 'remo-apoyo-pecho-mancuernas': 'per_unit_bilateral',
+  'encogimientos-mancuernas': 'per_unit_bilateral', 'press-arnold': 'per_unit_bilateral',
+  'curl-inclinado-mancuernas': 'per_unit_bilateral', 'curl-concentrado-mancuerna': 'per_unit_single',
+  'patada-triceps-mancuerna': 'per_unit_single', 'sentadilla-bulgara-mancuernas': 'per_unit_bilateral',
+  'peso-muerto-rumano-mancuernas': 'per_unit_bilateral',
 };
 export function resolvedLoadConvention(exercise: Pick<WorkoutExercise, 'exerciseId' | 'mode' | 'loadConvention'>, profile?: AthleteProfile): LoadConvention {
   if (exercise.loadConvention) return exercise.loadConvention;

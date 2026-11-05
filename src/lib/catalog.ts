@@ -1,4 +1,7 @@
 import type { Exercise, ExerciseMode } from './model';
+import { catalogAdditions, type EquipmentType } from './catalog-additions';
+
+export { EQUIPMENT_TYPES, type EquipmentType } from './catalog-additions';
 
 // Stable identifiers distinguish variants even when a user renames a custom exercise.
 const entries: [string, string, string, ExerciseMode?][] = [
@@ -74,7 +77,14 @@ const guides: Record<string, [string, string, string]> = {
   'elevacion-piernas': ['Elevación de piernas con control del tronco.', 'Adapta el recorrido o flexiona las rodillas para mantener el movimiento controlado.', 'Suelo, banco o soporte'],
   'crunch-polea': ['Flexión del tronco contra una polea alta.', 'Acerca el tórax a la pelvis manteniendo las manos como apoyo de la carga.', 'Polea alta y cuerda'],
 };
-export const CATALOG: Exercise[] = entries.map(([id, name, group, mode]) => ({ id, name, group, mode: mode ?? 'external_load_reps', image: `/assets/exercises/${id}.svg`, description: guides[id]?.[0], technique: guides[id]?.[1], equipment: guides[id]?.[2] }));
+export const CATALOG: Exercise[] = [
+  ...entries.map(([id, name, group, mode]) => ({ id, name, group, mode: mode ?? 'external_load_reps', image: `/assets/exercises/${id}.svg`, description: guides[id]?.[0], technique: guides[id]?.[1], equipment: guides[id]?.[2] })),
+  ...catalogAdditions.map(([id, name, group, equipmentType, primaryMuscles, secondaryMuscles, equipment, description, technique]): Exercise => ({
+    id, name, group, primaryMuscles, secondaryMuscles, equipment, description, technique,
+    mode: equipmentType === 'Peso corporal' || equipmentType === 'Rueda abdominal' ? 'bodyweight_reps' : 'external_load_reps',
+    image: `/assets/exercises/${id}.svg`,
+  })),
+];
 const catalogImages = new Map(CATALOG.map(exercise => [exercise.id, exercise.image!]));
 /** Resolve stable catalog IDs in routines and historical snapshots without rewriting saved data. */
 export function exerciseImage(exerciseId: string, image?: string): string | null {
@@ -83,3 +93,29 @@ export function exerciseImage(exerciseId: string, image?: string): string | null
 }
 export const GROUPS = [...new Set(CATALOG.map((exercise) => exercise.group))];
 export function normalizeSearch(value: string): string { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, ' '); }
+
+const legacyEquipment: Partial<Record<EquipmentType, string[]>> = {
+  Barra: ['press-banca-barra', 'remo-barra', 'sentadilla-barra', 'peso-muerto-convencional', 'peso-muerto-rumano', 'hip-thrust', 'press-militar', 'curl-barra', 'press-frances'],
+  Mancuernas: ['press-inclinado-mancuernas', 'aperturas-mancuernas', 'remo-mancuerna', 'zancadas-mancuernas', 'press-hombros-mancuernas', 'elevaciones-laterales', 'elevaciones-frontales', 'pajaros-mancuernas', 'curl-alterno-mancuernas', 'curl-martillo', 'extension-cabeza-mancuerna'],
+  Polea: ['aperturas-polea', 'jalon-pecho', 'remo-polea-baja', 'curl-polea', 'extension-triceps-polea', 'crunch-polea'],
+  Máquina: ['prensa-piernas', 'extension-cuadriceps', 'curl-femoral', 'elevacion-gemelos'],
+};
+const equipmentById = new Map<string, EquipmentType>(
+  catalogAdditions.map(([id, , , equipmentType]) => [id, equipmentType]),
+);
+for (const [equipmentType, ids] of Object.entries(legacyEquipment)) {
+  for (const id of ids) equipmentById.set(id, equipmentType as EquipmentType);
+}
+
+export function exerciseEquipmentType(exercise: Exercise): EquipmentType | undefined {
+  return equipmentById.get(exercise.id) ?? (exercise.mode === 'bodyweight_reps' ? 'Peso corporal' : undefined);
+}
+
+const searchAliases = new Map<string, string[]>(
+  catalogAdditions.filter(entry => entry[9]).map(([id, , , , , , , , , aliases]) => [id, aliases!.map(normalizeSearch)]),
+);
+searchAliases.set('curl-femoral', ['curl femoral tumbado', 'curl de isquios tumbado', 'lying leg curl']);
+
+export function matchesExerciseSearch(exercise: Pick<Exercise, 'id' | 'name'>, query: string): boolean {
+  return normalizeSearch(exercise.name).includes(query) || Boolean(searchAliases.get(exercise.id)?.some(alias => alias.includes(query)));
+}
