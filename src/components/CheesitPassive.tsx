@@ -5,6 +5,7 @@ import { getCompanionPassive, workoutPassiveReward } from '@/lib/cheesit-passive
 import { isCivilDate } from '@/lib/dates';
 import type { Workout } from '@/lib/model';
 import AbilityDetails from './AbilityDetails';
+import CreditCoin from './CreditCoin';
 import './cheesit-passive.css';
 
 type Status = 'equipped' | 'available' | 'locked';
@@ -16,7 +17,7 @@ export default function CheesitPassive({ companionId, status, compact = false, c
   return <div className={`cheesit-passive ${compact ? 'is-compact' : ''}`} data-passive-id={passive.id} data-passive-status={status} aria-label={`Pasiva: ${passive.name}`}>
     <AbilityDetails title={passive.name} icon={<Sparkles size={14} aria-hidden="true"/>}>
       <div className="cheesit-passive-heading"><span><Sparkles size={13} aria-hidden="true"/> PASIVA{status === 'equipped' ? ' ACTIVA' : ''}</span>{status && <small>{statusLabels[status]}</small>}</div>
-      <strong className="cheesit-passive-value">{passive.valueLabel}</strong>
+      <strong className="cheesit-passive-value">{passive.parameters.credits > 0 && <><CreditCoin/> </>}{passive.valueLabel}</strong>
       <p>{passive.description}</p>
       {!compact && <small className="cheesit-passive-rule">Automática al equipar · Se fija al empezar la sesión.</small>}
       {children}
@@ -44,6 +45,6 @@ export function WorkoutCheesitReward({ workout }: { workout: Workout }) {
   const passive = award && getCompanionPassive(award.companionId);
   return <div className="workout-cheesit-reward" aria-label="Bonificación del cheesit">
     <span><Sparkles size={15} aria-hidden="true"/> Bonificación del cheesit</span>
-    {companion && passive ? <><strong>{companion.name} · {passive.name}</strong><div><b>+{bonus.bonusXp} XP</b><b>+{bonus.bonusCredits} créditos directos</b></div><p>{award.reason === 'historical-date' ? 'Sin bonus: la fecha registrada no coincidía con el día de inicio de esta sesión.' : award.eligible ? 'Bonificación guardada al finalizar. Cambiar de cheesit o editar no vuelve a concederla.' : 'No se cumplió la condición de la pasiva al finalizar. La decisión queda guardada.'}</p></> : <><strong>+0 XP · +0 créditos directos</strong><p>Esta sesión no tenía una pasiva elegible al empezar.</p></>}
+    {companion && passive ? <><strong>{companion.name} · {passive.name}</strong><div><b>+{bonus.bonusXp} XP</b><b><CreditCoin/> +{bonus.bonusCredits} créditos directos</b></div><p>{award.reason === 'historical-date' ? 'Sin bonus: la fecha registrada no coincidía con el día de inicio de esta sesión.' : award.eligible ? 'Bonificación guardada al finalizar. Cambiar de cheesit o editar no vuelve a concederla.' : 'No se cumplió la condición de la pasiva al finalizar. La decisión queda guardada.'}</p></> : <><strong>+0 XP · <CreditCoin/> +0 créditos directos</strong><p>Esta sesión no tenía una pasiva elegible al empezar.</p></>}
   </div>;
 }

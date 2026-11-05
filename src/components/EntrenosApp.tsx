@@ -451,10 +451,10 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
  {screen==='train' && <>
   <header className="home-header compact"><h1>Entrenar</h1></header>
   <SectionCards label="Apartados de Entrenar" cards={[
-   {label:'Empezar entreno',icon:Play,open:()=>openStart()},
-   {label:'Mis rutinas',icon:ClipboardList,open:()=>navigate('routines')},
-   {label:'Planes de entrenamiento',icon:Layers,open:()=>navigate('plans')},
-   {label:'Catálogo de ejercicios',icon:BookOpen,open:()=>navigate('catalog')},
+   {label:'Empezar entreno',icon:Play,artwork:'training-start-card-3d',open:()=>openStart()},
+   {label:'Mis rutinas',icon:ClipboardList,artwork:'training-routines-card-3d',open:()=>navigate('routines')},
+   {label:'Planes de entrenamiento',icon:Layers,artwork:'training-plans-card-3d',open:()=>navigate('plans')},
+   {label:'Catálogo de ejercicios',icon:BookOpen,artwork:'training-catalog-card-3d',open:()=>navigate('catalog')},
   ]}/>
  </>}
  {screen==='plans' && <><Back title="Planes de entrenamiento" onClick={()=>navigate('train')}/><CyclePanel data={data} onChange={setData} onStart={startCycle}/></>}

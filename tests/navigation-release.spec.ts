@@ -50,7 +50,7 @@ test('the five tabs and all eight hub pages stay usable at 320, 390, 430 and des
   const labels = ['Inicio', 'Comunidad', 'Entrenar', 'Progreso', 'Arcade'];
   const groups = [
     { hub: 'Entrenar', group: 'Apartados de Entrenar', pages: ['Empezar entreno', 'Mis rutinas', 'Planes de entrenamiento', 'Catálogo de ejercicios'] },
-    { hub: 'Arcade', group: 'Apartados de Arcade', pages: ['Personaje', 'Cofres y créditos', 'Retos y logros', 'Nivel y temporadas'] },
+    { hub: 'Arcade', group: 'Apartados de Arcade', pages: ['Personaje', 'Cofres', 'Retos y logros', 'Nivel y temporadas'] },
   ];
   for (const width of [320, 390, 430, 1440]) {
     await page.setViewportSize({ width, height: 850 });
@@ -67,11 +67,11 @@ test('the five tabs and all eight hub pages stay usable at 320, 390, 430 and des
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
       if (width === 390) for (const label of pages) {
         await cards.filter({ hasText: label }).click();
-        await title(page, label);
+        await title(page, label === 'Cofres' ? 'Cofres y créditos' : label);
         await expect(nav(page, hub)).toHaveAttribute('aria-current', 'page');
         if (label === 'Empezar entreno') expect(page.url()).toBe(startRoute);
         await page.reload();
-        await title(page, label);
+        await title(page, label === 'Cofres' ? 'Cofres y créditos' : label);
         await page.goBack();
         await title(page, hub);
       }
@@ -129,7 +129,7 @@ test('equipped slots and crate odds stay compact on mobile and desktop', async (
   await expect(page.locator('.wardrobe-slot[data-slot="companion"]')).toContainText('Vega');
 
   await button(page, 'Inicio de Arcade').click();
-  await button(page, 'Cofres y créditos').click();
+  await button(page, 'Cofres').click();
   await expect(page.getByText('Cofres disponibles')).toHaveCount(0);
   await expect(page.locator('.arcade-crates .arcade-crate>p')).toHaveCount(0);
   const cards = page.locator('.arcade-crate');
@@ -221,7 +221,7 @@ test('existing profile, workouts, plans, routines, records and Arcade reservatio
   await button(page, 'Personaje').click();
   await title(page, 'Personaje');
   await button(page, 'Inicio de Arcade').click();
-  await button(page, 'Cofres y créditos').click();
+  await button(page, 'Cofres').click();
   await title(page, 'Cofres y créditos');
   await expect(page.getByRole('button', { name: /créditos disponibles/ })).toBeVisible();
   await button(page, 'Continuar apertura').click();

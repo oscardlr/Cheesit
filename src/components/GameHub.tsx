@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { ArrowRight, Award, Box, Check, ChevronRight, Clock3, Coins, Crown, Dumbbell, Footprints, Gift, Heart, LockKeyhole, Shirt, Sparkles, Target, Trophy, TrendingUp, Zap } from 'lucide-react';
+import { ArrowRight, Award, Box, Check, ChevronRight, Clock3, Crown, Dumbbell, Footprints, Gift, Heart, LockKeyhole, Shirt, Sparkles, Target, Trophy, TrendingUp, Zap } from 'lucide-react';
 import type { AppData } from '@/lib/model';
 import { CRATES, RARITIES, gameProgress, equipCosmetic, equipCompanion, gameBalance, gameCreditStatus, getAchievements, getLevelCrates, getMissions, normalizeGame, progressionSeasons, openCrate, openLevelCrate, type GameState, type InventoryItem, type Rarity } from '@/lib/game';
 import { nextWeeklyResetMadrid } from '@/lib/dates';
@@ -12,6 +12,7 @@ import PixelAthlete from './PixelAthlete';
 import { ArrowLeft } from 'lucide-react';
 import WardrobeV3 from './WardrobeV3';
 import CrateOpening from './CrateOpening';
+import CreditCoin from './CreditCoin';
 import CrateArtwork from './CrateArtwork';
 import InfoPopup from './InfoPopup';
 import './game-hub.css';
@@ -25,10 +26,10 @@ type Props = { data: AppData; today: string; effectsEnabled: boolean; soundEnabl
 export type ArcadeView = 'overview' | 'goals' | 'crates' | 'ascent' | 'looks' | 'abilities';
 type Tab = ArcadeView;
 const destinations = [
-  { id: 'looks', label: 'Personaje', icon: Shirt },
-  { id: 'crates', label: 'Cofres y créditos', icon: Box },
-  { id: 'goals', label: 'Retos y logros', icon: Target },
-  { id: 'ascent', label: 'Nivel y temporadas', icon: TrendingUp },
+  { id: 'looks', label: 'Personaje', icon: Shirt, artwork: 'arcade-character-card-3d' },
+  { id: 'crates', label: 'Cofres', icon: Box, artwork: 'arcade-crates-card-3d' },
+  { id: 'goals', label: 'Retos y logros', icon: Target, artwork: 'arcade-goals-card-3d' },
+  { id: 'ascent', label: 'Nivel y temporadas', icon: TrendingUp, artwork: 'arcade-seasons-card-3d' },
 ] as const;
 
 const fmt = (value: number) => new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(value);
@@ -107,16 +108,40 @@ export default function GameHub({ data, today, effectsEnabled, soundEnabled, ini
 
   return <div className={`game-hub arcade-redesign view-${activeTab} ${effectsEnabled ? '' : 'game-hub-quiet'}`}>
     <header className="arcade-header">
-      <div>{tab==='overview'?<span className="arcade-kicker"><span/>CADA REP DESBLOQUEA ALGO</span>:<button className="arcade-back" onClick={()=>selectTab('overview')}><ArrowLeft size={15}/>Inicio de Arcade</button>}<h1 ref={headingRef} tabIndex={-1} >{tab==='overview'?'Arcade':tab==='goals'?'Retos y logros':tab==='crates'?'Cofres y créditos':tab==='ascent'?'Nivel y temporadas':'Personaje'}<span className="arcade-title-dot" aria-hidden="true">.</span></h1></div>
-      <button className="arcade-wallet" onClick={()=>selectTab('crates')} title={`${fmt(balance)} créditos disponibles`} aria-label={`${fmt(balance)} créditos disponibles`}><Coins size={20}/><span><strong>{formatCreditBalance(balance)}</strong><small>créditos</small></span><ArrowRight size={16}/></button>
+      {tab === 'overview'
+        ? <span className="arcade-kicker"><span/>CADA REP DESBLOQUEA ALGO</span>
+        : <button className="arcade-back" onClick={() => selectTab('overview')}><ArrowLeft size={15}/>Inicio de Arcade</button>}
+      <h1 ref={headingRef} tabIndex={-1}>{tab==='overview'?'Arcade':tab==='goals'?'Retos y logros':tab==='crates'?'Cofres y créditos':tab==='ascent'?'Nivel y temporadas':'Personaje'}<span className="arcade-title-dot" aria-hidden="true">.</span></h1>
+      <div className="arcade-header-stats">
+        <span className="arcade-header-level">
+          <img src="/assets/cheesit-level-badge.png" alt="Nivel" width={24} height={24}/>
+          <strong>{currentProgress.level}</strong>
+        </span>
+        <button className="arcade-wallet" onClick={()=>selectTab('crates')} title={`${fmt(balance)} créditos disponibles`} aria-label={`${fmt(balance)} créditos disponibles`}>
+          <CreditCoin size={24}/>
+          <strong>{formatCreditBalance(balance)}</strong>
+        </button>
+      </div>
     </header>
-    {TEST_CREDITS>0&&<p className="arcade-notice test-credit-banner">MODO PRUEBAS · {new Intl.NumberFormat('es-ES').format(TEST_CREDITS)} créditos temporales extra. Se retirarán para la versión final.</p>}
+    {TEST_CREDITS>0&&<p className="arcade-notice test-credit-banner">MODO PRUEBAS · <CreditCoin/> {new Intl.NumberFormat('es-ES').format(TEST_CREDITS)} créditos temporales extra. Se retirarán para la versión final.</p>}
     {notice && <p className="arcade-notice" role="status">{notice}</p>}
-    {gameCreditStatus(game, data.workouts, data.profile).deficit > 0 && <p className="arcade-notice">Ajuste de actividad: {fmt(gameCreditStatus(game, data.workouts, data.profile).deficit)} créditos de compras anteriores ya no están respaldados por tu historial actual. Conservas los objetos; las nuevas ganancias cubren primero este ajuste. Tus movimientos originales siguen intactos.</p>}
-    {conversionNotice.count > 0 && <div className="opening-resume-banner" role="status"><Coins size={26}/><div><strong>{conversionNotice.count} {conversionNotice.count === 1 ? 'frase antigua convertida' : 'frases antiguas convertidas'} · +{fmt(conversionNotice.credits)} créditos</strong><p>Las ventas antiguas ya compensadas no añaden créditos. El historial se conserva.</p></div><button onClick={() => void updateGame(acknowledgeQuoteConversions).catch(() => setNotice('Reintenta el guardado del aviso desde la app.'))}>Entendido</button></div>}
+    {gameCreditStatus(game, data.workouts, data.profile).deficit > 0 && <p className="arcade-notice">Ajuste de actividad: <CreditCoin/> {fmt(gameCreditStatus(game, data.workouts, data.profile).deficit)} créditos de compras anteriores ya no están respaldados por tu historial actual. Conservas los objetos; las nuevas ganancias cubren primero este ajuste. Tus movimientos originales siguen intactos.</p>}
+    {conversionNotice.count > 0 && <div className="opening-resume-banner" role="status"><CreditCoin size={26}/><div><strong>{conversionNotice.count} {conversionNotice.count === 1 ? 'frase antigua convertida' : 'frases antiguas convertidas'} · +{fmt(conversionNotice.credits)} créditos</strong><p>Las ventas antiguas ya compensadas no añaden créditos. El historial se conserva.</p></div><button onClick={() => void updateGame(acknowledgeQuoteConversions).catch(() => setNotice('Reintenta el guardado del aviso desde la app.'))}>Entendido</button></div>}
     {game.pendingOpening && !openingVisible && <div className="opening-resume-banner"><Gift size={27}/><div><strong>Tu cofre sigue cerrado.</strong><p>La apertura está guardada con la misma recompensa y el mismo débito.</p></div><button onClick={() => setOpeningVisible(true)}>Continuar apertura</button></div>}
     <section key={activeTab} className="arcade-panel">
-      {tab==='overview' && <SectionCards label="Apartados de Arcade" cards={destinations.map(({ id, label, icon }) => ({ label, icon, open: () => selectTab(id) }))}/>}
+      {tab === 'overview' && <>
+        <div className="arcade-overview-xp">
+          <div className="arcade-overview-xp-labels">
+            <strong>Nivel {currentProgress.level}</strong>
+            {currentProgress.nextLevelXp > 0 ? <>
+              <span>Faltan {fmt(currentProgress.nextLevelXp - currentProgress.levelXp)} XP</span>
+              <strong>Nivel {currentProgress.level + 1}</strong>
+            </> : <span>Nivel máximo</span>}
+          </div>
+          <ProgressBar value={currentProgress.percent} label="Experiencia del nivel actual" />
+        </div>
+        <SectionCards label="Apartados de Arcade" cards={destinations.map(({ id, ...card }) => ({ ...card, open: () => selectTab(id) }))}/>
+      </>}
 
       {tab === 'goals' && <>
         <div className="arcade-section-head"><div><span className="eyebrow">OBJETIVOS</span><h2>Objetivos de actividad</h2></div><span className="arcade-tag"><Check size={13} /> {missions.filter(mission => mission.complete).length}/{missions.length} completas</span></div>
@@ -132,11 +157,11 @@ export default function GameHub({ data, today, effectsEnabled, soundEnabled, ini
           <div className="crate-art" aria-hidden="true"><div className="crate-halo"/><CrateArtwork crateId={crate.id}/></div>
           <div className="crate-heading"><h3>{crate.name}</h3><CrateOdds name={crate.name} odds={crate.odds}/></div>
           <button className="arcade-primary" disabled={busy || Boolean(game.pendingOpening) || balance < crate.cost} onClick={() => void buyCrate(crate.id)}>
-            <span>{busy ? 'Guardando…' : balance < crate.cost ? 'Faltan créditos' : 'Abrir cofre'}</span><strong>{fmt(crate.cost)} <Coins size={14}/></strong>
+            <span>{busy ? 'Guardando…' : balance < crate.cost ? 'Faltan créditos' : 'Abrir cofre'}</span><strong>{fmt(crate.cost)} <CreditCoin alt="créditos"/></strong>
           </button>
         </article>)}</div>
         {allLevelCrates.some(crate => !crate.claimed) && <LevelRewards compact crates={allLevelCrates} busy={busy || Boolean(game.pendingOpening)} onOpen={(level, season) => void buyCrate('level:' + level, level, season)} />}
-        <p className="arcade-economy-note"><Coins size={15} />Créditos virtuales. Cada cofre sortea primero la rareza y después equipo o cheesit de esa rareza. Los objetos no se pueden vender. El equipo duplicado añade cargas de habilidad.</p>
+        <p className="arcade-economy-note"><CreditCoin/>Créditos virtuales. Cada cofre sortea primero la rareza y después equipo o cheesit de esa rareza. Los objetos no se pueden vender. El equipo duplicado añade cargas de habilidad.</p>
       </>}
 
       {activeTab === 'collection' && <>

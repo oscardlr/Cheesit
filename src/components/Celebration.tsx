@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { ArrowUpRight, Check, Coins, Flame, Gift, Sparkles, Trophy, X, Zap } from 'lucide-react';
+import { ArrowUpRight, Check, Flame, Gift, Sparkles, Trophy, X, Zap } from 'lucide-react';
 import { playSound } from '@/lib/sound';
 import { COMPANIONS } from '@/lib/companions';
 import { getCompanionPassive, type CompanionPassiveAward } from '@/lib/cheesit-passives';
 import { CompanionSprite } from './CharacterAvatar';
 import PixelAthlete from './PixelAthlete';
+import CreditCoin from './CreditCoin';
 import './celebration.css';
 
 export type CelebrationEvent = {
@@ -146,7 +147,7 @@ export default function Celebration({ event, onDismiss, effectsEnabled, soundEna
         </div>
         <span className="celebration-sr" aria-live="polite" aria-atomic="true">{title} Has ganado {event.xp} XP.{levelUp ? ` Has alcanzado el nivel ${event.levelAfter}.` : ''}</span>
         <div className="celebration-reward" aria-label={`${event.xp} XP ganados`}><span aria-hidden="true">+<CountUp value={event.xp} animated={effectsEnabled} eventId={event.id}/></span><small>{isWorkout ? 'XP NUEVOS · BONUS DE SESIÓN' : 'XP GANADOS'}</small></div>
-        {event.coins !== undefined && <div className="celebration-coins"><Coins size={15}/><strong>{event.coins>=0?'+':''}<CountUp value={event.coins} animated={effectsEnabled} eventId={event.id}/></strong><span>CRÉDITOS</span></div>}
+        {event.coins !== undefined && <div className="celebration-coins"><CreditCoin size={18}/><strong>{event.coins>=0?'+':''}<CountUp value={event.coins} animated={effectsEnabled} eventId={event.id}/></strong><span>CRÉDITOS</span></div>}
         {!isWorkout&&event.breakdown&&<div className="celebration-set-breakdown">{event.breakdown.map(row=><span key={row.label}>{row.label} <strong>+{row.xp}</strong></span>)}</div>}
         {event.combo > 1 && <div className="celebration-combo"><Flame size={15} /><strong>×{event.combo}</strong><span>SERIES EN CADENA</span></div>}
         {levelUp && <div className="celebration-level-scene">
@@ -156,8 +157,8 @@ export default function Celebration({ event, onDismiss, effectsEnabled, soundEna
           <p>Tu cofre de nivel te espera en Arcade → Cofres.</p>
         </div>}
         {isWorkout && <>
-          {event.abilityUsed&&<div className="celebration-milestones"><strong><Sparkles size={12}/>Habilidad usada · 1 carga{event.abilityCredits?` · +${event.abilityCredits} créditos extra`:''}</strong></div>}
-          {cheesit&&passive&&event.cheesitReward&&<div className="celebration-cheesit-reward" aria-label="Bonificación del cheesit"><span>BONIFICACIÓN DEL CHEESIT</span><strong>{cheesit.name} · {passive.name}</strong><p><span>+{event.cheesitReward.bonusXp} XP</span><span>+{event.cheesitReward.bonusCredits} créditos directos</span></p><small>{event.cheesitReward.eligible?'Pasiva fijada al empezar. Bonificación concedida una vez.':event.cheesitReward.reason==='historical-date'?'La fecha registrada no coincidía con el día de inicio; esta sesión no recibe bonus de cheesit.':'No se cumplió la condición al finalizar. La decisión queda guardada.'}</small></div>}
+          {event.abilityUsed&&<div className="celebration-milestones"><strong><Sparkles size={12}/>Habilidad usada · 1 carga{event.abilityCredits ? <> · <CreditCoin/> +{event.abilityCredits} créditos extra</> : null}</strong></div>}
+          {cheesit&&passive&&event.cheesitReward&&<div className="celebration-cheesit-reward" aria-label="Bonificación del cheesit"><span>BONIFICACIÓN DEL CHEESIT</span><strong>{cheesit.name} · {passive.name}</strong><p><span>+{event.cheesitReward.bonusXp} XP</span><span><CreditCoin/> +{event.cheesitReward.bonusCredits} créditos directos</span></p><small>{event.cheesitReward.eligible?'Pasiva fijada al empezar. Bonificación concedida una vez.':event.cheesitReward.reason==='historical-date'?'La fecha registrada no coincidía con el día de inicio; esta sesión no recibe bonus de cheesit.':'No se cumplió la condición al finalizar. La decisión queda guardada.'}</small></div>}
           {!!event.milestones?.length && <div className="celebration-milestones"><span>NUEVAS VICTORIAS</span>{event.milestones.map(milestone=><strong key={milestone}><Trophy size={12}/>{milestone}</strong>)}</div>}
           {event.breakdown && event.breakdown.length > 0 && <div className="celebration-breakdown">{event.breakdown.map((row, index) => <div key={`${row.label}-${index}`}><span>{row.label}</span><strong>+{new Intl.NumberFormat('es-ES').format(row.xp)} XP</strong></div>)}</div>}
           {event.totalXp !== undefined && <div className="celebration-session-total"><span>TOTAL DE ESTA SESIÓN</span><strong>{new Intl.NumberFormat('es-ES').format(event.totalXp)} XP</strong><small>Incluye las series que ya has cobrado.</small></div>}
