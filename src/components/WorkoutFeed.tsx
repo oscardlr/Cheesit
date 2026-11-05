@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useId, useRef, useState, type FormEvent, type MouseEvent, type ReactNode, type RefObject } from 'react';
 import { flushSync } from 'react-dom';
-import { ArrowUpRight, Check, Dumbbell, Heart, ImageOff, LockKeyhole, MessageCircle, RefreshCw, Search, Send, Share2, Trash2, Users, X } from 'lucide-react';
+import { ArrowUpRight, Check, Dumbbell, Forward, Heart, ImageOff, LockKeyhole, MessageCircle, RefreshCw, Search, Send, Trash2, Users, X } from 'lucide-react';
 import { captionMentions } from '@/lib/post-mentions';
 import { totals } from '@/lib/metrics';
 import {
@@ -225,7 +225,10 @@ function PostCard({ post, viewer, detail, onProfile, onWorkout, onUpdate, onUnav
   return <article className={`feed-post${detail ? ' feed-post-detail' : ''}`} aria-label={`Entrenamiento de ${name}`} data-post-id={post.id}>
     <header className="feed-post-header"><button className="feed-author" onClick={() => onProfile(post.owner_id)} aria-label={`Ver perfil de ${name}`}><PersonalAvatar photo={post.photo} name={name}/><span><strong>{name}</strong><span>@{post.username}</span></span></button><time dateTime={post.workout.date}>{dateLabel(post.workout.date)}</time></header>
     {post.photo_path && <WorkoutPhoto path={post.photo_path} name={name} onOpen={() => onWorkout(post.owner_id, post.workout_id)} onLike={() => void like(true)}/>}
-    <div className="feed-actions"><button className={liked ? 'feed-liked' : ''} aria-label={liked ? 'Quitar me gusta' : 'Dar me gusta'} aria-pressed={liked} disabled={pendingLike !== null} onClick={() => void like(!liked)}><Heart size={23} fill={liked ? 'currentColor' : 'none'}/><span>{number(likes)}<span className="feed-action-label"> Me gusta</span></span></button><button ref={commentsButton} aria-expanded={comments} onClick={toggleComments} aria-label={`${post.comments} comentarios`}><MessageCircle size={23}/><span>{number(post.comments)}<span className="feed-action-label"> Comentarios</span></span></button><button className="feed-share" aria-label="Compartir entrenamiento" onClick={() => void share()}><Share2 size={22}/><span className="feed-action-label">Compartir</span></button></div>
+    <div className="feed-actions"><button className={liked ? 'feed-liked' : ''} aria-label={liked ? 'Quitar me gusta' : 'Dar me gusta'} aria-pressed={liked} disabled={pendingLike !== null} onClick={() => void like(!liked)}><Heart size={23} fill={liked ? 'currentColor' : 'none'}/><span>{number(likes)}<span className="feed-action-label"> Me gusta</span></span></button><button ref={commentsButton} aria-expanded={comments} onClick={toggleComments} aria-label={`${post.comments} comentarios`}><MessageCircle size={23}/><span>{number(post.comments)}<span className="feed-action-label"> Comentarios</span></span></button><button className="feed-share" aria-label="Compartir entrenamiento" onClick={() => void share()}>
+      <Forward size={22} aria-hidden="true"/>
+      <span className="feed-action-label">Compartir</span>
+    </button></div>
     {post.caption && <FeedCaption caption={post.caption} mentions={post.mentions} name={name} onProfile={onProfile}/>}
     {!detail && <div className={`feed-post-summary${post.photo_path ? '' : ' feed-post-without-photo'}`}><div className="feed-workout-label"><Dumbbell size={17}/><span>ENTRENAMIENTO COMPLETADO</span></div><h2 className="feed-workout-heading"><button className="feed-workout-title" onClick={() => onWorkout(post.owner_id, post.workout_id)}><span>{post.workout.name}</span><ArrowUpRight size={21}/></button></h2><div className="feed-workout-metrics"><span><strong>{post.workout.exercises.length}</strong> ejercicios</span><span><strong>{stats.sets}</strong> series</span><span><strong>{number(stats.volume)}</strong> kg × reps</span>{minutes !== null && <span><strong>{minutes}</strong> min</span>}</div><p className="feed-exercise-preview">{post.workout.exercises.slice(0, 3).map(exercise => exercise.name).join(' · ')}{post.workout.exercises.length > 3 && ` · +${post.workout.exercises.length - 3} más`}</p></div>}
     {error && <p className="feed-error" role="alert">{error}</p>}
