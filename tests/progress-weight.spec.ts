@@ -270,6 +270,8 @@ test('Cofre Maestro blocks insufficient credit and resumes one reserved prize at
   expect(reserved.transactions[0].amount).toBe(-1000);
   expect(reserved.pendingOpening?.itemId).toBe(reserved.inventory[0].id);
   await page.reload();
+  await expect(card.getByRole('button', { name: /Faltan créditos/ })).toBeDisabled();
+  await page.getByRole('button', { name: 'Continuar apertura', exact: true }).click();
   await expect(dialog.getByText('COFRE MAESTRO', { exact: true })).toBeVisible();
   await expect(dialog.locator('img.opening-master-art')).toBeVisible();
   const quick = dialog.getByRole('button', { name: /Revelar ahora/ });
