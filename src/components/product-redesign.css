@@ -124,17 +124,40 @@
 /* Arcade is a destination with its own home, then task-specific spaces. */
 .ux-shell.product-redesign.screen-game .app-content { max-width: 1400px; }
 .ux-shell.product-redesign.screen-game .topbar :is(.credit-pill,.level-pill) { display: none; }
-.ux-shell.product-redesign .arcade-redesign .arcade-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
-.ux-shell.product-redesign .arcade-redesign .arcade-header h1 { font-size: 54px; font-weight: 500; letter-spacing: -3px; line-height: 1; margin: 12px 0 0; }
+.ux-shell.product-redesign .arcade-redesign .arcade-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px 16px; margin-bottom: 28px; }
+.ux-shell.product-redesign .arcade-redesign .arcade-header h1 { font-size: 54px; font-weight: 500; letter-spacing: -3px; line-height: 1; margin: 0; }
 .ux-shell.product-redesign .arcade-redesign .arcade-header h1>span { display: inline; color: var(--lime); }
 .ux-shell.product-redesign .arcade-kicker { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 9px; font-weight: 600; letter-spacing: 1.6px; }
 .ux-shell.product-redesign .arcade-kicker>span { width: 5px; height: 5px; background: var(--lime); border-radius: 50%; }
+.ux-shell.product-redesign .arcade-header > :is(.arcade-kicker,.arcade-back) { grid-column: 1 / -1; justify-self: start; }
 .ux-shell.product-redesign .arcade-back { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; color: var(--muted); background: none; padding: 0; font-size: 12px; }
-.ux-shell.product-redesign .arcade-redesign .arcade-wallet { display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 54px; padding: 12px 16px; border: 1px solid #b8a0ff26; border-radius: 18px; background: #ffffff04; color: var(--lime); text-align: left; }
-.ux-shell.product-redesign .arcade-wallet>span { display: grid; gap: 3px; }
-.ux-shell.product-redesign .arcade-wallet strong { font-size: 21px; line-height: 1; font-weight: 500; letter-spacing: -.5px; }
-.ux-shell.product-redesign .arcade-wallet small { font-size: 10px; color: var(--muted); letter-spacing: .4px; }
-.ux-shell.product-redesign .arcade-wallet>svg:last-child { color: var(--muted); }
+.ux-shell.product-redesign .arcade-header-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.ux-shell.product-redesign .arcade-header-stats :is(.arcade-header-level,.arcade-wallet) {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ux-shell.product-redesign .arcade-header-level { color: var(--purple); }
+.ux-shell.product-redesign .arcade-redesign .arcade-wallet {
+  min-height: 44px;
+  margin: 0;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: #ffd569;
+}
+.ux-shell.product-redesign .arcade-header-stats strong {
+  font-size: 21px;
+  line-height: 1;
+  font-weight: 650;
+  letter-spacing: -.5px;
+  white-space: nowrap;
+}
 .ux-shell.product-redesign .arcade-overview-grid { display: grid; grid-template-columns: repeat(12,minmax(0,1fr)); gap: 18px; }
 .ux-shell.product-redesign .arcade-overview-grid>section,.ux-shell.product-redesign .arcade-destination { position: relative; min-width: 0; border: 1px solid #b8a0ff1d; border-radius: 26px; overflow: hidden; background: #1b1723; text-align: left; }
 .ux-shell.product-redesign .tile-kicker { display: inline-flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: #c1b3d2; line-height: 1.5; }
@@ -221,6 +244,25 @@
 .ux-shell.product-redesign .arcade-mission-count>strong { font-size: 30px; font-weight: 400; }
 .ux-shell.product-redesign .arcade-progress { height: 5px; border: 0; background: #b8a0ff1c; border-radius: 999px; }
 .ux-shell.product-redesign .arcade-progress>span { border-radius: 999px; background: var(--lime); }
+.ux-shell.product-redesign .arcade-overview-xp {
+  max-width: 900px;
+  margin-bottom: 24px;
+}
+.ux-shell.product-redesign .arcade-overview-xp-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.ux-shell.product-redesign .arcade-overview-xp-labels span { color: var(--lime); }
+.ux-shell.product-redesign .arcade-overview-xp .arcade-progress {
+  height: 8px;
+  background: #d8ff3e26;
+}
+
 .ux-shell.product-redesign .more-missions>summary { border-radius: 16px; background: #b8a0ff08; border-color: #b8a0ff20; padding: 14px 20px; font-size: 13px; }
 .ux-shell.product-redesign .arcade-achievements>article { border-radius: 18px; border-color: #b8a0ff16; background: #1a1721; }
 .ux-shell.product-redesign .arcade-body-grid { grid-template-columns: minmax(280px,.95fr) minmax(0,1.05fr); gap: 20px; align-items: stretch; }
@@ -341,10 +383,7 @@
   .ux-shell.product-redesign .arcade-redesign .arcade-header { margin-bottom: 22px; gap: 12px; }
   .ux-shell.product-redesign .arcade-redesign .arcade-header h1 { font-size: 44px; letter-spacing: -2px; }
   .ux-shell.product-redesign .arcade-kicker { font-size: 8px; letter-spacing: 1.1px; }
-  .ux-shell.product-redesign .arcade-redesign .arcade-wallet { border-radius: 16px; padding: 11px 12px; gap: 8px; }
-  .ux-shell.product-redesign .arcade-wallet strong { font-size: 18px; }
-  .ux-shell.product-redesign .arcade-wallet>svg { display: none; }
-  .ux-shell.product-redesign .arcade-wallet small { font-size: 9px; }
+  .ux-shell.product-redesign .arcade-header-stats strong { font-size: 18px; }
   .ux-shell.product-redesign .arcade-overview-grid { gap: 12px; }
   .ux-shell.product-redesign .arcade-overview-grid>section,.ux-shell.product-redesign .arcade-destination { border-radius: 23px; }
   .ux-shell.product-redesign .arcade-overview-grid .arcade-player { grid-column: 1 / -1; grid-template-columns: minmax(0,1fr) 43%; min-height: 326px; padding: 24px 22px 20px; gap: 12px 0; }
