@@ -1,5 +1,5 @@
 import { isCivilDate, todayMadrid } from './dates';
-import { currentSeasons, isYearSeason, MAX_CHARACTER_LEVEL } from './seasons';
+import { characterLevelThreshold, currentSeasons, isYearSeason, MAX_CHARACTER_LEVEL } from './seasons';
 import { isWorkSet, validSet, type Workout } from './model';
 import { levelProgress, legacyLevelProgress, rewardProgress, rewardSetIndex } from './rewards';
 import { GEAR, GEAR_SLOTS, type GearSlot } from './gear';
@@ -57,7 +57,9 @@ export const COMPANION_DROP_CHANCE = REWARD_CATEGORY_WEIGHTS.companion / rewardW
 export const REWARD_CATEGORY_LABEL = `${(GEAR_DROP_CHANCE * 100).toFixed(2).replace('.', ',')}% equipo · ${(COMPANION_DROP_CHANCE * 100).toFixed(2).replace('.', ',')}% cheesits`;
 export type PendingOpening = { itemId: string; startedAt: string; stage: 'spinning' | 'rarity' | 'revealing'; revealStartedAt?: string };
 export type SeasonCrateProgress = { season: string; baseline: number; reached: number; legacyLevels?: number[] };
+export type ArcadeGrant = { season: string; xp: number; credits: number; grantedAt: string; charges: Record<string, number> };
 export type GameState = {
+  arcadeGrant?: ArcadeGrant;
   quoteConversionVersion?: 1;
   quoteConversions?: QuoteConversion[];
   quoteConversionSeenIds?: string[];
@@ -267,7 +269,13 @@ export function isGameState(value: unknown): value is GameState {
   if (value.equippedCompanionId !== undefined && value.equippedCompanionId !== null && (typeof value.equippedCompanionId !== 'string' || ![...items.values()].some(item => item.id !== (record(value.pendingOpening) ? value.pendingOpening.itemId : null) && item.companionId === value.equippedCompanionId))) return false;
   if (value.activeAbilityId !== undefined && value.activeAbilityId !== null && (typeof value.activeAbilityId !== 'string' || !revealedGear.has(value.activeAbilityId) || !getAbilityDefinition(value.activeAbilityId))) return false;
   if (value.abilityUses !== undefined && (!Array.isArray(value.abilityUses) || value.abilityUses.length > 100000)) return false;
-  if (!validateAbilityChargeHistory([...items.values()], (value.abilityUses ?? []) as AbilityUse[], record(value.pendingOpening) ? value.pendingOpening.itemId as string : null, value.abilityChargeVersion, value.legacyAbilityUseIds)) return false;
+  const grant = value.arcadeGrant;
+  if (grant !== undefined && (!record(grant) || !isYearSeason(grant.season) || !date(grant.grantedAt) ||
+    typeof grant.xp !== 'number' || !Number.isSafeInteger(grant.xp) || grant.xp < 0 || grant.xp > characterLevelThreshold(MAX_CHARACTER_LEVEL) ||
+    typeof grant.credits !== 'number' || !Number.isSafeInteger(grant.credits) || grant.credits < 0 ||
+    !record(grant.charges) || !Object.entries(grant.charges).every(([key, count]) =>
+      !!getAbilityDefinition(key) && typeof count === 'number' && Number.isInteger(count) && count >= 0 && count <= 99))) return false;
+  if (!validateAbilityChargeHistory([...items.values()], (value.abilityUses ?? []) as AbilityUse[], record(value.pendingOpening) ? value.pendingOpening.itemId as string : null, value.abilityChargeVersion, value.legacyAbilityUseIds, grant as ArcadeGrant | undefined)) return false;
   if (value.missionRewards !== undefined && !validMissionRewards(value.missionRewards)) return false;
   if (value.seasonCrateClaimLocks !== undefined && (!Array.isArray(value.seasonCrateClaimLocks) || value.seasonCrateClaimLocks.length > 100000 || new Set(value.seasonCrateClaimLocks).size !== value.seasonCrateClaimLocks.length || value.seasonCrateClaimLocks.some(key => typeof key !== 'string' || !/^[1-9]\d{3}:(?:[2-9]|[1-9]\d)$/.test(key)))) return false;
   if (value.seasonProgressionVersion !== undefined && value.seasonProgressionVersion !== 1) return false;
@@ -331,7 +339,8 @@ export function gameProgress(game: GameState, history: Workout[], profile?: Athl
   const progress = rewardProgress(history, profile, season);
   const objectiveXp = missionRewardXp(game, season);
   const weightXp = bodyWeightXp(profile, season);
-  return { ...progress, ...levelProgress(progress.xp + objectiveXp + weightXp), objectiveXp, weightXp, season };
+  const grantedXp = game.arcadeGrant?.season === season ? game.arcadeGrant.xp : 0;
+  return { ...progress, ...levelProgress(progress.xp + objectiveXp + weightXp + grantedXp), objectiveXp, weightXp, season };
 }
 
 export function awardMissionRewards(game: GameState, history: Workout[], day: string, changedDate?: string): GameState {
@@ -353,7 +362,7 @@ export function gameCreditStatus(game: GameState, history: Workout[], profile?: 
     passiveSessions.add(workout.id);
     return sum + workoutPassiveReward(workout).bonusCredits;
   }, 0);
-  const rawEarned=100+quoteConversionCredits(game,false)+Math.floor(economicXp(game,history,profile)/5)+abilityCredits+companionCredits+game.transactions.filter(transaction=>!transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0);
+  const rawEarned=100+(game.arcadeGrant?.credits ?? 0)+quoteConversionCredits(game,false)+Math.floor(economicXp(game,history,profile)/5)+abilityCredits+companionCredits+game.transactions.filter(transaction=>!transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0);
   const earned=Math.max(0,rawEarned);
   const testing=testAllowance>0?testAllowance+quoteConversionCredits(game,true)+game.transactions.filter(transaction=>transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0):0;
   return { balance: Math.max(0,earned+testing), earnedBalance: earned, deficit: Math.max(0,-rawEarned), testingBalance: testing };
