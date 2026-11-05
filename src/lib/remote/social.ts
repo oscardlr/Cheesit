@@ -4,7 +4,7 @@ import type { Workout } from '../model';
 import type { ActivitySummary } from '../social-activity';
 
 export type SocialList = 'followers' | 'following';
-export type SocialRoute = { owner: string | null; list: SocialList | null; query: string; workout?: string | null; source?: 'notifications' };
+export type SocialRoute = { owner: string | null; list: SocialList | null; query: string; workout?: string | null; source?: 'notifications' | 'people' };
 export type SocialProfile = {
   owner_id: string; username: string; display_name: string; photo: string | null; bio: string; gym?: string | null;
   followers: number; following: number; is_following: boolean; follows_you: boolean;

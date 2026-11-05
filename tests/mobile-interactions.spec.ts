@@ -97,7 +97,7 @@ test('community photos and comments respond without waiting for the network', as
   }] });
   await signIn(page, viewerEmail);
   const community = () => page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Comunidad', exact: true }).tap();
-  const feed = page.getByRole('heading', { name: 'Comunidad', exact: true });
+  const feed = page.getByRole('tablist', { name: 'Seleccionar feed', exact: true });
   await expect(page.getByRole('heading', { name: 'Inicio', exact: true })).toBeVisible();
   await community();
   await expect(feed).toBeVisible();
@@ -165,7 +165,10 @@ test('the community directory lists people and follows or unfollows from a filte
   await signIn(page, 'directory-viewer@example.test');
   await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Comunidad', exact: true }).tap();
   const searchIcon = page.getByRole('button', { name: 'Buscar personas', exact: true });
+  const tabs = page.getByRole('tablist', { name: 'Seleccionar feed', exact: true });
   await expect(searchIcon).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Comunidad', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('searchbox')).toHaveCount(0);
   const profileButton = page.getByLabel('Menú de perfil');
   for (const width of [320, 360, 390]) {
     await page.setViewportSize({ width, height: 844 });
@@ -174,9 +177,15 @@ test('the community directory lists people and follows or unfollows from a filte
     expect(brand.x + brand.width, `cabecera a ${width}px`).toBeLessThanOrEqual(actions.x);
     expect((await profileButton.boundingBox())!.x).toBeGreaterThan(actions.x);
   }
+  const beforeSearch = (await tabs.boundingBox())!;
+  const icon = (await searchIcon.boundingBox())!;
+  expect(icon.x).toBeGreaterThanOrEqual(beforeSearch.x + beforeSearch.width);
+  expect(icon.y).toBeGreaterThanOrEqual(beforeSearch.y);
   await searchIcon.tap();
+  expect(await tabs.boundingBox()).toEqual(beforeSearch);
   const directory = page.getByRole('list', { name: 'Resultados de personas' });
   const query = page.getByRole('searchbox', { name: 'Nombre o nombre de usuario' });
+  await expect(query).toBeFocused();
   await expect(directory.getByRole('listitem')).toHaveCount(2);
   await expect(directory).not.toContainText('Mi cuenta');
   await query.fill('ngela mar');
@@ -192,6 +201,7 @@ test('the community directory lists people and follows or unfollows from a filte
   await following.tap();
   await expect(directory.getByRole('button', { name: `Seguir a @${handle}`, exact: true })).toBeEnabled();
   await query.clear();
+  await expect(query).toBeFocused();
   await expect(directory.getByRole('listitem')).toHaveCount(2);
   await directory.getByRole('button', { name: /Ángela Martín/ }).tap();
   await expect(page.getByRole('heading', { name: 'Ángela Martín', exact: true })).toBeVisible();

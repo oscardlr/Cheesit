@@ -1,7 +1,7 @@
 import { devices, expect, test, type Page } from '@playwright/test';
 import { accountsHarness } from './accounts-harness';
 import { CATALOG } from '../src/lib/catalog';
-import { gameBalance, normalizeGame, openCrate } from '../src/lib/game';
+import { gameBalance, normalizeGame, openCrate, type InventoryItem } from '../src/lib/game';
 import { emptyData, exerciseSnapshot, newSet, newWorkout, type AppData, type Routine } from '../src/lib/model';
 
 test.skip(process.env.CHEESIT_ACCOUNTS_FIXTURE !== '1', 'Requires isolated local accounts.');
@@ -89,6 +89,69 @@ test('the five tabs and all eight hub pages stay usable at 320, 390, 430 and des
   await page.reload();
   await title(page, 'Entrenamiento');
   await expect.poll(async () => ((await harness.account('nav-new@example.test')).data as AppData).workouts.map(w => [w.name, w.date])).toEqual([['Primera sesión', '2026-10-21']]);
+});
+
+test('equipped slots and crate odds stay compact on mobile and desktop', async ({ page }, info) => {
+  const email = 'nav-compact-arcade@example.test';
+  const acquiredAt = new Date().toISOString();
+  const inventory: InventoryItem[] = [
+    { id: crypto.randomUUID(), kind: 'gear', gearId: 'solar-cape', rarity: 'legendary', acquiredAt, crateId: 'starter', sold: false },
+    ...Array.from({ length: 2 }, () => ({ id: crypto.randomUUID(), kind: 'companion' as const, companionId: 'athlete', rarity: 'common' as const, acquiredAt, crateId: 'starter', sold: false })),
+  ];
+  await harness.seed(email, undefined, { ...emptyData(), game: {
+    ...normalizeGame(), inventory, cosmeticGear: { back: 'solar-cape' }, equippedCompanionId: 'athlete',
+    transactions: inventory.map(item => ({ id: crypto.randomUUID(), kind: 'crate', itemId: item.id, amount: -100, createdAt: acquiredAt, testFunded: true })),
+  } });
+  await enter(page, email);
+  await page.goto('/#view=game&tab=collection');
+  await title(page, 'Personaje');
+  await expect(page).toHaveURL(/tab=looks$/);
+  await expect(page.getByRole('navigation', { name: 'Organizar colección' }).getByRole('button')).toHaveText(['Aspectos', 'Habilidades']);
+  await expect(page.getByText('Tuyo para siempre')).toHaveCount(0);
+  await expect(page.locator('.wardrobe-stage .cheesit-passive')).toHaveCount(0);
+  const cheesit = page.locator('.cosmetic-card[data-companion-id="athlete"]');
+  await expect(cheesit.locator('.cheesit-passive')).toBeVisible();
+  await expect(cheesit.locator('.inventory-quantity')).toHaveText('2x');
+  const slots = page.locator('.wardrobe-slot');
+  await expect(slots).toHaveCount(6);
+  for (const width of [320, 390, 1440]) {
+    await page.setViewportSize({ width, height: 850 });
+    const sizes = await slots.evaluateAll(elements => elements.map(el => [el.clientWidth, el.clientHeight]));
+    for (const [w, h] of sizes) {
+      expect(Math.abs(w - sizes[0][0])).toBeLessThanOrEqual(1);
+      expect(h).toBe(sizes[0][1]);
+    }
+    if (width !== 320) await page.locator('.wardrobe-stage').screenshot({ path: info.outputPath(`equipped-${width}.png`) });
+  }
+  await cheesit.getByRole('button', { name: 'Quitar cheesit', exact: true }).click();
+  await expect(page.locator('.wardrobe-slot[data-slot="companion"]')).toContainText('Sin equipar');
+  await cheesit.getByRole('button', { name: 'Equipar cheesit', exact: true }).click();
+  await expect(page.locator('.wardrobe-slot[data-slot="companion"]')).toContainText('Vega');
+
+  await button(page, 'Inicio de Arcade').click();
+  await button(page, 'Cofres y créditos').click();
+  await expect(page.getByText('Cofres disponibles')).toHaveCount(0);
+  await expect(page.locator('.arcade-crates .arcade-crate>p')).toHaveCount(0);
+  const cards = page.locator('.arcade-crate');
+  for (const width of [320, 390, 1440]) {
+    await page.setViewportSize({ width, height: 850 });
+    const [first, second, third] = await Promise.all([0, 1, 2].map(i => cards.nth(i).boundingBox()));
+    expect(first!.y).toBe(second!.y);
+    expect(first!.x).toBeLessThan(second!.x);
+    expect(third!.y).toBeGreaterThan(first!.y);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
+    await expect(page.locator('.crate-odds')).toHaveCount(0);
+    await cards.first().getByRole('button', { name: /Probabilidades/ }).click();
+    const odds = page.getByRole('dialog', { name: 'Probabilidades · Cofre de hierro' });
+    await expect(odds).toContainText('70%');
+    await expect(odds).toContainText('1%');
+    await expect(page.getByText('Tu cofre sigue cerrado.')).toHaveCount(0);
+    await odds.getByRole('button', { name: 'Cerrar información' }).click();
+    if (width !== 320) await page.locator('.arcade-crates').screenshot({ path: info.outputPath(`crates-${width}.png`) });
+  }
+  const saved = (await harness.account(email)).data as AppData;
+  expect(saved.game?.pendingOpening ?? null).toBeNull();
+  expect(saved.game?.inventory.map(item => item.id)).toEqual(inventory.map(item => item.id));
 });
 
 test('existing profile, workouts, plans, routines, records and Arcade reservation survive navigation', async ({ page }) => {
