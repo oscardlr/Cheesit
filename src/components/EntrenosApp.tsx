@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type SetStateAction } from 'react';
-import { Activity, Archive, BookOpen, ClipboardList, Copy, Play, Search, ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronLeft, ChevronRight, CircleCheck, Dumbbell, Flame, Layers, LayoutDashboard, LockKeyhole, Plus, RotateCcw, Rss, Settings2, Sparkles, Target, Trophy, Zap } from 'lucide-react';
+import { Activity, Archive, BookOpen, ClipboardList, Copy, Play, ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronLeft, ChevronRight, CircleCheck, Dumbbell, Flame, Layers, LayoutDashboard, LockKeyhole, Plus, RotateCcw, Rss, Settings2, Sparkles, Target, Trophy, Zap } from 'lucide-react';
 import Celebration, { type CelebrationEvent } from './Celebration';
 import ArcadeExperience from './ArcadeExperience';
 import GameHub, { type ArcadeView } from './GameHub';
@@ -121,6 +121,7 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
  const [navigationReady,setNavigationReady]=useState(false);const lastHash=useRef('');const restoreSource=useRef<string|null>(null);const [routeRevision,refreshRoute]=useState(0);const restoreRouteRef=useRef<(hash:string)=>void>(()=>undefined);
  const notificationFeed = useNotifications(guest ? undefined : accountOwner);
  const [socialRoute,setSocialRoute] = useState<SocialRoute>({owner:null,list:null,query:''});
+ const [peopleQuery,setPeopleQuery] = useState<string|null>(null);
  const [detailReturn,setDetailReturn]=useState<'profile'|'progress'|'summary'>('progress');
  const [substituteId,setSubstituteId]=useState<string|null>(null);const [progressReturn,setProgressReturn]=useState<Screen>('summary');
  const reportSaveError=(error:unknown)=>{const text=error instanceof Error?error.message:'No se ha podido guardar en este dispositivo.';setSaveError(text);setSaveState('Error: cambios pendientes de guardar');if(error instanceof StorageConflictError)setStorageConflict(true)};
@@ -293,7 +294,6 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
  });
  const openGame=(tab:GameTab)=>navigate('game',()=>setGameTab(tab));
  const openHistory=(date=today)=>navigate('progress',()=>{setProgressView('history');setProgressId(null);setSelectedDate(date);setMonth(`${date.slice(0,7)}-01`)});
- const openPeople=()=>navigate('social',()=>setSocialRoute({owner:null,list:null,query:''}));
  const openDetail=(id:string)=>{setPublicationNotice(null);setDetailReturn('progress');setDetailId(id);setScreen('detail')};
  async function savePublication(id:string,publication:WorkoutPublication){
   if(busyRef.current)return;
@@ -346,7 +346,8 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
   }
   if(view==='social'){
    const list=params.get('list'),owner=params.get('person');
-   setSocialRoute({owner:owner&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(owner)?owner:null,list:list==='followers'||list==='following'?list:null,query:params.get('q')??'',workout:params.get('workout'),source:params.get('from')==='notifications'?'notifications':undefined});
+   const from=params.get('from');
+   setSocialRoute({owner:owner&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(owner)?owner:null,list:list==='followers'||list==='following'?list:null,query:params.get('q')??'',workout:params.get('workout'),source:from==='notifications'||from==='people'?from:undefined});
   }
   if(view==='start'){
    const date=params.get('date');
@@ -363,7 +364,7 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
   if(view==='game'){
    const tab=params.get('tab')||'overview';
    if(tab==='body'){setProgressView('body');setProgressId(null);setScreen('progress');return}
-   setGameTab(['overview','goals','crates','collection','ascent','looks','abilities'].includes(tab)?tab as GameTab:'overview');
+   setGameTab(tab==='collection'?'looks':['overview','goals','crates','ascent','looks','abilities'].includes(tab)?tab as GameTab:'overview');
   }
   setScreen(view);
  };
@@ -424,9 +425,15 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
  {screen==='profile' && <PersonalProfile onPublication={(owner,workout)=>guardNavigation(()=>{setSocialRoute({owner,workout,list:null,query:''});setScreen('social')})} accountOwner={accountOwner} onSocial={list=>guardNavigation(()=>{setSocialRoute({owner:accountOwner??null,list,query:''});setScreen('social')})} username={username} guest={guest} data={data} level={rewards.level} xp={rewards.xp} onSave={personalProfile=>persistConfirmedData({...currentData.current,personalProfile})} onWorkout={id=>{setDetailReturn('profile');setDetailId(id);setScreen('detail')}} onStart={()=>openStart()} onBack={()=>navigate('summary')}/>}
  {screen==='game' && <GameHub initialTab={gameTab} onTabChange={setGameTab} data={data} onPersist={persistData} onSettings={()=>navigate('settings')} today={today} effectsEnabled={effectsEnabled} soundEnabled={soundEnabled}/>}
  {screen==='notifications' && <Notifications feed={notificationFeed} guest={guest||!accountOwner} onBack={()=>navigate('feed')} onAccount={()=>navigate('settings')} onNavigate={route=>guardNavigation(()=>{setSocialRoute(route);setScreen('social')})}/>}
- {screen==='social' && <SocialPanel key={`${accountOwner??'guest'}:${socialRoute.owner??''}:${socialRoute.list??''}`} owner={accountOwner} guest={guest} route={socialRoute} onNavigate={route=>guardNavigation(()=>setSocialRoute(route))} onBack={()=>{if(socialRoute.source==='notifications')navigate('notifications');else if(socialRoute.list)setSocialRoute({...socialRoute,list:null});else if(socialRoute.owner)setSocialRoute({owner:null,list:null,query:socialRoute.query});else navigate('feed')}} onAccount={()=>navigate('settings')}/>}
+ {screen==='social' && <SocialPanel key={`${accountOwner??'guest'}:${socialRoute.owner??''}:${socialRoute.list??''}`} owner={accountOwner} guest={guest} route={socialRoute} onNavigate={route=>guardNavigation(()=>setSocialRoute(route))} onBack={()=>{if(socialRoute.source==='notifications')navigate('notifications');else if(socialRoute.list)setSocialRoute({...socialRoute,list:null});else if(socialRoute.source==='people')navigate('feed',()=>setPeopleQuery(socialRoute.query));else if(socialRoute.owner)setSocialRoute({owner:null,list:null,query:socialRoute.query});else navigate('feed')}} onAccount={()=>navigate('settings')}/>}
 
- {screen==='feed' && <><header className="home-header compact"><h1>Comunidad</h1><button className="secondary" onClick={openPeople}><Search size={18}/>Buscar personas</button></header><WorkoutFeed viewer={accountOwner} guest={guest} onAccount={()=>navigate('settings')} onProfile={owner=>guardNavigation(()=>{setSocialRoute({owner,list:null,query:''});setScreen('social')})} onWorkout={(owner,workout)=>guardNavigation(()=>{setSocialRoute({owner,workout,list:null,query:''});setScreen('social')})}/></>}
+ {screen==='feed' && <WorkoutFeed viewer={accountOwner} guest={guest} onAccount={()=>navigate('settings')}
+   onTogglePeopleSearch={()=>setPeopleQuery(query=>query===null?'':null)}
+   peopleSearch={peopleQuery!==null?<SocialPanel embedded owner={accountOwner} guest={guest} route={{owner:null,list:null,query:peopleQuery}}
+     onNavigate={route=>route.owner?guardNavigation(()=>{setSocialRoute({...route,source:'people'});setScreen('social')}):setPeopleQuery(route.query)}
+     onBack={()=>setPeopleQuery(null)} onAccount={()=>navigate('settings')}/>:undefined}
+   onProfile={owner=>guardNavigation(()=>{setSocialRoute({owner,list:null,query:''});setScreen('social')})}
+   onWorkout={(owner,workout)=>guardNavigation(()=>{setSocialRoute({owner,workout,list:null,query:''});setScreen('social')})}/>}
  {screen==='progress' && <>
   <header className="home-header compact"><h1>Progreso</h1></header>
   <nav className="progress-views" aria-label="Vistas de progreso">

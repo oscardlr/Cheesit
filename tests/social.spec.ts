@@ -172,5 +172,7 @@ test('search paginates and browser back restores the query without revisiting ev
   await page.locator('.social-person').first().click();
   await expect(page.getByRole('heading', { name: 'Perfil social', exact: true })).toBeVisible();
   await page.goBack(); await expect(page.getByLabel('Nombre o nombre de usuario', { exact: true })).toHaveValue('u');
-  await page.goBack(); await expect(page.getByRole('heading', { name: 'Comunidad', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Cerrar búsqueda de personas' }).click();
+  await expect(page.getByRole('tablist', { name: 'Seleccionar feed', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Nombre o nombre de usuario', { exact: true })).toHaveCount(0);
 });

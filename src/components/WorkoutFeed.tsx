@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type MouseEvent, type RefObject } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type MouseEvent, type ReactNode, type RefObject } from 'react';
 import { flushSync } from 'react-dom';
-import { ArrowUpRight, Check, Dumbbell, Heart, ImageOff, LockKeyhole, MessageCircle, RefreshCw, Send, Share2, Trash2, Users, X } from 'lucide-react';
+import { ArrowUpRight, Check, Dumbbell, Heart, ImageOff, LockKeyhole, MessageCircle, RefreshCw, Search, Send, Share2, Trash2, Users, X } from 'lucide-react';
 import { totals } from '@/lib/metrics';
 import {
   addPostComment, deletePostComment, downloadWorkoutPhoto, readFeed, readPostComments, setPostLike,
@@ -20,6 +20,8 @@ type FeedProps = {
   onProfile: (owner: string) => void;
   onWorkout: (owner: string, workout: string) => void;
   onAccount?: () => void;
+  onTogglePeopleSearch?: () => void;
+  peopleSearch?: ReactNode;
 };
 
 const number = (value: number) => value.toLocaleString('es-ES', { maximumFractionDigits: 1 });
@@ -219,7 +221,7 @@ function PostCard({ post, viewer, detail, onProfile, onWorkout, onUpdate, onUnav
   </article>;
 }
 
-function FeedStream({ viewer, owner, workout, onProfile, onWorkout, following = false, onFollowingChange }: FeedProps & { viewer: string; following?: boolean; onFollowingChange: (following: boolean) => void }) {
+function FeedStream({ viewer, owner, workout, onProfile, onWorkout, onTogglePeopleSearch, peopleSearch, following = false, onFollowingChange }: FeedProps & { viewer: string; following?: boolean; onFollowingChange: (following: boolean) => void }) {
   const [items, setItems] = useState<FeedPost[]>([]);
   const [cursor, setCursor] = useState<FeedCursor | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -264,13 +266,11 @@ function FeedStream({ viewer, owner, workout, onProfile, onWorkout, following = 
     observer.observe(sentinel.current); return () => observer.disconnect();
   }, [cursor, loading, error, load]);
   return <section ref={feed} className="workout-feed" aria-label={workout ? 'Publicación del entrenamiento' : owner ? 'Publicaciones del perfil' : 'Feed de la comunidad'} aria-busy={loading}>
-    {!workout && <div className="feed-toolbar">{!owner && <div className="feed-tabs" role="tablist" aria-label="Seleccionar feed" onKeyDown={event => {
-      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-      event.preventDefault();
-      const next = event.key === 'Home' ? false : event.key === 'End' ? true : !following;
-      const tabs = event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]');
-      tabs[next ? 1 : 0]?.focus(); onFollowingChange(next);
-    }}><button type="button" role="tab" aria-selected={!following} tabIndex={following ? -1 : 0} onClick={() => onFollowingChange(false)}>Descubrir</button><button type="button" role="tab" aria-selected={following} tabIndex={following ? 0 : -1} onClick={() => onFollowingChange(true)}>Siguiendo</button></div>}<button className="text-action" disabled={loading} onClick={() => { setNotice(''); void load(null, true); }} aria-label="Actualizar publicaciones"><RefreshCw size={16}/>Actualizar</button></div>}
+    {!workout && <FeedToolbar community={!owner} following={following} onFollowingChange={onFollowingChange}
+      onTogglePeopleSearch={onTogglePeopleSearch} searchOpen={Boolean(peopleSearch)}
+      onRefresh={() => { setNotice(''); void load(null, true); }} loading={loading}/>}
+    {peopleSearch}
+    <div hidden={Boolean(peopleSearch)}>
     {notice && <p className="feed-notice" role="status">{notice}</p>}
     <div className="feed-posts">{items.map(post => <PostCard key={post.id} post={post} viewer={viewer} detail={!!workout} onProfile={onProfile} onWorkout={onWorkout} onUpdate={update => setItems(previous => previous.map(item => item.id === post.id ? update(item) : item))} onUnavailable={id => { setItems(previous => previous.filter(item => item.id !== id)); setNotice('Esta publicación ya no está disponible.'); }}/>)}</div>
     {loading && <p className="feed-status" role="status">{loaded ? 'Cargando más entrenamientos…' : 'Cargando publicaciones…'}</p>}
@@ -279,13 +279,50 @@ function FeedStream({ viewer, owner, workout, onProfile, onWorkout, following = 
     <div ref={sentinel} className="feed-sentinel" aria-hidden="true"/>
     {cursor && !error && <button className="secondary feed-load-more" disabled={loading} onClick={() => void load(cursor)}>Cargar más entrenamientos</button>}
     {loaded && !loading && !error && !cursor && items.length > 0 && !workout && <p className="feed-end" role="status"><Check size={19}/>Estás al día. Has visto todos los entrenamientos disponibles.</p>}
+    </div>
   </section>;
+}
+
+function FeedToolbar({ community, following, onFollowingChange, onTogglePeopleSearch, searchOpen, onRefresh, loading }: {
+  community: boolean;
+  following: boolean;
+  onFollowingChange: (following: boolean) => void;
+  onTogglePeopleSearch?: () => void;
+  searchOpen?: boolean;
+  onRefresh?: () => void;
+  loading?: boolean;
+}) {
+  return <div className="feed-toolbar">
+    {community && <div className="feed-navigation">
+      <div className="feed-tabs" role="tablist" aria-label="Seleccionar feed" onKeyDown={event => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        const next = event.key === 'Home' ? false : event.key === 'End' ? true : !following;
+        event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next ? 1 : 0]?.focus();
+        onFollowingChange(next);
+      }}>
+        <button type="button" role="tab" aria-selected={!following} tabIndex={following ? -1 : 0} onClick={() => onFollowingChange(false)}>Descubrir</button>
+        <button type="button" role="tab" aria-selected={following} tabIndex={following ? 0 : -1} onClick={() => onFollowingChange(true)}>Siguiendo</button>
+      </div>
+      {onTogglePeopleSearch && <button type="button" className="feed-search-toggle" aria-label={searchOpen ? 'Cerrar búsqueda de personas' : 'Buscar personas'} aria-expanded={searchOpen} onClick={onTogglePeopleSearch}>
+        {searchOpen ? <X size={20} aria-hidden="true"/> : <Search size={20} aria-hidden="true"/>}
+      </button>}
+    </div>}
+    {onRefresh && <button className="text-action" disabled={loading || searchOpen} onClick={onRefresh} aria-label="Actualizar publicaciones"><RefreshCw size={16}/><span>Actualizar</span></button>}
+  </div>;
 }
 
 /** One implementation serves the global feed, profile publications and direct links. */
 export default function WorkoutFeed(props: FeedProps) {
   const [following, setFollowing] = useState(false);
-  if (props.guest || !props.viewer) return <section className="feed-empty"><Users size={34}/><h2>Entrenar también conecta.</h2><p>Inicia sesión para ver publicaciones, dar likes y comentar. Tus entrenamientos de invitado siguen disponibles en este dispositivo.</p>{props.onAccount && <button className="primary" onClick={props.onAccount}>Ir a mi cuenta<ArrowUpRight size={17}/></button>}</section>;
+  const changeFollowing = (next: boolean) => {
+    setFollowing(next);
+    if (props.peopleSearch) props.onTogglePeopleSearch?.();
+  };
+  if (props.guest || !props.viewer) return <>
+    {props.onTogglePeopleSearch && <FeedToolbar community following={following} onFollowingChange={changeFollowing} onTogglePeopleSearch={props.onTogglePeopleSearch} searchOpen={Boolean(props.peopleSearch)}/>}
+    {props.peopleSearch ?? <section className="feed-empty"><Users size={34}/><h2>Entrenar también conecta.</h2><p>Inicia sesión para ver publicaciones, dar likes y comentar. Tus entrenamientos de invitado siguen disponibles en este dispositivo.</p>{props.onAccount && <button className="primary" onClick={props.onAccount}>Ir a mi cuenta<ArrowUpRight size={17}/></button>}</section>}
+  </>;
   const onlyFollowing = !props.owner && !props.workout && following;
-  return <FeedStream key={`${props.viewer}:${props.owner ?? ''}:${props.workout ?? ''}`} {...props} viewer={props.viewer} following={onlyFollowing} onFollowingChange={setFollowing}/>;
+  return <FeedStream key={`${props.viewer}:${props.owner ?? ''}:${props.workout ?? ''}`} {...props} viewer={props.viewer} following={onlyFollowing} onFollowingChange={changeFollowing}/>;
 }

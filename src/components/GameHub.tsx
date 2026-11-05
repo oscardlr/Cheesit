@@ -1,19 +1,19 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { ArrowRight, Award, Box, Check, ChevronRight, Clock3, Coins, Crown, Dumbbell, Footprints, Gift, Heart, LockKeyhole, PackageOpen, Shirt, Sparkles, Target, Trophy, TrendingUp, Zap } from 'lucide-react';
+import { ArrowRight, Award, Box, Check, ChevronRight, Clock3, Coins, Crown, Dumbbell, Footprints, Gift, Heart, LockKeyhole, Shirt, Sparkles, Target, Trophy, TrendingUp, Zap } from 'lucide-react';
 import type { AppData } from '@/lib/model';
-import { CRATES, RARITIES, REWARD_CATEGORY_LABEL, gameProgress, equipCosmetic, equipCompanion, gameBalance, gameCreditStatus, getAchievements, getLevelCrates, getMissions, normalizeGame, progressionSeasons, openCrate, openLevelCrate, type GameState, type InventoryItem, type Rarity } from '@/lib/game';
+import { CRATES, RARITIES, gameProgress, equipCosmetic, equipCompanion, gameBalance, gameCreditStatus, getAchievements, getLevelCrates, getMissions, normalizeGame, progressionSeasons, openCrate, openLevelCrate, type GameState, type InventoryItem, type Rarity } from '@/lib/game';
 import { nextWeeklyResetMadrid } from '@/lib/dates';
 import { characterLevelThreshold, seasonBounds } from '@/lib/seasons';
 import { levelRank } from '@/lib/rewards';
 import { playSound } from '@/lib/sound';
 import PixelAthlete from './PixelAthlete';
-import CharacterAvatar, { CharacterParty } from './CharacterAvatar';
 import { ArrowLeft } from 'lucide-react';
 import WardrobeV3 from './WardrobeV3';
 import CrateOpening from './CrateOpening';
 import CrateArtwork from './CrateArtwork';
+import InfoPopup from './InfoPopup';
 import './game-hub.css';
 import SectionCards from './SectionCards';
 import filterStyles from './ExerciseLibrary.module.css';
@@ -22,7 +22,7 @@ import { acknowledgeQuoteConversions, quoteConversionNotice } from '@/lib/quote-
 import type { Mission } from '@/lib/objectives';
 
 type Props = { data: AppData; today: string; effectsEnabled: boolean; soundEnabled: boolean; initialTab?: Tab; onTabChange?: (tab: Tab) => void; onPersist: (next: AppData) => Promise<void>; onSettings?: () => void };
-export type ArcadeView = 'overview' | 'goals' | 'crates' | 'collection' | 'ascent' | 'looks' | 'abilities';
+export type ArcadeView = 'overview' | 'goals' | 'crates' | 'ascent' | 'looks' | 'abilities';
 type Tab = ArcadeView;
 const destinations = [
   { id: 'looks', label: 'Personaje', icon: Shirt },
@@ -143,15 +143,20 @@ export default function GameHub({ data, today, effectsEnabled, soundEnabled, ini
       </>}
 
       {tab === 'crates' && <>
-        <div className="arcade-crate-intro"><div><span className="eyebrow">RECOMPENSAS</span><h2>Cofres disponibles</h2><p>Consigue equipo, habilidades y cheesits con tus créditos.</p><div><span><Zap size={14} />5 XP = 1 crédito</span><span><Shirt size={14} />{REWARD_CATEGORY_LABEL}</span></div></div>{game.equippedCompanionId?<CharacterParty game={game} level={currentProgress.level} animated={effectsEnabled} compact/>:<CharacterAvatar game={game} level={currentProgress.level} animated={effectsEnabled} compact/>}</div>
-        {allLevelCrates.some(crate => !crate.claimed) && <LevelRewards crates={allLevelCrates} busy={busy || Boolean(game.pendingOpening)} onOpen={(level, season) => void buyCrate('level:' + level, level, season)} />}
-        <div className="arcade-crates">{CRATES.map((crate, index) => <article key={crate.id} className={'arcade-crate crate-' + index}><div className="crate-art" aria-hidden="true"><div className="crate-halo" /><CrateArtwork crateId={crate.id}/></div><span className="eyebrow">{index === 0 ? 'COFRE BÁSICO' : index === 1 ? 'COFRE INTERMEDIO' : 'COFRE AVANZADO'}</span><h3>{crate.name}</h3><p>{crate.description}</p><div className="crate-odds">{(Object.keys(RARITIES) as Rarity[]).map(rarity => <span key={rarity} style={rarityStyle(rarity)}><i />{RARITIES[rarity].label}<strong>{crate.odds[rarity]}%</strong></span>)}</div><button className="arcade-primary" disabled={busy || Boolean(game.pendingOpening) || balance < crate.cost} onClick={() => void buyCrate(crate.id)}><PackageOpen size={17} /><span>{busy ? 'Guardando recompensa…' : balance < crate.cost ? 'Necesitas más créditos' : 'Abrir cofre'}</span><strong>{fmt(crate.cost)} <Coins size={14} /></strong></button></article>)}</div>
+        <div className="arcade-crates">{CRATES.map((crate, index) => <article key={crate.id} className={`arcade-crate crate-${index}`}>
+          <div className="crate-art" aria-hidden="true"><div className="crate-halo"/><CrateArtwork crateId={crate.id}/></div>
+          <div className="crate-heading"><h3>{crate.name}</h3><CrateOdds name={crate.name} odds={crate.odds}/></div>
+          <button className="arcade-primary" disabled={busy || Boolean(game.pendingOpening) || balance < crate.cost} onClick={() => void buyCrate(crate.id)}>
+            <span>{busy ? 'Guardando…' : balance < crate.cost ? 'Faltan créditos' : 'Abrir cofre'}</span><strong>{fmt(crate.cost)} <Coins size={14}/></strong>
+          </button>
+        </article>)}</div>
+        {allLevelCrates.some(crate => !crate.claimed) && <LevelRewards compact crates={allLevelCrates} busy={busy || Boolean(game.pendingOpening)} onOpen={(level, season) => void buyCrate('level:' + level, level, season)} />}
         <p className="arcade-economy-note"><Coins size={15} />Créditos virtuales. Cada cofre sortea primero la rareza y después equipo o cheesit de esa rareza. Los objetos no se pueden vender. El equipo duplicado añade cargas de habilidad.</p>
       </>}
 
       {activeTab === 'collection' && <>
-        <div className="arcade-section-head"><div><span className="eyebrow">COLECCIÓN</span><h2>{tab==='looks'?'Tu personaje':tab==='abilities'?'Habilidades':'Tu colección'}</h2></div><span className="arcade-tag"><Sparkles size={14}/>{inventory.length} copias</span></div>
-        <WardrobeV3 initialPanel={tab==='looks'?'looks':tab==='abilities'?'abilities':'inventory'} onPanelChange={panel=>selectTab(panel==='inventory'?'collection':panel)} game={game} level={currentProgress.level} effectsEnabled={effectsEnabled} soundEnabled={soundEnabled} onChange={updateGame} onNotice={setNotice} onOpenCrates={()=>selectTab('crates')} onResumeOpening={()=>setOpeningVisible(true)}/>
+        <div className="arcade-section-head"><div><span className="eyebrow">COLECCIÓN</span><h2>{tab==='abilities'?'Habilidades':'Tu personaje'}</h2></div><span className="arcade-tag"><Sparkles size={14}/>{inventory.length} copias</span></div>
+        <WardrobeV3 initialPanel={tab==='abilities'?'abilities':'looks'} onPanelChange={selectTab} game={game} level={currentProgress.level} effectsEnabled={effectsEnabled} soundEnabled={soundEnabled} onChange={updateGame} onNotice={setNotice} onOpenCrates={()=>selectTab('crates')}/>
       </>}
       {tab === 'ascent' && <>
         <div className="arcade-ascent-hero"><div><span className="eyebrow">PROGRESO DE NIVEL</span><h2>Ascenso</h2><p>Temporada {selectedYear} · {selectedYear === today.slice(0,4) ? 'actual' : 'histórica'}. {fmt(progress.xp)} XP. Reinicio: {seasonBounds(selectedYear).next}.</p><label className="mission-filter">Año del personaje<select aria-label="Año del personaje" value={yearChoice} onChange={event=>setYearChoice(event.target.value)}><option value="">{today.slice(0,4)} · actual</option>{years.filter(year=>year!==today.slice(0,4)).map(year=><option key={year} value={year}>{year} · histórico</option>)}</select></label><div className="ascent-rank"><Crown size={22} /><span>NIVEL {progress.level}<strong>{levelRank(progress.level)}</strong></span></div><div className="ascent-xp"><span>{progress.level===99?'Nivel máximo':`${fmt(progress.levelXp)} / ${fmt(progress.nextLevelXp)} XP`}</span><strong>{Math.round(progress.percent)}%</strong></div><ProgressBar value={progress.percent} label="Progreso del nivel actual" /></div><div className="ascent-art"><PixelAthlete pose="climb" animated={effectsEnabled} /></div></div>
@@ -209,8 +214,14 @@ function MissionCard({ mission }: { mission: Mission }) {
   </article>;
 }
 
-function LevelRewards({ crates, busy, onOpen }: { crates: ReturnType<typeof getLevelCrates>; busy: boolean; onOpen: (level: number, season: string) => void }) {
+function CrateOdds({ name, odds }: { name: string; odds: Record<Rarity, number> }) {
+  return <InfoPopup title={`Probabilidades · ${name}`}>
+    <div className="crate-odds">{(Object.keys(RARITIES) as Rarity[]).map(rarity => <span key={rarity} style={rarityStyle(rarity)}><i aria-hidden="true"/>{RARITIES[rarity].label}<strong>{odds[rarity]}%</strong></span>)}</div>
+  </InfoPopup>;
+}
+
+function LevelRewards({ crates, busy, onOpen, compact = false }: { compact?: boolean; crates: ReturnType<typeof getLevelCrates>; busy: boolean; onOpen: (level: number, season: string) => void }) {
   const ready=crates.filter(crate=>!crate.claimed), claimed=crates.filter(crate=>crate.claimed);
-  const cards=(items:typeof crates)=><div className="level-rewards-grid">{[...items].reverse().map(crate=><article className={'level-reward-card '+(crate.claimed?'is-claimed':'')} key={crate.id}><span className="level-reward-icon">{crate.claimed?<Check size={30}/>:<Gift size={33}/>}</span><div><span className="eyebrow">NIVEL {crate.level}</span><h3>{crate.name}</h3><p>Equipo garantizado · Una recompensa por año y nivel</p><div className="level-reward-odds">{(Object.keys(RARITIES) as Rarity[]).filter(rarity=>crate.odds[rarity]>0).map(rarity=><span key={rarity} style={{color:RARITIES[rarity].color}}>{RARITIES[rarity].label} {crate.odds[rarity]}%</span>)}</div></div><button disabled={busy||crate.claimed} onClick={()=>onOpen(crate.level, crate.season)}>{crate.claimed?'Reclamado':'Abrir gratis'}{!crate.claimed&&<ArrowRight size={15}/>}</button></article>)}</div>;
+  const cards=(items:typeof crates)=><div className={compact ? 'level-rewards-grid compact-level-crates' : 'level-rewards-grid'}>{[...items].reverse().map(crate=><article className={'level-reward-card '+(crate.claimed?'is-claimed':'')} key={crate.id}><span className="level-reward-icon">{crate.claimed?<Check size={30}/>:<Gift size={33}/>}</span><div><span className="eyebrow">NIVEL {crate.level}</span>{compact ? <div className="crate-heading"><h3>{crate.name}</h3><CrateOdds name={crate.name} odds={crate.odds}/></div> : <><h3>{crate.name}</h3><p>Equipo garantizado · Una recompensa por año y nivel</p><div className="level-reward-odds">{(Object.keys(RARITIES) as Rarity[]).filter(rarity=>crate.odds[rarity]>0).map(rarity=><span key={rarity} style={{color:RARITIES[rarity].color}}>{RARITIES[rarity].label} {crate.odds[rarity]}%</span>)}</div></>}</div><button disabled={busy||crate.claimed} onClick={()=>onOpen(crate.level, crate.season)}>{crate.claimed?'Reclamado':'Abrir gratis'}{!crate.claimed&&<ArrowRight size={15}/>}</button></article>)}</div>;
   return <section className="level-rewards-section"><div className="arcade-section-head"><div><span className="eyebrow">COFRES DE ASCENSO</span><h2>Recompensas por nivel</h2></div><Gift size={23}/></div><p>100% equipo de la rareza sorteada, entre todas las ranuras. Cada copia añade sus cargas de habilidad.</p>{ready.length ? cards(ready) : <div className="level-reward-empty"><LockKeyhole size={22}/><p>{crates.length?'Has reclamado todos tus cofres de ascenso disponibles.':'Los cofres de ascenso se desbloquean a partir del nivel 2, uno por nivel.'}</p></div>}{claimed.length>0&&<details className="more-missions"><summary>Ver {claimed.length} cofres reclamados</summary>{cards(claimed)}</details>}</section>;
 }

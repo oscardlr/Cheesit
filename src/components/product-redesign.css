@@ -244,15 +244,15 @@
 .ux-shell.product-redesign .muscle-list { gap: 10px; }
 .ux-shell.product-redesign .muscle-list>button { border-radius: 999px; background: #ffffff03; border-color: #b8a0ff22; min-height: 56px; }
 .ux-shell.product-redesign .muscle-list>button[aria-pressed=true] { border-color: var(--lime); background: #d8ff3e08; }
-.ux-shell.product-redesign .arcade-crate-intro { padding: 28px; border-radius: 26px; background: #b8a0ff08; border-color: #b8a0ff1f; }
-.ux-shell.product-redesign .arcade-crates { gap: 20px; }
-.ux-shell.product-redesign .arcade-crate { border: 1px solid #b8a0ff22; padding: 26px; border-radius: 26px; background: radial-gradient(ellipse at 50% 15%,#b8a0ff26,transparent 55%),#19161f; }
+.ux-shell.product-redesign .arcade-crates { gap: clamp(8px, 2vw, 16px); max-width: 720px; }
+.ux-shell.product-redesign .arcade-crate { border: 1px solid #b8a0ff22; padding: clamp(8px, 2vw, 18px); border-radius: 20px; background: radial-gradient(ellipse at 50% 15%,#b8a0ff26,transparent 55%),#19161f; }
 .ux-shell.product-redesign .arcade-crate.crate-0 { background: radial-gradient(ellipse at 50% 20%,#b8a0ff20,transparent 55%),#19161f; }
 .ux-shell.product-redesign .arcade-crate.crate-1 { background: radial-gradient(ellipse at 50% 20%,#b8a0ff38,transparent 55%),#211a2d; }
 .ux-shell.product-redesign .arcade-crate.crate-2 { background: radial-gradient(ellipse at 50% 20%,#d8ff3e20,transparent 55%),#1c1d21; }
-.ux-shell.product-redesign .arcade-crate .crate-art { height: 180px; margin-bottom: 20px; }
-.ux-shell.product-redesign .arcade-crate h3 { font-size: 29px; font-weight: 500; letter-spacing: -1px; }
-.ux-shell.product-redesign .arcade-crate .arcade-primary { background: var(--lime); color: var(--bg); font-size: 12px; border-radius: 999px; padding-inline: 14px; }
+.ux-shell.product-redesign .arcade-crate .crate-art { height: clamp(84px, 17vw, 145px); margin: 0; }
+.ux-shell.product-redesign .arcade-crate h3 { font-size: clamp(14px, 2.6vw, 22px); font-weight: 600; letter-spacing: -.3px; line-height: 1.2; }
+.ux-shell.product-redesign .arcade-crate .arcade-primary { background: var(--lime); color: var(--bg); font-size: 12px; border-radius: 999px; padding: 6px clamp(6px, 1.2vw, 12px); gap: 4px; line-height: 1.2; }
+.ux-shell.product-redesign .arcade-crate .arcade-primary>strong { padding-left: 4px; white-space: nowrap; }
 .ux-shell.product-redesign .crate-odds { border-color: #b8a0ff15; padding-block: 16px; }
 .ux-shell.product-redesign .level-reward-card { border-radius: 22px; border-color: #b8a0ff25; background: linear-gradient(130deg,#292137,#19161f); }
 .ux-shell.product-redesign .level-reward-card>button { border-radius: 999px; }
@@ -417,11 +417,6 @@
   .ux-shell.product-redesign .body-detail>h3 { font-size: 30px; }
   .ux-shell.product-redesign .body-detail-total>strong { font-size: 48px; }
   .ux-shell.product-redesign .muscle-list>button { min-height: 54px; }
-  .ux-shell.product-redesign .arcade-crate-intro { padding: 22px; }
-  .ux-shell.product-redesign .arcade-crate-intro>.character-avatar { display: none; }
-  .ux-shell.product-redesign .arcade-crate-intro h2 { font-size: 25px; }
-  .ux-shell.product-redesign .arcade-crate { padding: 24px; }
-  .ux-shell.product-redesign .arcade-crate .crate-art { height: 180px; }
   .ux-shell.product-redesign .collection-subtabs { margin-bottom: 20px; }
   .ux-shell.product-redesign .collection-subtabs button { padding-inline: 8px; font-size: 11px; gap: 5px; }
   .ux-shell.product-redesign .collection-subtabs button>svg { width: 14px; }
