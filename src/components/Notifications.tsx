@@ -1,5 +1,7 @@
 'use client';
 
+import PageTitle from './PageTitle';
+
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, Heart } from 'lucide-react';
 import { markNotifications, notificationTime, readNotifications, type SocialNotification } from '@/lib/remote/notifications';
@@ -74,7 +76,7 @@ export default function Notifications({ feed, guest, onBack, onAccount, onNaviga
     if (n.kind === 'comment') return n.workout_label ? ' ha comentado en tu publicación.' : ' ha comentado en una publicación que ya no está disponible.';
     return n.workout_label ? ` ha publicado un entrenamiento de ${n.workout_label.toLocaleLowerCase('es-ES')}.` : ' ha publicado un entrenamiento que ya no está disponible.';
   }
-  return <div className="notifications-page"><header className="profile-page-heading"><button className="icon-button" aria-label="Volver" onClick={onBack}><ArrowLeft size={21}/></button><h1 ref={heading} tabIndex={-1}>Notificaciones</h1><Heart size={22}/></header>
+  return <div className="notifications-page"><header className="profile-page-heading"><button className="icon-button" aria-label="Volver" onClick={onBack}><ArrowLeft size={21}/></button><PageTitle ref={heading} tabIndex={-1}>Notificaciones</PageTitle><Heart size={22}/></header>
     {guest ? <section className="social-empty"><Heart size={32}/><h2>Tu comunidad, más cerca.</h2><p>Inicia sesión para recibir avisos de seguidores, entrenamientos, likes y comentarios.</p><button className="primary" onClick={onAccount}>Ir a mi cuenta<ArrowUpRight size={17}/></button></section> : <>
       <div className="notifications-toolbar"><p>{feed.unread ? `${feed.unread} sin leer` : 'Estás al día'}</p><button className="text-action" disabled={feed.marking || !feed.unread} onClick={() => void feed.mark(null)}>{feed.marking ? 'Guardando lectura…' : 'Marcar todas como leídas'}</button></div>
       {feed.loading && <p role="status">Cargando notificaciones…</p>}

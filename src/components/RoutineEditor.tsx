@@ -1,5 +1,7 @@
 'use client';
 
+import PageTitle from './PageTitle';
+
 import type { Exercise, Routine, RoutineExercise } from '@/lib/model';
 import { COLORS, ROUTINE_COLOR_OPTIONS, ROUTINE_ICONS, resolvedRoutineIcon, validPlannedSets } from '@/lib/model';
 import SupersetControl from './SupersetControl';
@@ -16,7 +18,7 @@ export default function RoutineEditor({ routine, exercises, message, busy, onCha
   const move = (index: number, delta: number) => { const list = [...routine.exercises]; [list[index], list[index + delta]] = [list[index + delta], list[index]]; onChange({ ...routine, exercises: list }); };
   const optionalNumber = (text: string) => text.trim() === '' ? undefined : Number(text);
   return <>
-    <header className="page-header"><button className="icon-button back" aria-label="Volver" onClick={onBack}>‹</button><h1>Editar rutina</h1><span /></header>
+    <header className="page-header"><button className="icon-button back" aria-label="Volver" onClick={onBack}>‹</button><PageTitle>Editar rutina</PageTitle><span /></header>
     <p className="notice">Define los ejercicios y las series. Guarda la rutina para reutilizarla.</p>
     <fieldset className="session-fields" disabled={busy}>
       <div className="form-card"><label>Nombre de la rutina<input value={routine.name} maxLength={80} placeholder="Por ejemplo, Tren superior" onChange={event => onChange({ ...routine, name: event.target.value })} /></label>

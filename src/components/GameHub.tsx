@@ -16,6 +16,7 @@ import CreditCoin from './CreditCoin';
 import CrateArtwork from './CrateArtwork';
 import InfoPopup from './InfoPopup';
 import './game-hub.css';
+import PageTitle from './PageTitle';
 import SectionCards from './SectionCards';
 import filterStyles from './ExerciseLibrary.module.css';
 import { formatCreditBalance, TEST_CREDITS } from '@/lib/test-credits';
@@ -107,11 +108,11 @@ export default function GameHub({ data, today, effectsEnabled, soundEnabled, ini
   }
 
   return <div className={`game-hub arcade-redesign view-${activeTab} ${effectsEnabled ? '' : 'game-hub-quiet'}`}>
-    <header className="arcade-header">
+    <header className="home-header arcade-page-header">
       {tab === 'overview'
-        ? <span className="arcade-kicker"><span/>CADA REP DESBLOQUEA ALGO</span>
+        ? <span className="eyebrow">CADA REP DESBLOQUEA ALGO</span>
         : <button className="arcade-back" onClick={() => selectTab('overview')}><ArrowLeft size={15}/>Inicio de Arcade</button>}
-      <h1 ref={headingRef} tabIndex={-1}>{tab==='overview'?'Arcade':tab==='goals'?'Retos y logros':tab==='crates'?'Cofres y créditos':tab==='ascent'?'Nivel y temporadas':'Personaje'}<span className="arcade-title-dot" aria-hidden="true">.</span></h1>
+      <PageTitle ref={headingRef} tabIndex={-1}>{tab==='overview'?'Arcade':tab==='goals'?'Retos y logros':tab==='crates'?'Cofres y créditos':tab==='ascent'?'Nivel y temporadas':'Personaje'}</PageTitle>
       <div className="arcade-header-stats">
         <span className="arcade-header-level">
           <img src="/assets/cheesit-level-badge.png" alt="Nivel" width={24} height={24}/>

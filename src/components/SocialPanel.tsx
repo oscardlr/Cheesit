@@ -1,5 +1,7 @@
 'use client';
 
+import PageTitle from './PageTitle';
+
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, MapPin, Search, Users, WifiOff } from 'lucide-react';
 import { readDirectory, readSocial, setFollow, SOCIAL_PAGE_SIZE, type DirectoryProfile, type SocialList, type SocialProfile, type SocialRoute } from '@/lib/remote/social';
@@ -95,7 +97,7 @@ export default function SocialPanel({ owner, guest, route, onNavigate, onBack, o
   }
   const title = route.workout ? 'Entrenamiento' : guest || searching ? 'Buscar personas' : route.list ? listLabel(route.list) : 'Perfil social';
   return <div className="social-page">
-    {!embedded && <header className="profile-page-heading"><button className="icon-button" aria-label="Volver" onClick={() => route.workout && !route.source ? onNavigate({ ...route, workout: null }) : onBack()}><ArrowLeft size={21}/></button><h1 ref={heading} tabIndex={-1}>{title}</h1><Users size={22} aria-hidden="true"/></header>}
+    {!embedded && <header className="profile-page-heading"><button className="icon-button" aria-label="Volver" onClick={() => route.workout && !route.source ? onNavigate({ ...route, workout: null }) : onBack()}><ArrowLeft size={21}/></button><PageTitle ref={heading} tabIndex={-1}>{title}</PageTitle><Users size={22} aria-hidden="true"/></header>}
     {guest || !owner ? <section className="social-empty"><Users size={36}/><h2>Conecta con tu gente.</h2><p>Necesitas una cuenta para buscar personas, ver perfiles y seguirlas. Puedes continuar entrenando como invitado.</p><button className="primary" onClick={onAccount}>Ir a mi cuenta<ArrowUpRight size={17}/></button></section> : <>
       {!online && <p className="social-offline" role="status"><WifiOff size={18}/>Sin conexión. Conéctate para consultar perfiles y confirmar seguimientos.</p>}
       {searching && <section className={embedded ? "social-search social-search-inline" : "social-search"}>{!embedded && <><span className="eyebrow">CADA REP, EN BUENA COMPAÑÍA</span><h2>Encuentra a tu gente<span>.</span></h2></>}<label htmlFor="social-search">Nombre o nombre de usuario</label><div><Search size={20}/><input id="social-search" type="search" autoFocus={embedded} autoComplete="off" autoCapitalize="none" spellCheck={false} maxLength={80} placeholder="Nombre o @usuario" value={route.query} onChange={e => onNavigate({ owner: null, list: null, query: e.target.value })}/></div></section>}
