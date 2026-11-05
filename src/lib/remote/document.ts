@@ -1,3 +1,5 @@
+import { preserveSeasonMetadata } from '../game';
+import { mergeMissionRewards } from '../objectives';
 import { preserveTrainingHistory } from '../training-features';
 import { preserveWorkoutPassiveEvent } from '../cheesit-passives';
 import { emptyData, type AppData } from '../model';
@@ -47,8 +49,21 @@ export function mergeDocuments(base: AccountDocument, local: AccountDocument, se
     return choices[key] === 'local' ? l : r;
   }
   const data = emptyData();
-  const activity = (d: AppData) => ({ workouts: d.workouts, game: d.game, profile: d.profile, training: d.training });
+  const activity = (d: AppData) => {
+    const game = d.game ? { ...d.game } : undefined;
+    if (game) delete game.missionRewards;
+    return { workouts: d.workouts, game, profile: d.profile, training: d.training };
+  };
   Object.assign(data, choose('activity', 'Historial, perfil y economía del juego', activity(base.data), activity(local.data), activity(server.data)));
+  if (data.game) {
+    const serverGame = server.data.game, localGame = local.data.game;
+    data.game = preserveSeasonMetadata(data.game, serverGame, localGame);
+    // Objective receipts identify a single payout. Preserve both devices'
+    // earned receipts without combining crate purchases or ability spending.
+    if (serverGame?.missionRewards || localGame?.missionRewards) {
+      data.game.missionRewards = mergeMissionRewards(serverGame?.missionRewards, localGame?.missionRewards);
+    }
+  }
   for (const kind of ['routines', 'customExercises'] as const) {
     // The cloud's array order is authoritative; append local additions in their
     // existing order. Sorting UUIDs would reshuffle a migrated routine library

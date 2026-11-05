@@ -58,8 +58,9 @@ test('cycles wrap, skip unavailable routines, ignore drafts/outside activity and
   const a = routine('A'), b = routine('B'), c = routine('C'); b.archived = true;
   const cycle = { id: newId(), name: 'ABC', routineIds: [a.id, b.id, c.id], position: 1, completedWorkoutIds: [] };
   let data: AppData = { ...emptyData(), routines: [a, b, c], training: { moments: [], cycles: [cycle], weeklyGoals: [] } };
-  assert.equal(nextCycleRoutine(data, cycle)?.routine.id, c.id);
-  const w = { ...newWorkout(c), cycleLink: { cycleId: cycle.id, position: 1, routineId: b.id } };
+  assert.equal(nextCycleRoutine({ ...data, routines: [a, c] }, cycle)?.routine.id, c.id);
+  assert.equal(nextCycleRoutine(data, cycle)?.routine.id, b.id, 'legacy archive flags do not hide routines');
+  const w = { ...newWorkout(b), cycleLink: { cycleId: cycle.id, position: 1, routineId: b.id } };
   assert.deepEqual(advanceCycle(data, w), data);
   const final = { ...w, status: 'finished' as const }; data = advanceCycle(data, final);
   assert.equal(data.training!.cycles[0].position, 2); assert.deepEqual(advanceCycle(data, final), data);

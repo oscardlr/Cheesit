@@ -21,7 +21,7 @@ export function seasonLabel(season: string) {
   if (!isMonthSeason(season)) return season;
   return new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${season}-01T12:00:00Z`));
 }
-/** 18 normal sets, four days/week plus actual weekly objectives reach 99 in a year. */
+/** The character curve caps at level 99; XP can continue to accumulate. */
 export function characterLevelThreshold(level: number): number {
   const steps = Math.max(0, Math.min(MAX_CHARACTER_LEVEL, Math.floor(level)) - 1);
   return 800 * steps + 30 * steps * (steps - 1);

@@ -1,3 +1,25 @@
-.body-weight-progress{margin:12px 0 32px;padding:24px;border:1px solid #79548b88;border-radius:14px;background:linear-gradient(130deg,#332441,#21192d)}
-.body-weight-progress h2{display:flex;align-items:center;gap:10px;margin:9px 0}.body-weight-progress h3{font-size:15px}.body-weight-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:22px 0}.body-weight-stats>div{display:flex;flex-direction:column;gap:8px;min-width:0}.body-weight-stats small{color:#c8b3d6}.body-weight-stats strong{font-size:clamp(19px,2.3vw,27px);color:#e5ff9a}.body-weight-stats span{font-size:11px;color:#bfa7ce;line-height:1.6}.body-weight-progress>progress{width:100%;height:8px;accent-color:#d8ff3e}.body-weight-forms{display:grid;grid-template-columns:1.3fr 1fr;gap:24px}.body-weight-forms fieldset{border:0;padding:0;margin:0;display:grid;gap:12px;min-width:0}.body-weight-forms label{display:grid;gap:7px;font-size:12px}.body-weight-forms input{width:100%;min-width:0;color-scheme:dark}.body-weight-forms button{min-height:44px}.body-weight-chart{margin-inline:0}.body-weight-chart svg{width:100%;height:auto}.body-weight-chart text{font-size:12px;fill:#d3bde5}.body-weight-history summary{padding:12px 0;cursor:pointer}.body-weight-history ul{list-style:none;padding:0}.body-weight-history li{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #81609844;font-size:12px}.body-weight-history li>time{flex:1}.body-weight-history button{min-height:40px}
-@media(max-width:600px){.body-weight-progress{padding:17px}.body-weight-stats{grid-template-columns:1fr 1fr}.body-weight-stats>div:last-child{grid-column:1/-1}.body-weight-forms{grid-template-columns:1fr;gap:12px}.body-weight-chart text{font-size:15px}}
+.body-weight-progress{margin:16px 0 32px;padding:18px;border:1px solid #79548b88;border-radius:14px;background:linear-gradient(130deg,#332441,#21192d)}
+.body-weight-heading,.body-weight-heading h2{display:flex;align-items:center;gap:8px;margin:0}
+.body-weight-progress h3{font-size:15px}
+.body-weight-stats{display:flex;flex-wrap:wrap;gap:12px 24px;margin:12px 0}
+.body-weight-stats>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.body-weight-stats small{color:#c8b3d6}
+.body-weight-stats strong{font-size:clamp(19px,2.3vw,27px);color:#e5ff9a}
+.body-weight-stats span{font-size:11px;color:#bfa7ce;line-height:1.6}
+.body-weight-progress>progress{width:100%;height:8px;accent-color:#d8ff3e}
+.body-weight-form fieldset{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px 12px;max-width:420px;min-width:0;border:0;padding:0;margin:0}
+.body-weight-form label{display:grid;gap:7px;font-size:12px}
+.body-weight-form input{width:100%;min-width:0;color-scheme:dark}
+.body-weight-form button{min-height:44px}
+.body-weight-form .body-weight-date,.body-weight-form .text-action{grid-column:1/-1;margin:0}
+.body-weight-form .text-action{justify-self:start}
+.body-weight-chart{margin-inline:0}
+.body-weight-chart svg{width:100%;height:auto}
+.body-weight-chart text{font-size:12px;fill:#d3bde5}
+.body-weight-history summary{padding:12px 0;cursor:pointer}
+.body-weight-history ul{list-style:none;padding:0}
+.body-weight-history li{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #81609844;font-size:12px}
+.body-weight-history li>time{flex:1}
+.body-weight-history button{min-height:40px}
+@media(max-width:600px){.body-weight-progress{padding:14px}.body-weight-chart text{font-size:15px}}
+@media(max-width:360px){.body-weight-form fieldset{grid-template-columns:1fr}}

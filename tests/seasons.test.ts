@@ -70,7 +70,7 @@ test('annual thresholds are shared at levels 1/98/99 and excess XP keeps a full 
   assert.equal(annualLevelProgress(Infinity).xp, 0);
 });
 
-test('economic XP, purchases, pending prize and inventory survive January while character XP restarts', () => {
+test('economic and character XP, purchases, pending prize and inventory survive January', () => {
   const time = clock('2026-12-31T12:00:00Z');
   try {
     let game = reconcileSeasonProgression(normalizeGame(), []);
@@ -80,7 +80,8 @@ test('economic XP, purchases, pending prize and inventory survive January while 
     const before = gameBalance(opened.game, history), lifetime = economicXp(opened.game, history);
     time.mock.mockImplementation(() => Date.parse('2027-01-01T12:00:00Z'));
     const next = reconcileSeasonProgression(opened.game, history);
-    assert.equal(gameProgress(next, history).level, 1); assert.equal(gameProgress(next, history).xp, 0);
+    assert.equal(gameProgress(next, history).level, gameProgress(game, history).level);
+    assert.equal(gameProgress(next, history).xp, gameProgress(game, history).xp);
     assert.equal(gameBalance(next, history), before); assert.equal(economicXp(next, history), lifetime);
     assert.deepEqual(next.inventory, opened.game.inventory); assert.deepEqual(next.pendingOpening, opened.game.pendingOpening);
     assert.equal(next.transactions[0].sourceSeason, '2026'); assert.ok(isGameState(next));
@@ -88,7 +89,7 @@ test('economic XP, purchases, pending prize and inventory survive January while 
   } finally { time.mock.restore(); }
 });
 
-test('same level can be claimed once in separate years; old unclaimed crates stay available after edits and rollover', () => {
+test('rollover cannot reopen an old level and subsequent levels still unlock their crates', () => {
   const time = clock('2026-12-30T12:00:00Z');
   try {
     let game = reconcileSeasonProgression(normalizeGame(), []);
@@ -102,13 +103,17 @@ test('same level can be claimed once in separate years; old unclaimed crates sta
     history[0].status = 'deleted'; history[1].status = 'deleted';
     game = reconcileSeasonProgression(game, history);
     assert.ok(getLevelCrates(game, history, undefined, '2026').some(crate => crate.level === 3 && !crate.claimed));
-    history.push(representativeWorkout('2027-01-02'));
+    const retainedLevel = gameProgress(game, history).level;
+    assert.ok(retainedLevel >= 3, 'deleting an old session does not lower the saved character level');
+    assert.equal(openLevelCrate(game, history, 2, undefined, '2027'), null);
+    history.push(...Array.from({ length: 4 }, (_, index) => representativeWorkout(addDays('2027-01-02', index))));
     game = reconcileSeasonProgression(game, history);
-    const opened = openLevelCrate(game, history, 2, undefined, '2027')!;
-    assert.ok(opened); assert.equal(opened.item.crateId, 'level:2027:2');
-    assert.equal(opened.game.transactions.filter(transaction => transaction.sourceLevel === 2).length, 2);
+    const opened = openLevelCrate(game, history, retainedLevel + 1, undefined, '2027')!;
+    assert.ok(opened);
+    assert.equal(opened.item.crateId, `level:2027:${retainedLevel + 1}`);
+    assert.equal(opened.game.transactions.filter(transaction => transaction.sourceLevel === 2).length, 1);
     assert.ok(isGameState(opened.game));
-    assert.equal(openLevelCrate(revealReservedOpening(opened.game), history, 2, undefined, '2027'), null);
+    assert.equal(openLevelCrate(revealReservedOpening(opened.game), history, retainedLevel + 1, undefined, '2027'), null);
     const oldPending = openLevelCrate(revealReservedOpening(opened.game), history, 3, undefined, '2026')!;
     assert.ok(oldPending); assert.equal(oldPending.game.transactions.at(-1)?.sourceSeason,'2026');
     assert.ok(oldPending.item.acquiredAt.startsWith('2027')); assert.ok(isGameState(oldPending.game));
@@ -131,7 +136,7 @@ test('migration is idempotent, preserves legacy claims/dates and grants only old
     assert.equal(transactionSeason(migrated.transactions[0]), '2025');
     assert.equal(getLevelCrates(migrated, history).some(crate => crate.level === 2), false);
     assert.equal(gameBalance(migrated, history), gameBalance(legacy, history));
-    assert.equal(gameProgress(migrated, history).xp, 0);
+    assert.equal(gameProgress(migrated, history).xp, rewardProgress(history).xp);
     assert.deepEqual(normalizeGame(JSON.parse(JSON.stringify(migrated))), migrated);
     const copied = data(migrated,history), restored = previewBackup(createBackup(copied),emptyData());
     assert.equal(restored.conflicts.length, 0); assert.deepEqual(restored.merged.game, migrated);
@@ -246,7 +251,7 @@ test('legacy backup baselines cannot revoke already earned seasonal crates or mi
 });
 
 
-test('annual reset and date corrections use the saved cheesit award and never the currently equipped passive', () => {
+test('permanent levels and date corrections use the saved cheesit award and never the currently equipped passive', () => {
   const time=clock('2026-12-31T13:00:00Z');
   try {
     const item={id:crypto.randomUUID(),kind:'companion' as const,companionId:'athlete',rarity:'common' as const,acquiredAt:'2026-01-01T12:00:00Z',crateId:'starter',sold:false};
@@ -256,7 +261,7 @@ test('annual reset and date corrections use the saved cheesit award and never th
     const game=reconcileSeasonProgression(owned,[workout]);const balance=gameBalance(game,[workout]);
     time.mock.mockImplementation(()=>Date.parse('2027-01-01T13:00:00Z'));
     const next={...reconcileSeasonProgression(game,[workout]),equippedCompanionId:null};
-    assert.equal(gameProgress(next,[workout]).xp,0);assert.equal(gameBalance(next,[workout]),balance);
+    assert.equal(gameProgress(next,[workout]).xp,workoutReward(workout,[workout]).totalXp);assert.equal(gameBalance(next,[workout]),balance);
     const moved={...workout,date:'2027-01-01'};
     assert.equal(gameProgress(next,[moved]).xp,workoutReward(workout,[workout]).totalXp);
     assert.equal(gameBalance(next,[moved]),balance);
@@ -264,7 +269,7 @@ test('annual reset and date corrections use the saved cheesit award and never th
   }finally{time.mock.restore();}
 });
 
-test('new annual entitlements stop at 99 even when statistical XP exceeds the final threshold', () => {
+test('new level entitlements stop at 99 even when statistical XP exceeds the final threshold', () => {
   const time=clock('2026-11-02T12:00:00Z');
   try {
     const initial=reconcileSeasonProgression(normalizeGame(),[]);

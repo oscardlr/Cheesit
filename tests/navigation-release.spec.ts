@@ -1,6 +1,7 @@
 import { devices, expect, test, type Page } from '@playwright/test';
 import { accountsHarness } from './accounts-harness';
 import { CATALOG } from '../src/lib/catalog';
+import { todayMadrid } from '../src/lib/dates';
 import { gameBalance, normalizeGame, openCrate, type InventoryItem } from '../src/lib/game';
 import { emptyData, exerciseSnapshot, newSet, newWorkout, type AppData, type Routine } from '../src/lib/model';
 
@@ -50,7 +51,7 @@ test('the five tabs and all eight hub pages stay usable at 320, 390, 430 and des
   const labels = ['Inicio', 'Comunidad', 'Entrenar', 'Progreso', 'Arcade'];
   const groups = [
     { hub: 'Entrenar', group: 'Apartados de Entrenar', pages: ['Empezar entreno', 'Mis rutinas', 'Planes de entrenamiento', 'Catálogo de ejercicios'] },
-    { hub: 'Arcade', group: 'Apartados de Arcade', pages: ['Personaje', 'Cofres', 'Retos y logros', 'Nivel y temporadas'] },
+    { hub: 'Arcade', group: 'Apartados de Arcade', pages: ['Personaje', 'Cofres', 'Retos y logros', 'Nivel y recompensas'] },
   ];
   for (const width of [320, 390, 430, 1440]) {
     await page.setViewportSize({ width, height: 850 });
@@ -79,7 +80,7 @@ test('the five tabs and all eight hub pages stay usable at 320, 390, 430 and des
   }
   await nav(page, 'Entrenar').click();
   await button(page, 'Empezar entreno').click();
-  await page.getByLabel('Fecha', { exact: true }).fill('2026-10-21');
+  await expect(page.getByLabel('Fecha', { exact: true })).toHaveCount(0);
   await page.getByLabel('Nombre', { exact: true }).fill('Primera sesión');
   await button(page, 'Empezar sin rutina').dblclick();
   await title(page, 'Entrenamiento');
@@ -88,7 +89,7 @@ test('the five tabs and all eight hub pages stay usable at 320, 390, 430 and des
   await title(page, 'Entrenamiento');
   await page.reload();
   await title(page, 'Entrenamiento');
-  await expect.poll(async () => ((await harness.account('nav-new@example.test')).data as AppData).workouts.map(w => [w.name, w.date])).toEqual([['Primera sesión', '2026-10-21']]);
+  await expect.poll(async () => ((await harness.account('nav-new@example.test')).data as AppData).workouts.map(w => [w.name, w.date])).toEqual([['Primera sesión', todayMadrid()]]);
 });
 
 test('equipped slots and crate odds stay compact on mobile and desktop', async ({ page }, info) => {

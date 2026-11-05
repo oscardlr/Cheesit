@@ -41,7 +41,7 @@ export default function ObjectivesPanel({ data, exercises, today, onSave }: {
   const exerciseGoals = data.training?.exerciseGoals;
   const progress = useMemo(() => new Map([...new Set(exerciseGoals?.map(goal => goal.exerciseId))].map(id =>
     [id, exerciseGoalProgress(data.workouts, id, today)])), [exerciseGoals, data.workouts, today]);
-  const loadExercises = exercises.filter(exercise => exercise.mode === 'external_load_reps' && !exercise.archived);
+  const loadExercises = exercises.filter(exercise => exercise.mode === 'external_load_reps');
 
   function open(next: Editor) {
     setNotice('');

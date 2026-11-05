@@ -6,7 +6,7 @@ import { AccountStore, readCache, type Outbox, type Transport } from '../src/lib
 import { blankDocument, documentAfter, mergeDocuments, same, type CloudSnapshot } from '../src/lib/remote/document';
 import { createBackup, previewBackup } from '../src/lib/backup';
 import { emptyData, type AppData, type Routine } from '../src/lib/model';
-import { gameBalance, normalizeGame } from '../src/lib/game';
+import { gameBalance, normalizeGame, openCrate } from '../src/lib/game';
 import { StorageConflictError } from '../src/lib/storage';
 import { RemoteConnectionError } from '../src/lib/remote/errors';
 import { resetAccountData } from '../src/lib/account-reset';
@@ -153,6 +153,43 @@ test('activity and ledger conflicts require an explicit choice; no automatic eco
   assert.equal(merge.unresolved[0].key, 'activity');
   merge = mergeDocuments(base, local, remote, { activity: 'local' }); assert.equal(merge.unresolved.length, 0);
   assert.deepEqual(merge.document.data.game, local.data.game);
+});
+
+test('concurrent mission receipts and a crate debit converge across CAS conflicts and retries', async () => {
+  const remote = server();
+  const buyer = await new AccountStore(crypto.randomUUID(), remote.transport).initialize();
+  const first = await new AccountStore(crypto.randomUUID(), remote.transport).initialize();
+  const second = await new AccountStore(crypto.randomUUID(), remote.transport).initialize();
+  try {
+    await buyer.saveData({ ...emptyData(), game: normalizeGame() });
+    await buyer.synchronize();
+    await Promise.all([first.synchronize(), second.synchronize()]);
+    const base = await buyer.loadData();
+    const purchase = openCrate(base.game!, [], 'starter')!;
+    const mission = { id: 'career-sessions-1', xp: 100, target: 1, awardedAt: '2026-11-05T09:00:00Z' };
+    const duplicate = { ...mission, awardedAt: '2026-11-05T10:00:00Z' };
+    const secondMission = { id: 'career-groups-1', xp: 50, target: 1, awardedAt: duplicate.awardedAt };
+    await Promise.all([
+      buyer.saveData({ ...base, game: purchase.game }),
+      first.saveData({ ...base, game: { ...base.game!, missionRewards: [mission] } }),
+      second.saveData({ ...base, game: { ...base.game!, missionRewards: [duplicate, secondMission] } }),
+    ]);
+    await buyer.synchronize();
+    remote.lose();
+    await assert.rejects(first.synchronize(), /response lost/);
+    await Promise.all([first.synchronize(), second.synchronize()]);
+    await buyer.synchronize();
+    const merged = remote.snapshot().data.game!;
+    assert.deepEqual(merged.missionRewards, [mission, secondMission]);
+    assert.deepEqual(merged.transactions, purchase.game.transactions);
+    assert.deepEqual(merged.pendingOpening, purchase.game.pendingOpening);
+    assert.equal(gameBalance(merged, [], undefined, 0), gameBalance(purchase.game, [], undefined, 0) + 30);
+    assert.equal(first.conflicts().length + second.conflicts().length + buyer.conflicts().length, 0);
+  } finally {
+    buyer.dispose();
+    first.dispose();
+    second.dispose();
+  }
 });
 
 test('two accounts retain isolated queues; disposed owner cannot send or save', async () => {

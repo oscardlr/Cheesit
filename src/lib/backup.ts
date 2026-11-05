@@ -6,6 +6,7 @@ import { isAthleteProfile } from './strength';
 import { GEAR, type GearSlot } from './gear';
 import { isCivilDate, todayMadrid } from './dates';
 import { WORKOUT_COLOR, copiedName, isRoutineColor, isRoutineIcon, newId, resolvedRoutineIcon, snapshotLoadConventions, validName, validPlannedSets, validSet, type AppData, type Exercise, type Routine, type Workout, type WorkoutSet } from './model';
+import { mergeMissionRewards } from './objectives';
 import { getAbilityCharges, isGameState, normalizeGame, preserveSeasonMetadata, reconcileSeasonProgression, unlockedCompanions, unlockedGear, type GameState } from './game';
 import { getAbilityDefinition, isAbilityUse } from './abilities';
 import { MUSCLES } from './muscles';
@@ -146,9 +147,7 @@ function mergeGame(current: GameState | undefined, incoming: GameState | undefin
   const active=normalized.activeAbilityId??null;
   const activeAbilityId=active&&getAbilityCharges(merged,active)>0?active:null;
   const equippedGear=Object.fromEntries(Object.entries(current.equippedGear??{}).filter(([slot,itemId])=>merged.inventory.some(item=>!item.sold&&item.id!==merged.pendingOpening?.itemId&&item.id===itemId&&GEAR.some(gear=>gear.id===item.gearId&&gear.slot===slot)))) as Partial<Record<GearSlot,string>>;
-  const missionRewards = new Map((current.missionRewards ?? []).map(reward => [reward.id, reward]));
-  for (const reward of incoming.missionRewards ?? []) if (!missionRewards.has(reward.id)) missionRewards.set(reward.id, reward);
-  return { ...merged, missionRewards: [...missionRewards.values()], weeklyWorkoutGoal: current.weeklyWorkoutGoal, weeklySetGoal: current.weeklySetGoal,
+  return { ...merged, weeklyWorkoutGoal: current.weeklyWorkoutGoal, weeklySetGoal: current.weeklySetGoal,
     equippedGear, cosmeticGear, equippedCompanionId, activeAbilityId, equippedQuoteId: null };
 }
 type Counts = { routines: number; workouts: number; customExercises: number };
@@ -248,6 +247,9 @@ export function previewBackup(raw: unknown, current: AppData, resolutions: Recor
     // Preserve identity tombstones even when the user selects one conflicting ledger.
     // Entries absent from that ledger are audit-only and grant no spendable credits.
     const conversionGame = { ...game,
+      ...(currentGame?.missionRewards || incomingGame?.missionRewards ? {
+        missionRewards: mergeMissionRewards(currentGame?.missionRewards, incomingGame?.missionRewards),
+      } : {}),
       quoteConversions: mergeQuoteConversions(normalizeGame(current.game).quoteConversions ?? [], normalizeGame(incoming.game).quoteConversions ?? [], game.quoteConversions ?? []).filter(entry => {
         const copy = game!.inventory.find(item => item.id === entry.itemId);
         return !copy || (copy.quoteId === entry.quoteId && copy.rarity === entry.rarity);

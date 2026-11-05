@@ -8,7 +8,7 @@ import { COMPANIONS, type Companion } from './companions';
 import { TEST_CREDITS } from './test-credits';
 import { abilityMatches, getAbilityDefinition, isAbilityUse, type AbilityUse } from './abilities';
 import { getAvailableAbilityCharges, getLegacyAbilityUseIds, validateAbilityChargeHistory } from './ability-charges';
-import { awardObjectiveMissions, getObjectiveMissions, missionRewardXp, validMissionRewards, type Mission, type MissionReward } from './objectives';
+import { awardObjectiveMissions, getObjectiveMissions, missionRewardCredits, missionRewardXp, validMissionRewards, type Mission, type MissionReward } from './objectives';
 import { workoutPassiveReward } from './cheesit-passives';
 import { bodyWeightXp } from './body-weight';
 import { migrateQuoteConversions, QUOTE_COMPENSATION, quoteConversionCredits, type QuoteConversion } from './quote-conversion';
@@ -148,12 +148,23 @@ export function reconcileSeasonProgression(game: GameState, history: Workout[], 
       const baseline = gameProgress(game, history, profile, year).level;
       return { season: year, baseline, reached: baseline, ...(year === season && legacyLevels.length ? { legacyLevels } : {}) };
     }).sort((a,b)=>a.season.localeCompare(b.season));
-    return { ...game, seasonProgressionVersion: 1, seasonProgressionStartedOn: day, seasonCrateProgress: entries };
+    game = { ...game, seasonProgressionVersion: 1, seasonProgressionStartedOn: day, seasonCrateProgress: entries };
   }
-  const level = gameProgress(game, history, profile, season).level;
+  const highest = highestReachedLevel(game);
+  const level = gameProgress(game, history, profile).level;
+  if (highest >= level) return game;
   const previous = entries.find(entry => entry.season === season);
-  if (previous && previous.reached >= level) return game;
-  const next = previous ? { ...previous, reached: level } : { season, baseline: 1, reached: level };
+  // Retain old seasonal entitlements but only unlock levels above the previous
+  // lifetime maximum. A change of year by itself cannot unlock any crate.
+  const next = previous ? {
+    ...previous,
+    reached: level,
+    ...(previous.reached < highest ? {
+      baseline: highest,
+      legacyLevels: [...new Set([...(previous.legacyLevels ?? []),
+        ...Array.from({ length: previous.reached - previous.baseline }, (_, index) => previous.baseline + index + 1)])],
+    } : {}),
+  } : { season, baseline: highest, reached: level };
   return { ...game, seasonCrateProgress: [...entries.filter(entry => entry.season !== season), next].sort((a, b) => a.season.localeCompare(b.season)) };
 }
 
@@ -335,12 +346,20 @@ export function normalizeGame(value?: unknown): GameState {
 export function economicXp(game: GameState, history: Workout[], profile?: AthleteProfile): number {
   return rewardProgress(history, profile).xp + missionRewardXp(game) + bodyWeightXp(profile);
 }
-export function gameProgress(game: GameState, history: Workout[], profile?: AthleteProfile, season = currentSeasons().year) {
+function highestReachedLevel(game: GameState): number {
+  return (game.seasonCrateProgress ?? []).reduce((highest, entry) => Math.max(highest, entry.reached), 1);
+}
+
+/** The character uses lifetime XP. An explicit year is for historical statistics. */
+export function gameProgress(game: GameState, history: Workout[], profile?: AthleteProfile, season?: string) {
   const progress = rewardProgress(history, profile, season);
   const objectiveXp = missionRewardXp(game, season);
   const weightXp = bodyWeightXp(profile, season);
-  const grantedXp = game.arcadeGrant?.season === season ? game.arcadeGrant.xp : 0;
-  return { ...progress, ...levelProgress(progress.xp + objectiveXp + weightXp + grantedXp), objectiveXp, weightXp, season };
+  const grant = game.arcadeGrant;
+  const grantedXp = grant && (!season || grant.season === season) ? grant.xp : 0;
+  const xp = progress.xp + objectiveXp + weightXp + grantedXp;
+  const savedThreshold = season ? 0 : characterLevelThreshold(highestReachedLevel(game));
+  return { ...progress, ...levelProgress(Math.max(xp, savedThreshold)), objectiveXp, weightXp, season };
 }
 
 export function awardMissionRewards(game: GameState, history: Workout[], day: string, changedDate?: string): GameState {
@@ -362,7 +381,8 @@ export function gameCreditStatus(game: GameState, history: Workout[], profile?: 
     passiveSessions.add(workout.id);
     return sum + workoutPassiveReward(workout).bonusCredits;
   }, 0);
-  const rawEarned=100+(game.arcadeGrant?.credits ?? 0)+quoteConversionCredits(game,false)+Math.floor(economicXp(game,history,profile)/5)+abilityCredits+companionCredits+game.transactions.filter(transaction=>!transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0);
+  const activityXp = rewardProgress(history, profile).xp + bodyWeightXp(profile);
+  const rawEarned=100+(game.arcadeGrant?.credits ?? 0)+quoteConversionCredits(game,false)+Math.floor(activityXp/5)+missionRewardCredits(game)+abilityCredits+companionCredits+game.transactions.filter(transaction=>!transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0);
   const earned=Math.max(0,rawEarned);
   const testing=testAllowance>0?testAllowance+quoteConversionCredits(game,true)+game.transactions.filter(transaction=>transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0):0;
   return { balance: Math.max(0,earned+testing), earnedBalance: earned, deficit: Math.max(0,-rawEarned), testingBalance: testing };
@@ -556,8 +576,8 @@ export function getDailyQuote(day: string): string {
 }
 
 export type { Mission } from './objectives';
-export type Achievement = Mission & { icon: string };
-const mission = (id: string, title: string, description: string, current: number, target: number, unit: string): Mission => ({ id, title, description, current, target, complete: current >= target, unit, xp: 0, scope: 'career', rewarded: false });
+export type Achievement = Omit<Mission, 'credits'> & { icon: string };
+const mission = (id: string, title: string, description: string, current: number, target: number, unit: string): Omit<Achievement, 'icon'> => ({ id, title, description, current, target, complete: current >= target, unit, xp: 0, scope: 'career', rewarded: false });
 
 export function getMissions(history: Workout[], day: string, game: GameState, _profile?: AthleteProfile): Mission[] {
   return getObjectiveMissions(history, day, game);
