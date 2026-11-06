@@ -66,6 +66,9 @@ export default function ExerciseLibrary({ exercises, onSelect, onSave }: {
       <legend>Grupo muscular</legend>
       <div className={styles.groupButtons}>{['Todos', ...GROUPS].map(value => <button type="button" key={value} aria-pressed={group === value} onClick={() => setGroup(value)}>{value}</button>)}</div>
     </fieldset>
+    <label className={styles.compactGroup}>Grupo muscular<select value={group} onChange={event => setGroup(event.target.value)}>
+      {['Todos', ...GROUPS].map(value => <option key={value}>{value}</option>)}
+    </select></label>
     <label>Material<select value={equipment} onChange={event => setEquipment(event.target.value)}>
       <option value="">Todo el material</option>
       {EQUIPMENT_TYPES.map(value => <option key={value}>{value}</option>)}

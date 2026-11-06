@@ -26,8 +26,7 @@ export default function ScrollNavigation({ view, children }: { view: string; chi
     const onScroll = (event: Event) => {
       const target = event.target === document ? root : event.target;
       if (!(target instanceof Element)) return;
-      const max = target.scrollHeight - target.clientHeight;
-      if (max <= 0) return;
+      const max = Math.max(0, target.scrollHeight - target.clientHeight);
       // Clamp rubber-band offsets before calculating direction.
       const position = Math.max(0, Math.min(max, target.scrollTop));
       const previous = positions.get(target) ?? 0;

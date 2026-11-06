@@ -119,3 +119,23 @@ test('during a workout only the exercise list scrolls, even when mobile navigati
   await expect.poll(() => scrollY(page)).toBe(background - 25);
   await expect(nav).not.toHaveAttribute('data-scroll-hidden', '');
 });
+
+
+test('the picker keeps room for the exercise list on a small phone and in landscape', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await enter(page);
+  await page.getByRole('button', { name: 'Empezar entreno', exact: true }).tap();
+  await page.getByRole('button', { name: 'Empezar sin rutina', exact: true }).tap();
+  await page.getByRole('button', { name: 'Añadir ejercicio', exact: true }).tap();
+  const picker = page.getByRole('dialog', { name: 'Añadir ejercicio' });
+  const list = picker.getByRole('region', { name: 'Resultados de ejercicios' });
+  for (const viewport of [{ width: 320, height: 568 }, { width: 700, height: 390 }]) {
+    await page.setViewportSize(viewport);
+    await expect(picker.getByRole('combobox', { name: 'Grupo muscular' })).toBeInViewport();
+    await expect(picker.getByRole('button', { name: 'Crear ejercicio propio' })).toBeInViewport({ ratio: 1 });
+    expect(await list.evaluate(node => node.clientHeight)).toBeGreaterThan(100);
+    await expect(list.getByRole('button', { name: /Press de banca con barra/i })).toBeInViewport({ ratio: 1 });
+  }
+  await picker.getByRole('combobox', { name: 'Grupo muscular' }).selectOption('Bíceps');
+  await expect(list.getByRole('button', { name: /Press de banca con barra/i })).toHaveCount(0);
+});

@@ -331,6 +331,7 @@ test('historial conserva el icono antiguo y guarda una rutina sin prescripción 
   const local = await stored(page);
   expect(local.routines[0].exercises).toEqual([{ id: expect.any(String), exerciseId: bench.id, sets: 1 }]);
   expect(local.workouts[0].exercises).toEqual(historical.exercises);
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   await nav.getByRole('button', { name: 'Entrenar', exact: true }).click();
   await page.getByRole('button', { name: 'Empezar entreno', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Color coral', exact: true })).toBeVisible();
@@ -345,6 +346,7 @@ test('historial conserva el icono antiguo y guarda una rutina sin prescripción 
   await page.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
   await page.getByRole('dialog', { name: 'Finalizar entrenamiento', exact: true }).getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
   await page.getByRole('button', { name: 'Continuar', exact: true }).click();
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   await nav.getByRole('button', { name: 'Progreso', exact: true }).click();
   const icon = page.getByRole('button', { name: /Empuje coral/ }).first().locator('.workout-history-icon');
   await expect(icon).toHaveCSS('color', 'rgb(236, 137, 151)');
