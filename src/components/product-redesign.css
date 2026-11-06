@@ -523,6 +523,7 @@
 .ux-shell.product-redesign .home-command-grid { display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: var(--card-gap); margin-bottom: var(--section-gap); align-items: stretch; }
 .ux-shell.product-redesign .home-command-grid .next-session { margin: 0; min-height: 245px; }
 .ux-shell.product-redesign .home-command-grid .week-card { display: flex; flex-direction: column; justify-content: center; min-width: 0; border-radius: 28px; background: linear-gradient(135deg,#211b2d,#1b1723); }
+.ux-shell.product-redesign .home-command-grid .activity-section { grid-column: 1 / -1; min-width: 0; }
 .ux-shell.product-redesign .home-command-grid .week-strip { margin-block: 6px 2px; }
 .ux-shell.product-redesign .home-command-grid .next-session-art { width: 135px; height: 160px; margin-right: -10px; }
 .ux-shell.product-redesign .home-command-grid .next-session-copy { max-width: 440px; }

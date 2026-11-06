@@ -91,7 +91,7 @@
   background: #d8ff3e14;
   font-weight: 700;
 }
-.home-secondary-links, .progress-views { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 var(--section-gap); }
+.progress-views { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 var(--section-gap); }
 .progress-views button {
   min-height: 44px;
   padding: 9px 13px;
