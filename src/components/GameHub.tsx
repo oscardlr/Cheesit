@@ -154,8 +154,7 @@ export default function GameHub({ data, today, effectsEnabled, soundEnabled, ini
       {tab === 'crates' && <>
         <div className="arcade-crates">{CRATES.map((crate, index) => <article key={crate.id} className={`arcade-crate crate-${crate.id === MASTER_CRATE_ID ? 'master' : index}`}>
           <div className="crate-art" aria-hidden="true"><div className="crate-halo"/><CrateArtwork crateId={crate.id}/></div>
-          <div className="crate-heading"><h3>{crate.name}</h3>{crate.id !== MASTER_CRATE_ID && <CrateOdds name={crate.name} odds={crate.odds}/>}</div>
-          {crate.id === MASTER_CRATE_ID && <div className="master-crate-odds" aria-label="Probabilidades de rareza">{(Object.keys(RARITIES) as Rarity[]).filter(rarity => crate.odds[rarity] > 0).map(rarity => <span key={rarity} style={rarityStyle(rarity)}>{RARITIES[rarity].label} <strong>{crate.odds[rarity]} %</strong></span>)}</div>}
+          <div className="crate-heading"><h3>{crate.name}</h3><CrateOdds name={crate.name} odds={crate.odds}/></div>
           <button className="arcade-primary" disabled={busy || Boolean(game.pendingOpening) || balance < crate.cost} onClick={() => void buyCrate(crate.id)}>
             <span>{busy ? 'Guardando…' : balance < crate.cost ? 'Faltan créditos' : 'Abrir cofre'}</span><strong>{cratePrice.format(crate.cost)} <CreditCoin alt="créditos"/></strong>
           </button>

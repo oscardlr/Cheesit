@@ -249,21 +249,27 @@ test('Cofre Maestro blocks insufficient credit and resumes one reserved prize at
   await page.getByRole('button', { name: 'Cofres', exact: true }).click();
   const card = page.getByRole('article').filter({ has: page.getByRole('heading', { name: 'Cofre Maestro', exact: true }) });
   const buy = card.getByRole('button', { name: /Abrir cofre/ });
-  await expect(card).toContainText('Rara 25 %');
-  await expect(card).toContainText('Épica 50 %');
-  await expect(card).toContainText('Legendaria 25 %');
+  await card.getByRole('button', { name: 'Información sobre Probabilidades · Cofre Maestro' }).click();
+  const odds = page.getByRole('dialog', { name: 'Probabilidades · Cofre Maestro' });
+  await expect(odds.locator('.crate-odds > span')).toHaveText(['Común0%', 'Rara25%', 'Épica50%', 'Legendaria25%']);
+  await odds.getByRole('button', { name: 'Cerrar información' }).click();
+  await expect(odds).toHaveCount(0);
   await expect(buy).toHaveAccessibleName(/1\.?000 créditos/);
   for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     const artwork = card.locator('img.crate-illustration');
     await expect.poll(() => artwork.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
+    await expect(artwork).toHaveCSS('animation-name', 'crate-hover');
+    await expect(artwork).toHaveCSS('animation-duration', '4s');
+    await expect(card.locator('.crate-halo')).toHaveCSS('background-color', 'rgba(255, 52, 52, 0.2)');
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
     await card.screenshot({ path: info.outputPath(`master-card-${width}.png`), animations: 'disabled' });
   }
   await page.setViewportSize({ width: 390, height: 844 });
   await buy.click();
   const dialog = page.getByRole('dialog');
-  await expect(dialog.getByText('COFRE MAESTRO', { exact: true })).toBeVisible();
+  await expect(dialog.getByRole('heading', { name: 'Sorteando rareza', exact: true })).toBeVisible();
+  await expect(dialog.getByLabel('Ruleta de rarezas')).toBeVisible();
   const reserved = (await stored(page)).game!;
   expect(reserved.inventory).toHaveLength(1);
   expect(reserved.transactions).toHaveLength(1);
@@ -272,10 +278,9 @@ test('Cofre Maestro blocks insufficient credit and resumes one reserved prize at
   await page.reload();
   await expect(card.getByRole('button', { name: /Faltan créditos/ })).toBeDisabled();
   await page.getByRole('button', { name: 'Continuar apertura', exact: true }).click();
-  await expect(dialog.getByText('COFRE MAESTRO', { exact: true })).toBeVisible();
-  await expect(dialog.locator('img.opening-master-art')).toBeVisible();
-  const quick = dialog.getByRole('button', { name: /Revelar ahora/ });
-  if (await quick.isVisible()) await quick.click();
+  const reveal = dialog.getByRole('status', { name: 'Abriendo recompensa' });
+  await expect(reveal.locator('.opening-crate-lid')).toBeVisible({ timeout: 8000 });
+  await expect(reveal.getByText('ROMPIENDO EL SELLO', { exact: true })).toBeVisible();
   await expect(dialog.getByRole('heading', { name: 'Recompensa obtenida' })).toBeVisible();
   await dialog.screenshot({ path: info.outputPath('master-opening-390.png'), animations: 'disabled' });
   await page.setViewportSize({ width: 1440, height: 900 });
