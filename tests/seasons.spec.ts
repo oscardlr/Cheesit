@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { representativeWorkout } from '../scripts/simulate-season-progression';
-import { normalizeGame, reconcileSeasonProgression, gameProgress } from '../src/lib/game';
+import { normalizeGame, reconcileSeasonProgression, gameProgress, levelCrate } from '../src/lib/game';
 import type { AppData } from '../src/lib/model';
 
 async function seed(page: Page, data: AppData) {
@@ -69,7 +69,17 @@ for (const width of [390,1440]) {
     await expect(page.locator('.arcade-ascent-hero')).toContainText('XP acumulada');
     await expect(page.locator('.ascent-rank')).toContainText(`NIVEL ${progress.level}`);
     await expect(page.getByLabel('Año del personaje', { exact: true })).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: /nivel 2 · 2026/i })).toBeVisible();
+    const crate = page.locator('.level-reward-card').filter({ has: page.getByRole('heading', { name: 'Cofre de ascenso nivel 2', exact: true }) });
+    await expect(crate).toBeVisible();
+    await expect(crate).toHaveText('Cofre de ascenso nivel 2Abrir gratis');
+    const art = crate.locator('.level-reward-art');
+    await expect(art).toHaveAttribute('src', '/assets/grind-chest-ascent.webp');
+    await expect.poll(() => art.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
+    await crate.screenshot({ path: info.outputPath(`level-crate-${width}.png`), animations: 'disabled' });
+    await crate.getByRole('button', { name: 'Información sobre Probabilidades · Cofre de ascenso nivel 2' }).click();
+    const odds = page.getByRole('dialog', { name: 'Probabilidades · Cofre de ascenso nivel 2' });
+    await expect(odds.locator('.crate-odds strong')).toHaveText(Object.values(levelCrate(2).odds).map(value => `${value}%`));
+    await odds.getByRole('button', { name: 'Cerrar información' }).click();
     await noOverflow(page);
     await page.screenshot({ path: info.outputPath(`ascent-${width}.png`), fullPage: true, animations: 'disabled' });
     await page.clock.setSystemTime(new Date('2028-05-01T12:00:00Z'));
@@ -101,3 +111,43 @@ for (const width of [390,1440]) {
     await page.locator('.arcade-ascent-hero').screenshot({path:info.outputPath(`max-ascent-${width}.png`),animations:'disabled'});
   });
 }
+
+test('level up shows the new ascent chest and the same chest can be claimed for free', async ({ page }, info) => {
+  await page.clock.setFixedTime(new Date('2026-11-06T12:00:00Z'));
+  const draft = representativeWorkout('2026-11-06');
+  draft.status = 'draft';
+  draft.exercises = draft.exercises.slice(0, 1);
+  draft.exercises[0].sets = draft.exercises[0].sets.slice(0, 1);
+  draft.exercises[0].sets[0].confirmed = false;
+  const arcadeGrant = { season: '2026', xp: 790, credits: 0, grantedAt: '2026-11-01T12:00:00Z', charges: {} };
+  await seed(page, {
+    routines: [], customExercises: [], workouts: [draft],
+    game: { ...normalizeGame(), arcadeGrant },
+    preferences: { effects: false, sound: false },
+  });
+  await page.getByRole('button', { name: 'Continuar entreno', exact: true }).click();
+  await page.getByRole('button', { name: 'Confirmar serie 1', exact: true }).click();
+  const celebration = page.locator('.celebration-level-scene');
+  await expect(celebration).toHaveText('Cofre de ascenso nivel 2');
+  const art = celebration.locator('img');
+  await expect(art).toHaveAttribute('src', '/assets/grind-chest-ascent.webp');
+  await expect.poll(() => art.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
+  await celebration.screenshot({ path: info.outputPath('level-up-chest.png'), animations: 'disabled' });
+  await page.getByRole('button', { name: 'Cerrar celebración', exact: true }).click();
+
+  await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Arcade', exact: true }).click();
+  await page.getByRole('button', { name: 'Cofres', exact: true }).click();
+  const crate = page.locator('.level-reward-card').filter({ hasText: 'Cofre de ascenso nivel 2' });
+  await expect(crate.locator('img')).toHaveAttribute('src', '/assets/grind-chest-ascent.webp');
+  const wallet = page.locator('.arcade-wallet');
+  const balance = await wallet.getAttribute('aria-label');
+  await crate.getByRole('button', { name: 'Abrir gratis', exact: true }).click();
+  const result = page.getByRole('dialog');
+  await expect(result.getByRole('heading', { name: 'Recompensa obtenida' })).toBeVisible();
+  await result.getByRole('button', { name: 'Guardar en colección', exact: true }).click();
+  await expect(wallet).toHaveAttribute('aria-label', balance!);
+  await page.getByRole('button', { name: 'Inicio de Arcade', exact: true }).click();
+  await page.getByRole('button', { name: 'Nivel y recompensas', exact: true }).click();
+  await page.getByText('Cofres reclamados', { exact: true }).click();
+  await expect(crate.getByRole('button', { name: 'Reclamado', exact: true })).toBeDisabled();
+});

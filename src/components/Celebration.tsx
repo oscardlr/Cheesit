@@ -1,13 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { ArrowUpRight, Check, Flame, Gift, Sparkles, Trophy, X, Zap } from 'lucide-react';
+import { ArrowUpRight, Check, Flame, Sparkles, Trophy, X, Zap } from 'lucide-react';
+import { levelCrate } from '@/lib/game';
 import { playSound } from '@/lib/sound';
 import { COMPANIONS } from '@/lib/companions';
 import { getCompanionPassive, type CompanionPassiveAward } from '@/lib/cheesit-passives';
 import { CompanionSprite } from './CharacterAvatar';
 import PixelAthlete from './PixelAthlete';
 import CreditCoin from './CreditCoin';
+import CrateArtwork from './CrateArtwork';
 import './celebration.css';
 
 export type CelebrationEvent = {
@@ -65,7 +67,10 @@ export default function Celebration({ event, onDismiss, effectsEnabled, soundEna
   soundRef.current = soundEnabled;
   const eventId = event?.id;
   const kind = event?.kind;
-  const levelUp = Boolean(event?.levelAfter && event?.levelBefore && event.levelAfter > event.levelBefore);
+  const unlockedCrate = event?.levelAfter && event.levelBefore && event.levelAfter > event.levelBefore
+    ? levelCrate(event.levelAfter)
+    : null;
+  const levelUp = Boolean(unlockedCrate);
 
   useEffect(() => {
     if (eventId === undefined || !kind) return;
@@ -150,11 +155,9 @@ export default function Celebration({ event, onDismiss, effectsEnabled, soundEna
         {event.coins !== undefined && <div className="celebration-coins"><CreditCoin size={18}/><strong>{event.coins>=0?'+':''}<CountUp value={event.coins} animated={effectsEnabled} eventId={event.id}/></strong><span>CRÉDITOS</span></div>}
         {!isWorkout&&event.breakdown&&<div className="celebration-set-breakdown">{event.breakdown.map(row=><span key={row.label}>{row.label} <strong>+{row.xp}</strong></span>)}</div>}
         {event.combo > 1 && <div className="celebration-combo"><Flame size={15} /><strong>×{event.combo}</strong><span>SERIES EN CADENA</span></div>}
-        {levelUp && <div className="celebration-level-scene">
-          <div className="celebration-level-copy"><Gift size={18}/><span>NUEVO NIVEL DESBLOQUEADO</span><strong>{event.levelAfter}</strong></div>
-          <div className="celebration-stairs" aria-hidden="true"><i/><i/><i/><i/><PixelAthlete pose="climb" animated={effectsEnabled}/><Gift className="celebration-chest" size={30}/></div>
-          <p>Nivel {event.levelBefore} <ArrowUpRight size={14}/> Nivel {event.levelAfter}.</p>
-          <p>Tu cofre de nivel te espera en Arcade → Cofres.</p>
+        {unlockedCrate && <div className="celebration-level-scene">
+          <CrateArtwork crateId={unlockedCrate.id} className="celebration-level-crate" />
+          <strong>{unlockedCrate.name}</strong>
         </div>}
         {isWorkout && <>
           {event.abilityUsed&&<div className="celebration-milestones"><strong><Sparkles size={12}/>Habilidad usada · 1 carga{event.abilityCredits ? <> · <CreditCoin/> +{event.abilityCredits} créditos extra</> : null}</strong></div>}

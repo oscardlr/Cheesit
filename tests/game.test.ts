@@ -354,6 +354,9 @@ test('every reached level has a tailored free gear crate and can be claimed only
   duplicate.transactions.push({ ...duplicate.transactions[0], id: crypto.randomUUID(), itemId: item.id });
   assert.equal(isGameState(duplicate), false);
   for (const level of [2, 3, 5, 10, 20, 99]) assert.equal(Object.values(levelCrate(level).odds).reduce((sum, value) => sum + value, 0), 100);
+  assert.equal(levelCrate(5).name, 'Cofre de ascenso nivel 5');
+  assert.equal(levelCrate(93, '2025').name, 'Cofre de ascenso nivel 93');
+  assert.equal(levelCrate(93, '2025').id, 'level:2025:93');
   assert.equal(levelCrate(5).odds.common, 0);
   assert.equal(levelCrate(10).odds.rare, 0);
   const restored = previewBackup(createBackup(data(reloaded)), data());

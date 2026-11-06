@@ -115,12 +115,11 @@ const sourceLevel = (crateId: string): number | null => {
   return level >= 2 ? level : null;
 };
 export function levelCrate(level: number, season = currentSeasons().year): LevelCrate {
-  const milestone = level % 10 === 0 ? 'Leyenda' : level % 5 === 0 ? 'Élite' : 'Ascenso';
   const common = Math.max(20, 60 - level * 2), epic = Math.min(25, 8 + Math.floor(level / 3)), legendary = Math.min(10, 1 + Math.floor(level / 8));
   const odds: Record<Rarity, number> = level % 10 === 0 ? { common: 0, rare: 0, epic: 70, legendary: 30 }
     : level % 5 === 0 ? { common: 0, rare: 60, epic: 32, legendary: 8 }
       : { common, rare: 100 - common - epic - legendary, epic, legendary };
-  return { id: `level:${season}:${level}`, level, season, name: `Cofre ${milestone} · nivel ${level} · ${season}`, claimed: false, odds, guaranteedGear: true };
+  return { id: `level:${season}:${level}`, level, season, name: `Cofre de ascenso nivel ${level}`, claimed: false, odds, guaranteedGear: true };
 }
 
 /** A legacy claim keeps its real timestamp; no invented award date is written. */
