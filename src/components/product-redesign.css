@@ -520,17 +520,17 @@
 }
 @media(prefers-reduced-motion:reduce) { .ux-shell.product-redesign * { scroll-behavior: auto; } }
 .ux-shell.product-redesign .page-title-dot { color: var(--lime); }
-.ux-shell.product-redesign .home-command-grid { display: grid; grid-template-columns: minmax(0,1fr) 300px; grid-template-areas: "session week" "activity activity"; gap: var(--card-gap); margin-bottom: var(--section-gap); align-items: stretch; }
-.ux-shell.product-redesign .home-command-grid .next-session { grid-area: session; margin: 0; min-height: 245px; }
-.ux-shell.product-redesign .home-command-grid .week-card { grid-area: week; display: flex; flex-direction: column; justify-content: center; min-width: 0; border-radius: 28px; background: linear-gradient(135deg,#211b2d,#1b1723); }
-.ux-shell.product-redesign .home-command-grid .activity-section { grid-area: activity; min-width: 0; }
+.ux-shell.product-redesign .home-command-grid { display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: var(--card-gap); margin-bottom: var(--section-gap); align-items: stretch; }
+.ux-shell.product-redesign .home-command-grid .next-session { margin: 0; min-height: 245px; }
+.ux-shell.product-redesign .home-command-grid .week-card { display: flex; flex-direction: column; justify-content: center; min-width: 0; border-radius: 28px; background: linear-gradient(135deg,#211b2d,#1b1723); }
+.ux-shell.product-redesign .home-command-grid .activity-section { grid-column: 1 / -1; min-width: 0; }
 .ux-shell.product-redesign .home-command-grid .week-strip { margin-block: 6px 2px; }
 .ux-shell.product-redesign .home-command-grid .next-session-art { width: 135px; height: 160px; margin-right: -10px; }
 .ux-shell.product-redesign .home-command-grid .next-session-copy { max-width: 440px; }
 .ux-shell.product-redesign .home-command-grid .next-session h2 { font-size: 34px; }
-@media(min-width:761px) and (max-width:1100px) { .ux-shell.product-redesign .home-command-grid { grid-template-columns: minmax(0,1fr); grid-template-areas: "session" "activity" "week"; } .ux-shell.product-redesign .home-command-grid .week-card { padding-block: 22px; } .ux-shell.product-redesign .home-command-grid .week-strip>button { min-height: 66px; } }
+@media(min-width:761px) and (max-width:1100px) { .ux-shell.product-redesign .home-command-grid { grid-template-columns: minmax(0,1fr); } .ux-shell.product-redesign .home-command-grid .week-card { padding-block: 22px; } .ux-shell.product-redesign .home-command-grid .week-strip>button { min-height: 66px; } }
 @media(max-width:760px) {
- .ux-shell.product-redesign .home-command-grid { grid-template-columns: minmax(0,1fr); grid-template-areas: "session" "activity" "week"; }
+ .ux-shell.product-redesign .home-command-grid { grid-template-columns: minmax(0,1fr); }
  .ux-shell.product-redesign .home-command-grid .next-session { min-height: 0; }
  .ux-shell.product-redesign .home-command-grid .next-session h2 { font-size: 31px; }
  .ux-shell.product-redesign .home-command-grid .week-card { padding: 20px; border-radius: 23px; }
