@@ -48,6 +48,7 @@ test('during a workout only the exercise list scrolls, even when mobile navigati
   const list = picker.getByRole('region', { name: 'Resultados de ejercicios' });
   await add.tap();
   await picker.getByRole('button', { name: /Press de banca con barra/i }).tap();
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   await add.tap();
   await list.evaluate(async node => {
     await Promise.all(node.closest('.exercise-picker')!.getAnimations().map(animation => animation.finished));
@@ -65,7 +66,7 @@ test('during a workout only the exercise list scrolls, even when mobile navigati
   ]);
   const initial = await layout();
   const background = await scrollY(page);
-  expect(background).toBeGreaterThan(0);
+  expect(background).toBeGreaterThan(30);
   const bounds = (await list.boundingBox())!;
   expect(bounds.height).toBeGreaterThan(120);
   const x = bounds.x + bounds.width / 2;
@@ -114,4 +115,7 @@ test('during a workout only the exercise list scrolls, even when mobile navigati
   await expect(picker.getByRole('searchbox')).toHaveValue('press de banca con barra');
   await picker.getByRole('button', { name: 'Cerrar', exact: true }).tap();
   expect(await scrollY(page)).toBe(background);
+  await page.evaluate(() => window.scrollBy(0, -25));
+  await expect.poll(() => scrollY(page)).toBe(background - 25);
+  await expect(nav).not.toHaveAttribute('data-scroll-hidden', '');
 });

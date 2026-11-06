@@ -10,19 +10,21 @@ export default function ScrollNavigation({ view, children }: { view: string; chi
     const nav = navRef.current;
     if (!nav) return;
     const mobile = window.matchMedia(MOBILE_NAV);
+    const root = document.scrollingElement;
     const positions = new WeakMap<Element, number>();
     let source: Element | null = null;
     let direction = 0;
     let distance = 0;
     const reset = () => {
       nav.removeAttribute('data-scroll-hidden');
+      if (root) positions.set(root, Math.max(0, root.scrollTop));
       source = null;
       direction = 0;
       distance = 0;
     };
 
     const onScroll = (event: Event) => {
-      const target = event.target === document ? document.scrollingElement : event.target;
+      const target = event.target === document ? root : event.target;
       if (!(target instanceof Element)) return;
       const max = target.scrollHeight - target.clientHeight;
       if (max <= 0) return;
