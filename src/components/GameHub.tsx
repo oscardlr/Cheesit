@@ -169,7 +169,7 @@ export default function GameHub({ data, today, effectsEnabled, soundEnabled, ini
       </>}
       {tab === 'ascent' && <>
         <div className="arcade-ascent-hero"><div><span className="eyebrow">PROGRESO DE NIVEL</span><h2>Ascenso</h2><p>{fmt(progress.xp)} XP acumulada.</p><div className="ascent-rank"><Crown size={22} /><span>NIVEL {progress.level}<strong>{levelRank(progress.level)}</strong></span></div><div className="ascent-xp"><span>{progress.level===99?'Nivel máximo':`${fmt(progress.levelXp)} / ${fmt(progress.nextLevelXp)} XP`}</span><strong>{Math.round(progress.percent)}%</strong></div><ProgressBar value={progress.percent} label="Progreso del nivel actual" /></div><div className="ascent-art"><PixelAthlete pose="climb" animated={effectsEnabled} /></div></div>
-        <LevelRewards crates={allLevelCrates} busy={busy || Boolean(game.pendingOpening)} onOpen={(level,season)=>void buyCrate("level:"+level,level,season)}/><div className="ascent-path" aria-label="Camino de niveles">{Array.from({ length: 7 }, (_, index) => Math.max(1, Math.min(93, progress.level - 2)) + index).map(level => <div key={level} className={`ascent-stop ${level < progress.level ? 'passed' : level === progress.level ? 'current' : 'locked'}`}><span>{level < progress.level ? <Check size={20} /> : level === progress.level ? <Footprints size={22} /> : level % 5 === 0 ? <Gift size={22} /> : <LockKeyhole size={18} />}</span><div><small>{level === progress.level ? 'ESTÁS AQUÍ' : level < progress.level ? 'CONQUISTADO' : 'PRÓXIMO ESCALÓN'}</small><strong>Nivel {level}</strong><p>{levelRank(level)}</p></div><small>{fmt(characterLevelThreshold(level))} XP</small></div>)}</div>
+        <LevelRewards crates={allLevelCrates} busy={busy || Boolean(game.pendingOpening)} onOpen={(level,season)=>void buyCrate("level:"+level,level,season)}/><div className="ascent-path" aria-label="Camino de niveles">{Array.from({ length: 7 }, (_, index) => Math.max(1, Math.min(93, progress.level - 2)) + index).map(level => <div key={level} className={`ascent-stop ${level < progress.level ? 'passed' : level === progress.level ? 'current' : 'locked'}`}><span>{level < progress.level ? <Check size={20} /> : level === progress.level ? <Footprints size={22} /> : level % 5 === 0 ? <CrateArtwork crateId={`level:${level}`} className="ascent-path-crate" /> : <LockKeyhole size={18} />}</span><div><small>{level === progress.level ? 'ESTÁS AQUÍ' : level < progress.level ? 'CONQUISTADO' : 'PRÓXIMO ESCALÓN'}</small><strong>Nivel {level}</strong><p>{levelRank(level)}</p></div><small>{fmt(characterLevelThreshold(level))} XP</small></div>)}</div>
         <div className="arcade-xp-rules"><h3><Zap size={19} />Cómo se obtiene XP</h3><div><span>Serie confirmada<strong>30–130 XP</strong></span><span>Entreno finalizado<strong>+200 XP</strong></span><span>Récord personal comparable<strong>+75 XP</strong></span><span>3 grupos musculares en una sesión<strong>+100 XP</strong></span></div><p>Carga, repeticiones y progreso personal ajustan el XP de cada serie. Primer escalón: {fmt(characterLevelThreshold(2))} XP. El nivel 99 requiere {fmt(characterLevelThreshold(99))} XP acumulada. A partir del nivel 2, cada nuevo nivel desbloquea un cofre gratis con equipo garantizado. En el máximo sigues acumulando XP.</p></div>
       </>}
     </section>
@@ -229,8 +229,30 @@ function CrateOdds({ name, odds }: { name: string; odds: Record<Rarity, number> 
   </InfoPopup>;
 }
 
-function LevelRewards({ crates, busy, onOpen, compact = false }: { compact?: boolean; crates: ReturnType<typeof getLevelCrates>; busy: boolean; onOpen: (level: number, season: string) => void }) {
-  const ready=crates.filter(crate=>!crate.claimed), claimed=crates.filter(crate=>crate.claimed);
-  const cards=(items:typeof crates)=><div className={compact ? 'level-rewards-grid compact-level-crates' : 'level-rewards-grid'}>{[...items].reverse().map(crate=><article className={'level-reward-card '+(crate.claimed?'is-claimed':'')} key={crate.id}><span className="level-reward-icon">{crate.claimed?<Check size={30}/>:<Gift size={33}/>}</span><div><span className="eyebrow">NIVEL {crate.level}</span>{compact ? <div className="crate-heading"><h3>{crate.name}</h3><CrateOdds name={crate.name} odds={crate.odds}/></div> : <><h3>{crate.name}</h3><p>Equipo garantizado</p><div className="level-reward-odds">{(Object.keys(RARITIES) as Rarity[]).filter(rarity=>crate.odds[rarity]>0).map(rarity=><span key={rarity} style={{color:RARITIES[rarity].color}}>{RARITIES[rarity].label} {crate.odds[rarity]}%</span>)}</div></>}</div><button disabled={busy||crate.claimed} onClick={()=>onOpen(crate.level, crate.season)}>{crate.claimed?'Reclamado':'Abrir gratis'}{!crate.claimed&&<ArrowRight size={15}/>}</button></article>)}</div>;
-  return <section className="level-rewards-section"><div className="arcade-section-head"><div><span className="eyebrow">COFRES DE ASCENSO</span><h2>Recompensas por nivel</h2></div><Gift size={23}/></div><p>100% equipo de la rareza sorteada, entre todas las ranuras. Cada copia añade sus cargas de habilidad.</p>{ready.length ? cards(ready) : <div className="level-reward-empty"><LockKeyhole size={22}/><p>{crates.length?'Has reclamado todos tus cofres de ascenso disponibles.':'Los cofres de ascenso se desbloquean a partir del nivel 2, uno por nivel.'}</p></div>}{claimed.length>0&&<details className="more-missions"><summary>Ver {claimed.length} cofres reclamados</summary>{cards(claimed)}</details>}</section>;
+function LevelRewards({ crates, busy, onOpen, compact = false }: { crates: ReturnType<typeof getLevelCrates>; busy: boolean; onOpen: (level: number, season: string) => void; compact?: boolean }) {
+  const ready = crates.filter(crate => !crate.claimed);
+  const claimed = crates.filter(crate => crate.claimed);
+  const cards = (items: typeof crates) => (
+    <div className={compact ? 'level-rewards-grid compact-level-crates' : 'level-rewards-grid'}>
+      {[...items].reverse().map(crate => (
+        <article className={`level-reward-card${crate.claimed ? ' is-claimed' : ''}`} key={crate.id}>
+          <CrateArtwork crateId={crate.id} className="level-reward-art" />
+          <div className="crate-heading">
+            <h3>{crate.name}</h3>
+            <CrateOdds name={crate.name} odds={crate.odds} />
+          </div>
+          <button disabled={busy || crate.claimed} onClick={() => onOpen(crate.level, crate.season)}>
+            {crate.claimed ? 'Reclamado' : 'Abrir gratis'}
+            {!crate.claimed && <ArrowRight size={15} />}
+          </button>
+        </article>
+      ))}
+    </div>
+  );
+
+  return <section className="level-rewards-section">
+    <div className="arcade-section-head"><h2>Cofres de ascenso</h2></div>
+    {ready.length ? cards(ready) : <div className="level-reward-empty"><p>Sin cofres pendientes.</p></div>}
+    {claimed.length > 0 && <details className="more-missions"><summary>Cofres reclamados</summary>{cards(claimed)}</details>}
+  </section>;
 }
