@@ -53,6 +53,9 @@ for (const width of [390,1440]) {
     const earnedLevel = await level.innerText();
     const earnedProgress = await progressBar.getAttribute('aria-valuenow');
     expect(earnedLevel).toBe('NIVEL 2');
+    await expect(page.locator('.body-legend > span')).toHaveCount(12);
+    await expect(page.locator('.body-legend').getByText('90–98', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Pecho, nivel 2/i })).toHaveCSS('fill', 'rgb(139, 128, 184)');
     expect(Number(earnedProgress)).toBeGreaterThan(0);
     await expect(page.getByLabel('Mes muscular', { exact: true })).toHaveCount(0);
     await noOverflow(page);
@@ -87,6 +90,7 @@ for (const width of [390,1440]) {
     await expect(page.locator('.ascent-rank')).toContainText(`NIVEL ${progress.level}`);
     await page.reload();
     await expect(page.locator('.ascent-rank')).toContainText(`NIVEL ${progress.level}`);
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
     await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Inicio', exact: true }).click();
     await expect(page.locator('.character-season')).toContainText('XP acumulada');
     expect(errors).toEqual([]);
@@ -119,7 +123,7 @@ test('level up shows the new ascent chest and the same chest can be claimed for 
   draft.exercises = draft.exercises.slice(0, 1);
   draft.exercises[0].sets = draft.exercises[0].sets.slice(0, 1);
   draft.exercises[0].sets[0].confirmed = false;
-  const arcadeGrant = { season: '2026', xp: 790, credits: 0, grantedAt: '2026-11-01T12:00:00Z', charges: {} };
+  const arcadeGrant = { season: '2026', xp: 390, credits: 0, grantedAt: '2026-11-01T12:00:00Z', charges: {} };
   await seed(page, {
     routines: [], customExercises: [], workouts: [draft],
     game: { ...normalizeGame(), arcadeGrant },
@@ -135,6 +139,7 @@ test('level up shows the new ascent chest and the same chest can be claimed for 
   await celebration.screenshot({ path: info.outputPath('level-up-chest.png'), animations: 'disabled' });
   await page.getByRole('button', { name: 'Cerrar celebración', exact: true }).click();
 
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Arcade', exact: true }).click();
   await page.getByRole('button', { name: 'Cofres', exact: true }).click();
   const crate = page.locator('.level-reward-card').filter({ hasText: 'Cofre de ascenso nivel 2' });

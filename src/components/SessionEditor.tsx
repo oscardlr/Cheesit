@@ -9,16 +9,14 @@ import { workoutCopySessions } from '@/lib/metrics';
 import { supersetLabel } from '@/lib/training-features';
 import { effectiveLoad, exerciseLoadConvention, type AthleteProfile } from '@/lib/strength';
 import LoadConvention from './LoadConvention';
-import SessionAbilityNote from './SessionAbilityNote';
 import { SessionCheesitPassive } from './CheesitPassive';
 import ExerciseThumbnail from './ExerciseThumbnail';
-import type { GameState } from '@/lib/game';
 
 const elapsed = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 
-export default function SessionEditor({ workout, history, profile, game, historical, saveState, message, busy, today, onChange, onConfirm, onFinish, onFinishAndPublish, onAdd, onBack, onAbandon, onProgress, onSubstitute, finishPending }: {
+export default function SessionEditor({ workout, history, profile, historical, saveState, message, busy, today, onChange, onConfirm, onFinish, onFinishAndPublish, onAdd, onBack, onAbandon, onProgress, onSubstitute, finishPending }: {
   finishPending?: boolean;
-  workout: Workout; history: Workout[]; profile: AthleteProfile; game: GameState; historical: boolean;
+  workout: Workout; history: Workout[]; profile: AthleteProfile; historical: boolean;
   saveState: string; message: string; busy: boolean; today: string;
   onChange: (workout: Workout) => void; onConfirm: (exercise: WorkoutExercise, set: WorkoutSet) => void;
   onFinish: () => void; onFinishAndPublish?: () => void; onAdd: () => void; onBack: () => void; onAbandon: () => void;
@@ -62,7 +60,7 @@ export default function SessionEditor({ workout, history, profile, game, histori
   return <>
     <header className="page-header"><button className="icon-button back" aria-label="Volver" onClick={onBack}>‹</button><PageTitle>{historical ? 'Editar entrenamiento' : 'Entrenamiento'}</PageTitle><span className="header-spacer" /></header>
     <section className="session-compact" aria-label="Estado de la sesión"><div><strong>{confirmed} / {planned} series</strong><span>{historical&&(!workout.startedAt||!workout.finishedAt)?'Duración no registrada':`Duración · ${elapsed(duration)}`}</span></div><div className="progress-track" role="progressbar" aria-label="Series completadas" aria-valuenow={confirmed} aria-valuemin={0} aria-valuemax={planned||1}><span style={{ width: `${planned ? confirmed / planned * 100 : 0}%` }} /></div></section>
-    <SessionCheesitPassive workout={workout}/><SessionAbilityNote workout={workout} game={game} /><fieldset className="session-fields" disabled={busy}>
+    <SessionCheesitPassive workout={workout}/><fieldset className="session-fields" disabled={busy}>
     {!historical && <section className="rest-timer rest-compact" aria-label="Descanso"><div className="rest-main"><Timer size={19} /><strong>{rest ? (remaining ? elapsed(remaining) : 'Descanso completado') : `Descanso · ${elapsed(workout.defaultRestSeconds ?? 90)}`}</strong><button className="secondary" onClick={() => startRest(workout.defaultRestSeconds ?? 90)}>Iniciar descanso</button></div>
       {rest && <div className="rest-running-actions">{remaining > 0 && <button className="text-action" onClick={() => change({ ...workout, restTimer: { ...rest, remainingSeconds: remaining, endsAt: rest.endsAt ? null : new Date(Date.now() + remaining * 1000).toISOString() } })}>{rest.endsAt ? 'Pausar' : 'Reanudar'}</button>}<button className="text-action" onClick={() => startRest(Math.min(3600, remaining + 30))}>+30 s</button></div>}
       <details><summary>Ajustar descanso</summary><label>Segundos de descanso<input type="number" min={0} max={3600} step={15} value={workout.defaultRestSeconds ?? 90} onChange={event => { const seconds = Number(event.target.value); if (Number.isInteger(seconds) && seconds >= 0 && seconds <= 3600) change({ ...workout, defaultRestSeconds: seconds }); }} /></label><label className="check-label"><input type="checkbox" checked={workout.autoRest === true} onChange={event => change({ ...workout, autoRest: event.target.checked })} /> Iniciar descanso automáticamente</label><p className="muted">El contador continúa al cambiar de pantalla o volver a la app.</p></details>

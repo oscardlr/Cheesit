@@ -5,7 +5,7 @@ import { ArrowRight, Check, LockKeyhole, Shirt, Sparkles, Zap } from 'lucide-rea
 import { GEAR, type Gear, type GearSlot } from '@/lib/gear';
 import { COMPANIONS, type Companion } from '@/lib/companions';
 import { getAbilityDefinition } from '@/lib/abilities';
-import { equipCompanion, equipCosmetic, getAbilityCharges, RARITIES, setActiveAbility, unlockedCompanions, unlockedGear, type GameState, type Rarity } from '@/lib/game';
+import { equipCompanion, equipCosmetic, equippedGearAbilities, RARITIES, unlockedCompanions, unlockedGear, type GameState, type Rarity } from '@/lib/game';
 import { playSound } from '@/lib/sound';
 import { appearanceGear, CharacterParty, CompanionSprite, GearSprite, SLOT_LABELS } from './CharacterAvatar';
 import CheesitPassive from './CheesitPassive';
@@ -19,13 +19,12 @@ type Props={initialPanel?:Panel;onPanelChange?:(panel:Panel)=>void;game:GameStat
 type Panel='looks'|'abilities';
 type LookSlot=GearSlot|'companion';
 type Look={kind:'gear';slot:GearSlot;definition:Gear}|{kind:'companion';slot:'companion';definition:Companion};
-const panels:{id:Panel;label:string;Icon:typeof Shirt}[]=[{id:'looks',label:'Aspectos',Icon:Shirt},{id:'abilities',label:'Habilidades',Icon:Zap}];
+const panels:{id:Panel;label:string;Icon:typeof Shirt}[]=[{id:'looks',label:'Aspectos',Icon:Shirt},{id:'abilities',label:'Pasivas',Icon:Zap}];
 const lookSlots:{id:LookSlot|'all';label:string}[]=[{id:'all',label:'Todos'},{id:'head',label:'Cabeza'},{id:'top',label:'Torso'},{id:'bottom',label:'Piernas'},{id:'hand',label:'Manos'},{id:'back',label:'Espalda'},{id:'companion',label:'Cheesit'}];
 const lookCatalog:Look[]=[...GEAR.map(definition=>({kind:'gear' as const,slot:definition.slot,definition})),...COMPANIONS.map(definition=>({kind:'companion' as const,slot:'companion' as const,definition}))];
 const styleFor=(rarity:Rarity)=>({'--rarity':RARITIES[rarity].color} as CSSProperties);
 const rarestFirst=(a:{rarity:Rarity},b:{rarity:Rarity})=>RARITIES[b.rarity].order-RARITIES[a.rarity].order;
 const lookKindOrder={companion:0,gear:1};
-const chargeLabel=(quantity:number)=>`${quantity} ${quantity===1?'carga':'cargas'}`;
 const gearCollections=Array.from(new Set(GEAR.flatMap(gear=>gear.collection?[gear.collection]:[])));
 
 export default function WardrobeV3({initialPanel='looks',onPanelChange,game,level,effectsEnabled,soundEnabled,onChange,onNotice,onOpenCrates}:Props){
@@ -56,7 +55,7 @@ export default function WardrobeV3({initialPanel='looks',onPanelChange,game,leve
     const key=item.gearId?`gear:${item.gearId}`:item.companionId?`companion:${item.companionId}`:null;
     if(key)copies.set(key,(copies.get(key)??0)+1);
   }
-  const active=getAbilityDefinition(game.activeAbilityId);
+  const passives=equippedGearAbilities(game);
   const change=async(transform:(current:GameState)=>GameState,message:string,sound='confirm')=>{if(saveLock.current)return;saveLock.current=true;setSaving(true);try{await onChange(transform);onNotice(message);if(soundEnabled)playSound(sound)}catch{onNotice('No se ha confirmado el guardado. Reintenta desde el aviso de la app.');if(soundEnabled)playSound('error')}finally{saveLock.current=false;setSaving(false)}};
   return <div className={`wardrobe-v3 ${effectsEnabled?'':'is-quiet'}`} aria-busy={saving}>
     <nav className="collection-subtabs" aria-label="Organizar colección">{panels.map(({id,label,Icon})=><button key={id} aria-pressed={panel===id} onClick={()=>setPanel(id)}><Icon size={15}/>{label}</button>)}</nav>
@@ -79,12 +78,12 @@ export default function WardrobeV3({initialPanel='looks',onPanelChange,game,leve
           {quantity>1&&<span className="inventory-quantity" aria-label={`${quantity} copias`}>{quantity}x</span>}
           <small>{RARITIES[definition.rarity].label} · {look.slot==='companion'?'Cheesit':SLOT_LABELS[look.slot]}</small>
           {look.kind==='companion'?<div className="companion-preview cosmetic-companion-preview"><CompanionSprite companionId={definition.id} animated={effectsEnabled}/></div>:<div className="gear-card-preview"><GearSprite gearId={definition.id}/></div>}
-          <div className="collection-item-heading"><h3>{definition.name}</h3><InfoPopup title={definition.name}><p>{definition.description}</p></InfoPopup></div>{look.kind==='companion'&&<CheesitPassive companionId={definition.id} status={selected?'equipped':'available'}/>} {look.kind==='gear'&&<GearAbility gearId={definition.id} charges={getAbilityCharges(game,definition.id)}/>}
+          <div className="collection-item-heading"><h3>{definition.name}</h3><InfoPopup title={definition.name}><p>{definition.description}</p></InfoPopup></div>{look.kind==='companion'&&<CheesitPassive companionId={definition.id} status={selected?'equipped':'available'}/>} {look.kind==='gear'&&<GearAbility gearId={definition.id}/>}
           <button className="wardrobe-action" aria-pressed={selected} onClick={()=>{
             if(look.kind==='companion')change(value=>equipCompanion(value,selected?null:definition.id),selected?'Cheesit guardado. Su aspecto sigue desbloqueado.':'Cheesit equipado. Su pasiva se fija al empezar una nueva sesión.');
-            else change(value=>equipCosmetic(value,selected?null:definition.id,look.slot),selected?'Aspecto guardado. Puedes volver a equiparlo cuando quieras.':'Aspecto equipado. La habilidad se elige por separado.');
+            else change(value=>equipCosmetic(value,selected?null:definition.id,look.slot),selected?'Aspecto guardado. Puedes volver a equiparlo cuando quieras.':'Aspecto equipado. Su pasiva se aplicará automáticamente.');
           }}>{look.kind==='companion'?(selected?'Quitar cheesit':'Equipar cheesit'):(selected?'Quitar aspecto':'Usar aspecto')}<Check size={15}/></button>
-          {look.kind==='gear'&&<button className="wardrobe-action" aria-pressed={game.activeAbilityId===definition.id} disabled={!getAbilityCharges(game,definition.id)} onClick={()=>change(value=>setActiveAbility(value,definition.id),'Habilidad preparada para el próximo entrenamiento nuevo.')}>{game.activeAbilityId===definition.id?'Habilidad preparada':'Preparar habilidad'}<Zap size={15}/></button>}
+
         </article>;
       })}</div>:<EmptyPanel onOpen={onOpenCrates} text={collectionFilter!=='all'?`Descubre las piezas de ${collectionFilter} en los cofres. Cada una incluye su propio aspecto y habilidad.`:lookFilter==='all'?'Cada pieza o cheesit revelada añade un aspecto permanente a tu armario.':`Abre un cofre para desbloquear tu primer aspecto de ${lookSlots.find(slot=>slot.id===lookFilter)?.label.toLocaleLowerCase('es-ES')}.`}/>}
       {lockedLooks.length>0&&<section className="cosmetic-locked-section" aria-label="Aspectos sin desbloquear"><div className="cosmetic-locked-heading"><LockKeyhole size={20}/><div><h3>{lockedLooks.length} aspectos sin desbloquear.</h3><p>Estos aspectos se desbloquean al obtenerlos en un cofre.</p></div></div><div className="cosmetic-grid">{lockedLooks.map(look=><article className="cosmetic-locked-card" key={`${look.kind}:${look.definition.id}`} data-slot={look.slot} data-rarity={look.definition.rarity} data-item-kind={look.kind} data-gear-id={look.kind==='gear'?look.definition.id:undefined} data-companion-id={look.kind==='companion'?look.definition.id:undefined}>
@@ -93,22 +92,22 @@ export default function WardrobeV3({initialPanel='looks',onPanelChange,game,leve
         <div className="collection-item-heading"><h4>{look.definition.name}</h4><InfoPopup title={look.definition.name}><p>{look.definition.description}</p></InfoPopup></div>{look.kind==='gear'&&<GearAbility gearId={look.definition.id}/>}
       </article>)}</div></section>}
     </section>}
-    {panel==='abilities'&&<>
-      <section className="ability-explanation"><AbilityDetails title="Habilidad para la próxima sesión" icon={<Zap size={18} aria-hidden="true"/>}><p>Elige una antes de empezar un entrenamiento nuevo. Se queda asignada a esa sesión aunque cambies después de aspecto. Solo gasta una carga al finalizar si ha dado un bonus; editar o recargar no consume otra. Los duplicados suman cargas.</p></AbilityDetails></section>
-      <div className="ability-current"><div>{active?<AbilityDetails key={active.id} title={`Próxima habilidad: ${active.name}`} icon={<Zap size={18} aria-hidden="true"/>}><p>{active.description}</p><p>{chargeLabel(getAbilityCharges(game,active.id))} para próximas sesiones.</p></AbilityDetails>:<AbilityDetails title="Sin habilidad para la próxima sesión" icon={<Zap size={18} aria-hidden="true"/>}><p>Tu personaje puede llevar cualquier aspecto sin activar una habilidad.</p></AbilityDetails>}</div>{active&&<button onClick={()=>change(value=>setActiveAbility(value,null),'Habilidad desactivada para próximas sesiones.')}>Desactivar habilidad</button>}</div>
-      {available.length?<div className="ability-grid">{available.map(gear=>{const ability=getAbilityDefinition(gear.id);if(!ability)return null;const charges=getAbilityCharges(game,gear.id),selected=game.activeAbilityId===gear.id;return <article key={gear.id} data-ability-id={gear.id} data-rarity={gear.rarity} className={`ability-card ${selected?'is-active':''} ${charges?'':'is-empty'}`} style={styleFor(gear.rarity)}><small>{RARITIES[gear.rarity].label} · {selected?'PREPARADA':'HABILIDAD'}</small><GearSprite gearId={gear.id}/><GearAbility gearId={gear.id} charges={charges}/><button className="wardrobe-action" aria-pressed={selected} disabled={!selected&&!charges} onClick={()=>change(value=>setActiveAbility(value,selected?null:gear.id),selected?'Habilidad desactivada.':'Habilidad preparada para el próximo entrenamiento nuevo.')}>{selected?'Desactivar':charges?'Preparar habilidad':'Sin cargas'}<Zap size={15}/></button></article>})}</div>:<EmptyPanel onOpen={onOpenCrates} text="Consigue una pieza para desbloquear su aspecto y su primera carga."/>}
-    </>}
+    {panel==='abilities'&&<section className="wardrobe-looks" aria-label="Pasivas equipadas">
+      <div className="arcade-section-head"><h2>Pasivas equipadas</h2></div>
+      {passives.length ? <div className="ability-grid">{passives.map(passive => (
+        <div className="ability-card" key={passive.id}><GearSprite gearId={passive.id}/><GearAbility gearId={passive.id}/></div>
+      ))}</div> : <p>Equipa un aspecto para aplicar su pasiva automáticamente al terminar un entrenamiento.</p>}
+    </section>}
   </div>;
 }
 
 function EmptyPanel({text,onOpen}:{text:string;onOpen:()=>void}){return <div className="arcade-empty"><Sparkles size={39}/><h3>Sin elementos disponibles</h3><p>{text}</p><button className="arcade-primary" onClick={onOpen}>Explorar cofres<ArrowRight size={16}/></button></div>}
 
-function GearAbility({gearId,charges}:{gearId:string;charges?:number}){
-  const ability=getAbilityDefinition(gearId);
-  if(!ability)return null;
+function GearAbility({ gearId }: { gearId: string }) {
+  const ability = getAbilityDefinition(gearId);
+  if (!ability) return null;
   return <AbilityDetails className="cosmetic-ability" title={ability.name} icon={<Zap size={13} aria-hidden="true"/>}>
     <p>{ability.description}</p>
-    {charges!==undefined&&<div className="ability-charge-row"><strong>{charges}</strong><span>{charges===1?'CARGA DISPONIBLE':'CARGAS DISPONIBLES'}</span></div>}
-    <p>Cada copia revelada añade {chargeLabel(ability.chargesPerDrop)}. Solo se consume una al finalizar una sesión con bonus. Cambiar de aspecto no gasta cargas; el aspecto permanece al agotarlas.</p>
+    <p>Se aplica al finalizar el entrenamiento si llevas este aspecto equipado.</p>
   </AbilityDetails>;
 }

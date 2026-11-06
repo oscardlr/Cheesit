@@ -277,11 +277,26 @@ test('Cofre Maestro blocks insufficient credit and resumes one reserved prize at
   expect(reserved.pendingOpening?.itemId).toBe(reserved.inventory[0].id);
   await page.reload();
   await expect(card.getByRole('button', { name: /Faltan créditos/ })).toBeDisabled();
+  await page.evaluate(() => {
+    const complete = Object.getOwnPropertyDescriptor(IDBTransaction.prototype, 'oncomplete')!;
+    Object.defineProperty(IDBTransaction.prototype, 'oncomplete', {
+      ...complete,
+      set(this: IDBTransaction, callback: ((event: Event) => void) | null) {
+        complete.set!.call(this, this.mode === 'readwrite' && callback
+          ? (event: Event) => window.setTimeout(() => callback.call(this, event), 450)
+          : callback);
+      },
+    });
+  });
   await page.getByRole('button', { name: 'Continuar apertura', exact: true }).click();
   const reveal = dialog.getByRole('status', { name: 'Abriendo recompensa' });
   await expect(reveal.locator('.opening-crate-lid')).toBeVisible({ timeout: 8000 });
   await expect(reveal.getByText('ROMPIENDO EL SELLO', { exact: true })).toBeVisible();
   await expect(dialog.getByRole('heading', { name: 'Recompensa obtenida' })).toBeVisible();
+  const refresh = () => page.evaluate(() => window.dispatchEvent(new Event('cheesit:before-account-refresh', { cancelable: true })));
+  expect(await refresh()).toBe(false);
+  await expect(dialog.getByRole('heading', { name: 'Recompensa obtenida' })).toBeVisible();
+
   await dialog.screenshot({ path: info.outputPath('master-opening-390.png'), animations: 'disabled' });
   await page.setViewportSize({ width: 1440, height: 900 });
   await dialog.screenshot({ path: info.outputPath('master-opening-1440.png'), animations: 'disabled' });
@@ -293,4 +308,47 @@ test('Cofre Maestro blocks insufficient credit and resumes one reserved prize at
   expect(revealed.pendingOpening).toBeNull();
   expect(revealed.inventory).toEqual(reserved.inventory);
   expect(revealed.transactions).toEqual(reserved.transactions);
+});
+
+test('historial conserva el icono antiguo y guarda una rutina sin prescripción desde un entreno propio', async ({ page }) => {
+  const bench = CATALOG.find(exercise => exercise.id === 'press-banca-barra')!;
+  const historical: Workout = {
+    ...newWorkout(), name: 'Empuje de archivo', date: '2026-10-29', status: 'finished', color: '#0057C2', icon: undefined,
+    exercises: [{ ...exerciseSnapshot(bench), id: newId(), sets: [
+      { ...newSet(), weight: 50, reps: 10, confirmed: true },
+      { ...newSet(), weight: 45, reps: 12, confirmed: true },
+    ] }],
+  };
+  await page.clock.setFixedTime(new Date('2026-11-06T12:00:00Z'));
+  await seed(page, { ...emptyData(), workouts: [historical], preferences: { effects: false, sound: false } });
+  const nav = page.getByRole('navigation', { name: 'Navegación principal' });
+  await nav.getByRole('button', { name: 'Progreso', exact: true }).click();
+  const oldEntry = page.getByRole('button', { name: /Empuje de archivo/ }).first();
+  await expect(oldEntry.locator('.workout-history-icon svg')).toHaveClass(/lucide-dumbbell/);
+  await oldEntry.click();
+  await page.getByRole('button', { name: 'Guardar rutina', exact: true }).click();
+  await expect(page.getByText('Rutina guardada en Mis rutinas.', { exact: true })).toBeVisible();
+  const local = await stored(page);
+  expect(local.routines[0].exercises).toEqual([{ id: expect.any(String), exerciseId: bench.id, sets: 1 }]);
+  expect(local.workouts[0].exercises).toEqual(historical.exercises);
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await nav.getByRole('button', { name: 'Entrenar', exact: true }).click();
+  await page.getByRole('button', { name: 'Empezar entreno', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Color coral', exact: true })).toBeVisible();
+  await page.getByLabel('Rutina', { exact: true }).selectOption(local.routines[0].id);
+  await page.getByLabel('Nombre', { exact: true }).fill('Empuje coral');
+  await page.getByRole('button', { name: 'Color coral', exact: true }).click();
+  await page.getByRole('button', { name: 'Icono Llama', exact: true }).click();
+  await page.getByRole('button', { name: 'Empezar con esta rutina', exact: true }).click();
+  await page.getByLabel(`Carga en kg, serie 1 de ${bench.name}`).fill('51');
+  await page.getByLabel(`Repeticiones, serie 1 de ${bench.name}`).fill('8');
+  await page.getByRole('button', { name: 'Confirmar serie 1', exact: true }).click();
+  await page.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Finalizar entrenamiento', exact: true }).getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
+  await page.getByRole('button', { name: 'Continuar', exact: true }).click();
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await nav.getByRole('button', { name: 'Progreso', exact: true }).click();
+  const icon = page.getByRole('button', { name: /Empuje coral/ }).first().locator('.workout-history-icon');
+  await expect(icon).toHaveCSS('color', 'rgb(236, 137, 151)');
+  await expect(icon.locator('svg')).toHaveClass(/lucide-flame/);
 });

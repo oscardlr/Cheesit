@@ -125,3 +125,35 @@
   .ux-shell.product-redesign[class*=screen-] .app-content { padding-bottom: calc(130px + env(safe-area-inset-bottom)); }
   .session-fields .set-row input { font-size: 16px; }
 }
+
+.workout-history-icon { flex-shrink: 0; }
+
+@media (max-width: 760px) {
+  .training-navigation.bottom-nav {
+    transition: transform 200ms ease-out;
+  }
+  .training-navigation.bottom-nav[data-scroll-hidden]:not(:has(:focus-visible)) {
+    transform: translateY(calc(100% + 32px + env(safe-area-inset-bottom)));
+    pointer-events: none;
+  }
+  html:has(.exercise-picker) {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+  .ux-shell.product-redesign .exercise-picker > .modal {
+    display: flex;
+    flex-direction: column;
+    height: 92dvh;
+    padding-block: 14px calc(12px + env(safe-area-inset-bottom));
+    overflow: clip;
+  }
+  .exercise-picker .modal-head {
+    flex: none;
+    margin-bottom: 10px;
+  }
+}
+@media (max-width: 760px) and (prefers-reduced-motion: reduce) {
+  .training-navigation.bottom-nav {
+    transition: none;
+  }
+}

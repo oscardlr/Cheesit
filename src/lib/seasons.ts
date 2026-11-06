@@ -24,15 +24,18 @@ export function seasonLabel(season: string) {
 /** The character curve caps at level 99; XP can continue to accumulate. */
 export function characterLevelThreshold(level: number): number {
   const steps = Math.max(0, Math.min(MAX_CHARACTER_LEVEL, Math.floor(level)) - 1);
-  return 800 * steps + 30 * steps * (steps - 1);
+  // Early discounts taper toward the existing level-99 threshold.
+  const finalStep = MAX_CHARACTER_LEVEL - 1;
+  const discount = Math.floor(400 * steps * (finalStep - steps) / (finalStep - 1));
+  return 800 * steps + 30 * steps * (steps - 1) - discount;
 }
-export function annualLevelProgress(xp: number) {
+export function annualLevelProgress(xp: number, minimumLevel = 1) {
   const safeXp = Number.isFinite(xp) ? Math.max(0, Math.floor(xp)) : 0;
-  let level = 1;
+  let level = minimumLevel;
   while (level < MAX_CHARACTER_LEVEL && characterLevelThreshold(level + 1) <= safeXp) level++;
   const maxLevel = level === MAX_CHARACTER_LEVEL;
-  const levelXp = safeXp - characterLevelThreshold(level);
-  const nextLevelXp = maxLevel ? 0 : characterLevelThreshold(level + 1) - characterLevelThreshold(level);
+  const levelXp = Math.max(0, safeXp - characterLevelThreshold(level));
+  const nextLevelXp = maxLevel ? 0 : characterLevelThreshold(level + 1) - Math.min(safeXp, characterLevelThreshold(level));
   return { xp: safeXp, level, levelXp, nextLevelXp, percent: maxLevel ? 100 : levelXp / nextLevelXp * 100 };
 }
 

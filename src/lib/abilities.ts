@@ -1,6 +1,6 @@
 import { GEAR } from './gear';
 import type { Rarity } from './game';
-import type { WorkoutExercise } from './model';
+import { isWorkSet, validSet, type Workout, type WorkoutExercise } from './model';
 
 export type AbilityUse = { workoutId: string; abilityId: string; bonusXp: number; bonusCredits: number; awardedAt: string; setBonuses: Record<string, number> };
 export type Ability = { id: string; name: string; description: string; target: 'all' | 'legs' | 'arms' | 'push' | 'pull' | 'credits'; percent: number; maxXp: number; credits: number; chargesPerDrop: number; rarity: Rarity };
@@ -50,4 +50,28 @@ export function isAbilityUse(value: unknown): value is AbilityUse {
   return ability.target === 'credits'
     ? use.bonusXp === 0 && total === 0 && use.bonusCredits === ability.credits
     : use.bonusCredits === 0 && use.bonusXp === total && total > 0 && total <= ability.maxXp;
+}
+
+/** Keep earned outfit rewards independent of the currently equipped pieces. */
+export function validGearPassiveRewards(value: unknown, workoutId: string): value is AbilityUse[] {
+  if (!Array.isArray(value) || value.length > 5) return false;
+  const slots = new Set<string>();
+  for (const reward of value) {
+    if (!isAbilityUse(reward) || reward.workoutId !== workoutId) return false;
+    const slot = GEAR.find(gear => gear.id === reward.abilityId)?.slot;
+    if (!slot || slots.has(slot)) return false;
+    slots.add(slot);
+  }
+  return true;
+}
+
+export function workoutGearPassiveRewards(workout: Workout): AbilityUse[] {
+  return workout.status === 'finished' && !workout.abilityReward && validGearPassiveRewards(workout.gearPassiveRewards, workout.id)
+    ? workout.gearPassiveRewards
+    : [];
+}
+
+export function workoutGearPassiveCredits(workout: Workout): number {
+  if (!workout.exercises.some(exercise => exercise.sets.some(set => isWorkSet(set) && set.confirmed && validSet(set, exercise.mode)))) return 0;
+  return workoutGearPassiveRewards(workout).reduce((credits, reward) => credits + reward.bonusCredits, 0);
 }

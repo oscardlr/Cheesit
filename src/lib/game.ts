@@ -6,7 +6,7 @@ import { GEAR, GEAR_SLOTS, type GearSlot } from './gear';
 import type { AthleteProfile } from './strength';
 import { COMPANIONS, type Companion } from './companions';
 import { TEST_CREDITS } from './test-credits';
-import { abilityMatches, getAbilityDefinition, isAbilityUse, type AbilityUse } from './abilities';
+import { abilityMatches, getAbilityDefinition, isAbilityUse, workoutGearPassiveCredits, type Ability, type AbilityUse } from './abilities';
 import { getAvailableAbilityCharges, getLegacyAbilityUseIds, validateAbilityChargeHistory } from './ability-charges';
 import { awardObjectiveMissions, getObjectiveMissions, missionRewardCredits, missionRewardXp, validMissionRewards, type Mission, type MissionReward } from './objectives';
 import { workoutPassiveReward } from './cheesit-passives';
@@ -359,8 +359,8 @@ export function gameProgress(game: GameState, history: Workout[], profile?: Athl
   const grant = game.arcadeGrant;
   const grantedXp = grant && (!season || grant.season === season) ? grant.xp : 0;
   const xp = progress.xp + objectiveXp + weightXp + grantedXp;
-  const savedThreshold = season ? 0 : characterLevelThreshold(highestReachedLevel(game));
-  return { ...progress, ...levelProgress(Math.max(xp, savedThreshold)), objectiveXp, weightXp, season };
+  const minimumLevel = season ? 1 : highestReachedLevel(game);
+  return { ...progress, ...levelProgress(xp, minimumLevel), objectiveXp, weightXp, season };
 }
 
 export function awardMissionRewards(game: GameState, history: Workout[], day: string, changedDate?: string): GameState {
@@ -380,7 +380,7 @@ export function gameCreditStatus(game: GameState, history: Workout[], profile?: 
   const companionCredits = history.reduce((sum, workout) => {
     if (passiveSessions.has(workout.id)) return sum;
     passiveSessions.add(workout.id);
-    return sum + workoutPassiveReward(workout).bonusCredits;
+    return sum + workoutPassiveReward(workout).bonusCredits + workoutGearPassiveCredits(workout);
   }, 0);
   const activityXp = rewardProgress(history, profile).xp + bodyWeightXp(profile);
   const rawEarned=100+(game.arcadeGrant?.credits ?? 0)+quoteConversionCredits(game,false)+Math.floor(activityXp/5)+missionRewardCredits(game)+abilityCredits+companionCredits+game.transactions.filter(transaction=>!transaction.testFunded).reduce((sum,transaction)=>sum+transaction.amount,0);
@@ -552,6 +552,16 @@ export function applyWorkoutAbility(game: GameState, workout: Workout, history: 
   if (!ability || getAbilityCharges(game, ability.id) <= 0) return { game, workout, reward: null };
   const bare: Workout = { ...workout, abilityReward: undefined };
   const index = rewardSetIndex([...history.filter(previous => previous.id !== workout.id), bare], profile);
+  const latestSource = Math.max(...game.inventory.filter(item => item.gearId === ability.id && item.id !== game.pendingOpening?.itemId).map(item => Date.parse(item.acquiredAt)));
+  const reward = calculateAbilityReward(ability, workout, index, new Date(Math.max(Date.now(), latestSource)).toISOString());
+  if (!reward) return { game, workout, reward: null };
+  const uses = [...(game.abilityUses ?? []), reward];
+  const nextGame = { ...game, abilityUses: uses };
+  if (nextGame.activeAbilityId === ability.id && getAbilityCharges(nextGame, ability.id) === 0) nextGame.activeAbilityId = null;
+  return { game: nextGame, workout: { ...workout, abilityReward: reward }, reward };
+}
+
+function calculateAbilityReward(ability: Ability, workout: Workout, index: ReturnType<typeof rewardSetIndex>, awardedAt: string): AbilityUse | null {
   const eligible = workout.exercises.flatMap(exercise => abilityMatches(ability, exercise)
     ? exercise.sets.filter(set => isWorkSet(set) && set.confirmed && validSet(set, exercise.mode)).map(set => ({ set, xp: index.get(set.id)?.xp ?? 0 })) : []);
   const setBonuses: Record<string, number> = {};
@@ -562,13 +572,35 @@ export function applyWorkoutAbility(game: GameState, workout: Workout, history: 
     setBonuses[set.id] = bonus; bonusXp += bonus;
   }
   const bonusCredits = ability.target === 'credits' && eligible.length > 0 ? ability.credits : 0;
-  if (!bonusXp && !bonusCredits) return { game, workout, reward: null };
-  const latestSource = Math.max(...game.inventory.filter(item => item.gearId === ability.id && item.id !== game.pendingOpening?.itemId).map(item => Date.parse(item.acquiredAt)));
-  const reward: AbilityUse = { workoutId: workout.id, abilityId: ability.id, bonusXp, bonusCredits, setBonuses, awardedAt: new Date(Math.max(Date.now(), latestSource)).toISOString() };
-  const uses = [...(game.abilityUses ?? []), reward];
-  const nextGame = { ...game, abilityUses: uses };
-  if (nextGame.activeAbilityId === ability.id && getAbilityCharges(nextGame, ability.id) === 0) nextGame.activeAbilityId = null;
-  return { game: nextGame, workout: { ...workout, abilityReward: reward }, reward };
+  if (!bonusXp && !bonusCredits) return null;
+  return { workoutId: workout.id, abilityId: ability.id, bonusXp, bonusCredits, setBonuses, awardedAt: awardedAt };
+}
+
+export function equippedGearAbilities(game: GameState): Ability[] {
+  const owned = unlockedGear(game);
+  const equipped = game.cosmeticGear ?? normalizeGame(game).cosmeticGear;
+  return Object.entries(equipped ?? {}).flatMap(([slot, id]) => {
+    if (!owned.some(gear => gear.id === id && gear.slot === slot)) return [];
+    const ability = getAbilityDefinition(id);
+    return ability ? [ability] : [];
+  });
+}
+
+/** The outfit worn at first completion determines the award. Retrying or
+ * editing a finished session preserves the original result. */
+export function applyWorkoutGearPassives(game: GameState, workout: Workout, history: Workout[], profile?: AthleteProfile): Workout {
+  const stored = history.find(previous => previous.id === workout.id);
+  if (stored?.status === 'finished') return { ...workout, gearPassiveRewards: stored.gearPassiveRewards };
+  if (workout.status !== 'finished' || workout.abilityReward || workout.gearPassiveRewards !== undefined) return workout;
+  const abilities = equippedGearAbilities(game);
+  if (!abilities.length) return { ...workout, gearPassiveRewards: [] };
+  const index = rewardSetIndex([...history.filter(previous => previous.id !== workout.id), workout], profile);
+  const awardedAt = workout.finishedAt ?? workout.updatedAt;
+  const gearPassiveRewards = abilities.flatMap(ability => {
+    const reward = calculateAbilityReward(ability, workout, index, awardedAt);
+    return reward ? [reward] : [];
+  });
+  return { ...workout, gearPassiveRewards };
 }
 
 export function getDailyQuote(day: string): string {

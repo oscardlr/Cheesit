@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { EQUIPMENT_TYPES, GROUPS, exerciseEquipmentType, matchesExerciseSearch, normalizeSearch } from '@/lib/catalog';
 import { MUSCLES, type MuscleId } from '@/lib/muscles';
 import { newId, validName, type Exercise } from '@/lib/model';
@@ -18,6 +18,16 @@ export default function ExerciseLibrary({ exercises, onSelect, onSave }: {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const editing = edit !== null;
+  const libraryRef = useRef<HTMLDivElement>(null);
+  const panelOpen = detail !== null || editing;
+
+  useLayoutEffect(() => {
+    const library = libraryRef.current;
+    if (!panelOpen || !library?.closest('.exercise-picker') || !window.matchMedia('(max-width: 760px)').matches) return;
+    const previous = document.activeElement as HTMLElement | null;
+    library.querySelector<HTMLElement>('.exercise-guide, .form-card')?.focus({ preventScroll: true });
+    return () => previous?.focus({ preventScroll: true });
+  }, [panelOpen]);
 
   useLayoutEffect(() => {
     if (!editing) return;
@@ -50,21 +60,24 @@ export default function ExerciseLibrary({ exercises, onSelect, onSave }: {
       return { ...current, [key]: [...selected, id], [other]: current[other]?.filter(value => value !== id) };
     });
   };
-  return <div className={`exercise-library ${styles.library}`}>
+  return <div ref={libraryRef} className={`exercise-library ${styles.library}`} data-panel-open={panelOpen || undefined}>
     <label>Buscar ejercicio<input type="search" placeholder="Busca por nombre" value={search} onChange={event => setSearch(event.target.value)} /></label>
     <fieldset className={styles.groupFilter}>
       <legend>Grupo muscular</legend>
       <div className={styles.groupButtons}>{['Todos', ...GROUPS].map(value => <button type="button" key={value} aria-pressed={group === value} onClick={() => setGroup(value)}>{value}</button>)}</div>
     </fieldset>
+    <label className={styles.compactGroup}>Grupo muscular<select value={group} onChange={event => setGroup(event.target.value)}>
+      {['Todos', ...GROUPS].map(value => <option key={value}>{value}</option>)}
+    </select></label>
     <label>Material<select value={equipment} onChange={event => setEquipment(event.target.value)}>
       <option value="">Todo el material</option>
       {EQUIPMENT_TYPES.map(value => <option key={value}>{value}</option>)}
     </select></label>
     <div className="library-results"><span role="status">{visible.length} {visible.length===1?'ejercicio':'ejercicios'}</span></div>
-    <div className="catalog-list">{visible.map(ex => <div className="catalog-entry" key={ex.id}><button className="list-row" onClick={() => onSelect ? onSelect(ex) : setDetail(ex)}><ExerciseThumbnail exerciseId={ex.id} image={ex.image} /><span className="list-copy"><strong>{ex.name}</strong><small>{ex.group}{ex.mode === 'bodyweight_reps' ? ' · Peso corporal' : ''}</small></span><span>{onSelect ? '＋' : '→'}</span></button><button className="text-action" aria-label={`Ficha técnica ${ex.id}`} onClick={() => setDetail(ex)}>Ficha</button>{isCustom(ex) && <button className="text-action" aria-label={`Editar ficha ${ex.id}`} onClick={() => { setEdit(structuredClone(ex)); setDetail(null); }}>Editar</button>}</div>)}{!visible.length && <div className="empty-card"><h3>Sin resultados</h3><p>Prueba otro nombre o cambia el grupo muscular o el material.</p><button className="text-action" onClick={()=>{setSearch('');setGroup('Todos');setEquipment('')}}>Limpiar búsqueda y filtros</button></div>}</div>
-    <button className="secondary wide" onClick={() => { setEdit({ id: newId(), name: '', group: GROUPS[0], mode: 'external_load_reps', loadConvention: 'total', primaryMuscles: [], secondaryMuscles: [] }); setError(''); }}>Crear ejercicio propio</button>
-    {detail && <section className="exercise-guide" aria-label={`Ficha: ${detail.name}`}><div className="section-heading"><h2>{detail.name}</h2><button className="icon-button" aria-label="Cerrar ficha" onClick={() => setDetail(null)}>×</button></div><ExerciseThumbnail exerciseId={detail.id} image={detail.image} large /><p>{detail.description ?? `Registro de ${detail.name.toLocaleLowerCase('es-ES')}. Conserva la misma variante y material para comparar tus sesiones.`}</p><p>{detail.technique ?? 'Prepara el material y el espacio, usa un recorrido que puedas controlar y termina la serie si aparece dolor. Ajusta la ejecución con un profesional si lo necesitas.'}</p><p>Material: {detail.equipment ?? (detail.mode === 'bodyweight_reps' ? 'Peso corporal' : detail.name.toLowerCase().includes('mancuerna') ? 'Mancuerna' : detail.name.toLowerCase().includes('barra') ? 'Barra y discos' : 'Máquina o polea específica')}</p><p className="muted">Fichas e ilustraciones esquemáticas propias de Cheesit · CC BY 4.0. Sin recursos de terceros.</p>{detail.resource && <p><a href={detail.resource.url} target="_blank" rel="noreferrer">{detail.resource.title}</a> · {detail.resource.license}</p>}</section>}
-    {edit && <section className="form-card" aria-label="Editor de ejercicio propio"><h2>{exercises.some(ex => ex.id === edit.id) ? 'Editar ejercicio propio' : 'Nuevo ejercicio'}</h2><fieldset className="session-fields" disabled={busy}>
+    <div className="catalog-list" tabIndex={0} role="region" aria-label="Resultados de ejercicios">{visible.map(ex => <div className="catalog-entry" key={ex.id}><button className="list-row" onClick={() => onSelect ? onSelect(ex) : setDetail(ex)}><ExerciseThumbnail exerciseId={ex.id} image={ex.image} /><span className="list-copy"><strong>{ex.name}</strong><small>{ex.group}{ex.mode === 'bodyweight_reps' ? ' · Peso corporal' : ''}</small></span><span>{onSelect ? '＋' : '→'}</span></button><button className="text-action" aria-label={`Ficha técnica ${ex.id}`} onClick={() => setDetail(ex)}>Ficha</button>{isCustom(ex) && <button className="text-action" aria-label={`Editar ficha ${ex.id}`} onClick={() => { setEdit(structuredClone(ex)); setDetail(null); }}>Editar</button>}</div>)}{!visible.length && <div className="empty-card"><h3>Sin resultados</h3><p>Prueba otro nombre o cambia el grupo muscular o el material.</p><button className="text-action" onClick={()=>{setSearch('');setGroup('Todos');setEquipment('')}}>Limpiar búsqueda y filtros</button></div>}</div>
+    <button className="secondary wide" onClick={() => { setDetail(null); setEdit({ id: newId(), name: '', group: GROUPS[0], mode: 'external_load_reps', loadConvention: 'total', primaryMuscles: [], secondaryMuscles: [] }); setError(''); }}>Crear ejercicio propio</button>
+    {detail && <section className="exercise-guide" tabIndex={-1} aria-label={`Ficha: ${detail.name}`}><div className="section-heading"><h2>{detail.name}</h2><button className="icon-button" aria-label="Cerrar ficha" onClick={() => setDetail(null)}>×</button></div><ExerciseThumbnail exerciseId={detail.id} image={detail.image} large /><p>{detail.description ?? `Registro de ${detail.name.toLocaleLowerCase('es-ES')}. Conserva la misma variante y material para comparar tus sesiones.`}</p><p>{detail.technique ?? 'Prepara el material y el espacio, usa un recorrido que puedas controlar y termina la serie si aparece dolor. Ajusta la ejecución con un profesional si lo necesitas.'}</p><p>Material: {detail.equipment ?? (detail.mode === 'bodyweight_reps' ? 'Peso corporal' : detail.name.toLowerCase().includes('mancuerna') ? 'Mancuerna' : detail.name.toLowerCase().includes('barra') ? 'Barra y discos' : 'Máquina o polea específica')}</p><p className="muted">Fichas e ilustraciones esquemáticas propias de Cheesit · CC BY 4.0. Sin recursos de terceros.</p>{detail.resource && <p><a href={detail.resource.url} target="_blank" rel="noreferrer">{detail.resource.title}</a> · {detail.resource.license}</p>}</section>}
+    {edit && <section className="form-card" tabIndex={-1} aria-label="Editor de ejercicio propio"><h2>{exercises.some(ex => ex.id === edit.id) ? 'Editar ejercicio propio' : 'Nuevo ejercicio'}</h2><fieldset className="session-fields" disabled={busy}>
       <label>Nombre del ejercicio<input maxLength={80} value={edit.name} onChange={event => setEdit({ ...edit, name: event.target.value })} /></label>
       <label>Grupo del ejercicio<select value={edit.group} onChange={event => setEdit({ ...edit, group: event.target.value })}>{GROUPS.map(value => <option key={value}>{value}</option>)}</select></label>
       <label>Modalidad<select value={edit.mode} onChange={event => setEdit({ ...edit, mode: event.target.value as Exercise['mode'] })}><option value="external_load_reps">Carga externa y repeticiones</option><option value="bodyweight_reps">Peso corporal y repeticiones</option></select></label>

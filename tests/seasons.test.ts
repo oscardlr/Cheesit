@@ -295,3 +295,26 @@ test('an empty year opened before January is not offered as a historical season 
   const withRights={...january,seasonCrateProgress:[{season:'2026',baseline:1,reached:2},{season:'2027',baseline:1,reached:1}]};
   assert.deepEqual(progressionSeasons(withRights,[],'2027'),['2027','2026']);
 });
+
+test('the revised character curve preserves XP and attained levels while its costs rise', () => {
+  let priorCost = 0;
+  for (let level = 2; level <= 99; level++) {
+    const steps = level - 1;
+    const previousThreshold = 800 * steps + 30 * steps * (steps - 1);
+    const threshold = characterLevelThreshold(level);
+    assert.ok(threshold <= previousThreshold);
+    const cost = threshold - characterLevelThreshold(level - 1);
+    assert.ok(cost > priorCost);
+    priorCost = cost;
+    const existing = annualLevelProgress(previousThreshold);
+    assert.equal(existing.xp, previousThreshold);
+    assert.ok(existing.level >= level);
+  }
+  assert.equal(characterLevelThreshold(2), 400);
+  assert.equal(characterLevelThreshold(99), 363580);
+  const retained = annualLevelProgress(100, 7);
+  assert.equal(retained.level, 7);
+  assert.equal(retained.xp, 100);
+  assert.equal(retained.percent, 0);
+  assert.equal(retained.nextLevelXp - retained.levelXp, characterLevelThreshold(8) - 100);
+});

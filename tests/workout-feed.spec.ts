@@ -36,6 +36,8 @@ test('today and calendar starts preserve the intended date and make old archives
   await page.getByRole('button', { name: 'Empezar entreno', exact: true }).click();
   await expect(page.getByLabel('Fecha', { exact: true })).toHaveCount(0);
   await page.getByLabel('Rutina', { exact: true }).selectOption(routine.id);
+  await page.getByRole('button', { name: 'Color coral', exact: true }).click();
+  await page.getByRole('button', { name: 'Icono Llama', exact: true }).click();
   await page.getByRole('button', { name: 'Empezar con esta rutina', exact: true }).click();
   await expect(page.locator('.exercise-card')).toContainText(exercise.name);
   await expect(page.getByRole('group', { name: /Tipo de serie/ })).toHaveCount(0);
@@ -44,7 +46,7 @@ test('today and calendar starts preserve the intended date and make old archives
   await page.getByText('Notas del ejercicio', { exact: true }).click();
   await page.getByLabel(`Notas de ${exercise.name}`, { exact: true }).fill('Mantener el control.');
   await expect(page.getByLabel(/Descanso del ejercicio/)).toHaveCount(0);
-  await expect.poll(async () => ((await harness.account(email)).data as AppData).workouts[0]?.date).toBe(todayMadrid());
+  await expect.poll(async () => ((await harness.account(email)).data as AppData).workouts[0]).toMatchObject({ date: todayMadrid(), icon: 'flame', color: '#EC8997' });
 
   const past = addDays(todayMadrid(), -1);
   await page.goto(`/#view=progress&tab=history&date=${past}`);
@@ -102,7 +104,12 @@ test('retrying a failed save and publish opens the editor with a single private 
 test('selecting a caption mention notifies the recipient once and opens the published workout', async ({ page, browser }) => {
   test.setTimeout(60000);
   const draft = workout('Entreno con Bruno', 'draft');
-  const author = await harness.seed('mention-author@example.test', undefined, account('Ana', [draft]));
+  const custom = { id: crypto.randomUUID(), name: 'Press de autor', group: 'Pecho', mode: 'external_load_reps' as const, loadConvention: 'per_unit_bilateral' as const };
+  draft.exercises.push({ ...exerciseSnapshot(custom), id: crypto.randomUUID(), notes: 'Nota de autor', sets: [
+    { ...newSet(), weight: 25, reps: 7, confirmed: true },
+    { ...newSet(), weight: 22, reps: 9, confirmed: true },
+  ] });
+  const author = await harness.seed('mention-author@example.test', undefined, { ...account('Ana', [draft]), customExercises: [custom] });
   const recipient = await harness.seed('mention-recipient@example.test', undefined, account('Bruno'));
   const { username } = await harness.social('mention-recipient@example.test');
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -150,6 +157,19 @@ test('selecting a caption mention notifies the recipient once and opens the publ
     await expect(other.getByLabel(`Opciones de la publicación: ${draft.name}`)).toHaveCount(0);
     const postCaption = other.locator('.feed-caption');
     await expect(postCaption.getByRole('link', { name: `@${username}`, exact: true })).toHaveCount(2);
+    await expect(postCaption.getByRole('link', { name: `@${username}`, exact: true }).first()).toHaveCSS('text-decoration-line', 'none');
+    await other.getByRole('button', { name: 'Guardar rutina', exact: true }).click();
+    await expect(other.getByRole('status').filter({ hasText: 'Rutina guardada en Mis rutinas.' })).toBeVisible();
+    await expect.poll(async () => ((await harness.account('mention-recipient@example.test')).data as AppData).routines[0]?.name).toBe(draft.name);
+    const received = (await harness.account('mention-recipient@example.test')).data as AppData;
+    const imported = received.routines[0];
+    expect(imported.exercises).toEqual([
+      { id: expect.any(String), exerciseId: draft.exercises[0].exerciseId, sets: 1 },
+      { id: expect.any(String), exerciseId: received.customExercises[0].id, sets: 1 },
+    ]);
+    expect(received.customExercises[0]).toMatchObject({ name: custom.name, loadConvention: custom.loadConvention });
+    expect(received.customExercises[0].id).not.toBe(custom.id);
+
     await expect(postCaption.getByRole('link', { name: '@sin_cuenta' })).toHaveCount(0);
     await expect(postCaption).toContainText('@sin_cuenta');
     await postCaption.getByRole('link', { name: `@${username}`, exact: true }).first().click();
@@ -375,4 +395,57 @@ test('training starts real routines and split progression survives reload with a
   await expect(page.getByRole('heading', { name: 'Progreso', exact: true })).toBeVisible();
   expect(page.url()).toContain('view=progress');
   await expect(page.locator('.calendar-title h2')).toContainText('octubre');
+});
+
+test('equipped outfit passives survive account sync and switch with the worn piece', async ({ page }) => {
+  test.setTimeout(90000);
+  const { normalizeGame } = await import('../src/lib/game');
+  const { GEAR } = await import('../src/lib/gear');
+  const email = 'outfit-passive-sync@example.test';
+  const acquiredAt = '2026-10-21T12:00:00Z';
+  const inventory = ['purple-tank', 'training-tank'].map(id => {
+    const gear = GEAR.find(entry => entry.id === id)!;
+    return { id: crypto.randomUUID(), kind: 'gear' as const, gearId: id, rarity: gear.rarity, acquiredAt, crateId: 'starter', sold: false };
+  });
+  const game = { ...normalizeGame(), inventory, equippedGear: { top: inventory[0].id },
+    transactions: inventory.map(item => ({ id: crypto.randomUUID(), kind: 'crate' as const, itemId: item.id, amount: -100, createdAt: acquiredAt })) };
+  delete game.cosmeticGear;
+  const drafts = ['Con atuendo anterior', 'Con atuendo nuevo', 'Sin atuendo'].map(name => ({
+    ...workout(name, 'draft'), date: todayMadrid(), publication: undefined,
+  }));
+  await harness.seed(email, undefined, { ...account('Atleta de pasivas', drafts), game, preferences: { effects: false, sound: false } });
+  await login(page, email);
+  const finish = async (index: number, expected: string[]) => {
+    await page.goto(`/#view=editor&id=${drafts[index].id}`);
+    await expect(page.getByLabel('Habilidad de esta sesión')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
+    await page.getByRole('dialog', { name: 'Finalizar entrenamiento', exact: true }).getByRole('button', { name: 'Guardar entrenamiento', exact: true }).click();
+    const reward = page.getByRole('button', { name: 'Continuar', exact: true });
+    await expect(reward).toBeVisible();
+    await reward.click();
+    await expect.poll(async () => {
+      const result = (await harness.account(email)).data as AppData;
+      return result.workouts.find(entry => entry.id === drafts[index].id)?.gearPassiveRewards?.map(use => use.abilityId);
+    }).toEqual(expected);
+  };
+  await finish(0, ['purple-tank']);
+  const wardrobe = async () => {
+    await nav(page, 'Arcade').click();
+    await page.getByRole('button', { name: 'Personaje', exact: true }).click();
+  };
+  await wardrobe();
+  const second = page.locator('.cosmetic-card[data-gear-id="training-tank"]');
+  await second.getByRole('button', { name: 'Usar aspecto', exact: true }).click();
+  await expect(second.getByRole('button', { name: 'Quitar aspecto', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Pasivas', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Pasivas equipadas' })).toBeVisible();
+  await expect(page.getByText(/Habilidad para la próxima sesión|Próxima habilidad/)).toHaveCount(0);
+  await finish(1, ['training-tank']);
+  await wardrobe();
+  await second.getByRole('button', { name: 'Quitar aspecto', exact: true }).click();
+  await expect(second.getByRole('button', { name: 'Usar aspecto', exact: true })).toBeVisible();
+  await finish(2, []);
+  const data = (await harness.account(email)).data as AppData;
+  expect(data.workouts.find(entry => entry.id === drafts[0].id)?.gearPassiveRewards?.[0].abilityId).toBe('purple-tank');
+  expect(data.game?.abilityUses).toEqual([]);
 });

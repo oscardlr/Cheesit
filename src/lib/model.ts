@@ -1,5 +1,5 @@
 import type { TrainingFeatures } from './training-features';
-import { CATALOG } from './catalog';
+import { CATALOG, GROUPS } from './catalog';
 import { todayMadrid } from './dates';
 import type { GameState } from './game';
 import type { AthleteProfile } from './strength';
@@ -20,7 +20,7 @@ export type ExercisePrescription = { repsMin?: number | null; repsMax?: number |
 export type WorkoutExercise = { supersetId?: string } & ExerciseMetadata & ExercisePrescription & { id: string; exerciseId: string; name: string; group: string; mode: ExerciseMode; sets: WorkoutSet[] };
 /** Historical sessions without this field remain unpublished. */
 export type WorkoutPublication = { published: boolean; photoPath?: string; caption?: string; mentions?: import('./post-mentions').PostMentions };
-export type Workout = { publication?: WorkoutPublication; routineId?: string; cycleLink?: { cycleId: string; position: number; routineId: string }; id: string; date: string; name: string; color: string; status: 'draft' | 'finished' | 'deleted'; createdAt: string; updatedAt: string; exercises: WorkoutExercise[]; abilityId?:string|null; abilityReward?:AbilityUse; companionPassive?: CompanionPassiveSnapshot | null; companionReward?: CompanionPassiveAward; notes?: string; startedAt?: string; finishedAt?: string; autoRest?: boolean; defaultRestSeconds?: number; restTimer?: { endsAt: string | null; remainingSeconds: number; durationSeconds: number } };
+export type Workout = { publication?: WorkoutPublication; routineId?: string; cycleLink?: { cycleId: string; position: number; routineId: string }; id: string; date: string; name: string; color: string; icon?: RoutineIconId; status: 'draft' | 'finished' | 'deleted'; createdAt: string; updatedAt: string; exercises: WorkoutExercise[]; abilityId?:string|null; abilityReward?:AbilityUse; gearPassiveRewards?: AbilityUse[]; companionPassive?: CompanionPassiveSnapshot | null; companionReward?: CompanionPassiveAward; notes?: string; startedAt?: string; finishedAt?: string; autoRest?: boolean; defaultRestSeconds?: number; restTimer?: { endsAt: string | null; remainingSeconds: number; durationSeconds: number } };
 export type RoutineExercise = { setKinds?: SetKind[]; supersetId?: string } & ExercisePrescription & { id: string; exerciseId: string; sets: number };
 export const ROUTINE_ICONS = ['dumbbell', 'biceps-flexed', 'target', 'flame', 'activity', 'timer', 'mountain', 'heart-pulse'] as const;
 export type RoutineIconId = typeof ROUTINE_ICONS[number];
@@ -46,13 +46,41 @@ export const emptyData = (): AppData => ({ routines: [], workouts: [], customExe
 export const newId = (): string => crypto.randomUUID();
 export const newSet = (): WorkoutSet => ({ id: newId(), weight: null, reps: null, confirmed: false });
 
+/** Copy the public exercise identities, with one empty planning slot per exercise. */
+export function saveWorkoutAsRoutine(data: AppData, source: Workout, id: string): AppData {
+  if (data.routines.some(routine => routine.id === id)) return data;
+  if (!source.exercises.length || source.exercises.length > 50) throw new Error('El entrenamiento no tiene una lista válida de ejercicios.');
+  const customExercises = [...data.customExercises];
+  const exerciseIds = new Map([...CATALOG, ...customExercises].map(exercise => [exercise.id, exercise.id]));
+  const exercises = source.exercises.map(exercise => {
+    let exerciseId = exerciseIds.get(exercise.exerciseId);
+    if (!exerciseId) {
+      if (!validName(exercise.name) || !GROUPS.includes(exercise.group) || !['external_load_reps', 'bodyweight_reps'].includes(exercise.mode)) {
+        throw new Error('Un ejercicio del entrenamiento no se puede añadir a la biblioteca.');
+      }
+      // A foreign exercise may have a private ID or lack a catalog entry.
+      const loadConvention = resolvedLoadConvention(exercise);
+      const local = customExercises.find(candidate => candidate.name === exercise.name && candidate.group === exercise.group &&
+        candidate.mode === exercise.mode && (candidate.loadConvention ?? 'total') === loadConvention);
+      const definition = local ?? { id: newId(), name: exercise.name, group: exercise.group, mode: exercise.mode, loadConvention };
+      if (!local) customExercises.push(definition);
+      exerciseId = definition.id;
+      exerciseIds.set(exercise.exerciseId, exerciseId);
+    }
+    return { id: newId(), exerciseId, sets: 1 };
+  });
+  const name = source.name.trim().slice(0, 80) || 'Entrenamiento';
+  const routine: Routine = { id, name, color: COLORS[1], icon: DEFAULT_ROUTINE_ICON, archived: false, exercises };
+  return { ...data, routines: [...data.routines, routine], customExercises };
+}
+
 /** Copies exercise information at the time a session starts. */
 export function newWorkout(routine?: Routine, exercises: Exercise[] = CATALOG, profile?: AthleteProfile, game?: GameState): Workout {
   if (routine?.exercises.some(item => !validPlannedSets(item.sets))) throw new Error('Las series previstas deben ser un entero entre 1 y 20.');
   if (routine?.exercises.some(item => !validRoutinePrescription(item))) throw new Error('Revisa los rangos de repeticiones, carga y descanso de la rutina.');
   const now = new Date().toISOString();
   return snapshotWorkoutPassive({
-    id: newId(), date: todayMadrid(), name: routine?.name ?? 'Entrenamiento', color: WORKOUT_COLOR,
+    id: newId(), date: todayMadrid(), name: routine?.name ?? 'Entrenamiento', color: WORKOUT_COLOR, icon: resolvedRoutineIcon(routine?.icon),
     ...(routine ? { routineId: routine.id } : {}), status: 'draft', createdAt: now, updatedAt: now, startedAt: now, ...(routine?.notes ? { notes: routine.notes } : {}),
     exercises: (routine?.exercises ?? []).flatMap((item) => {
       const exercise = exercises.find((candidate) => candidate.id === item.exerciseId);
