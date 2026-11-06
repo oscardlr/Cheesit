@@ -1,6 +1,6 @@
 import { isWorkSet, validSet, type Workout, type WorkoutExercise, type WorkoutSet } from './model';
 import { effectiveLoad, normalizeProfile, strengthReference, type AthleteProfile } from './strength';
-import { isAbilityUse } from './abilities';
+import { isAbilityUse, workoutGearPassiveCredits, workoutGearPassiveRewards } from './abilities';
 import { workoutPassiveReward } from './cheesit-passives';
 import { annualLevelProgress, inSeason } from './seasons';
 
@@ -70,10 +70,11 @@ export function rewardSetIndex(history: Workout[], profile?: AthleteProfile): Ma
     while (index < sorted.length && sorted[index].date === date) {
       const workout = sorted[index++];
       const ability = workout.status === 'finished' && isAbilityUse(workout.abilityReward) && workout.abilityReward.workoutId === workout.id && workout.abilityReward.abilityId === workout.abilityId ? workout.abilityReward : null;
+      const gearPassives = workoutGearPassiveRewards(workout);
       for (const exercise of workout.exercises) for (const set of exercise.sets) {
         if (!isWorkSet(set) || !set.confirmed || !validSet(set, exercise.mode) || rewards.has(set.id)) continue;
         const core = calculateSet(exercise, set, previous.get(conditionKey(exercise)), currentProfile);
-        const abilityXp = ability?.setBonuses[set.id] ?? 0;
+        const abilityXp = (ability?.setBonuses[set.id] ?? 0) + gearPassives.reduce((sum, reward) => sum + (reward.setBonuses[set.id] ?? 0), 0);
         rewards.set(set.id, abilityXp ? { ...core, xp: core.xp + abilityXp, abilityXp } : core);
         if (workout.status === 'finished') toPublish.push({ exercise, set });
       }
@@ -110,8 +111,9 @@ function sessionReward(workout: Workout, index: Map<string, SetReward>, visited 
   const abilityCredits = finished && isAbilityUse(workout.abilityReward) && workout.abilityReward.workoutId === workout.id && workout.abilityReward.abilityId === workout.abilityId ? workout.abilityReward.bonusCredits : 0;
   const passive = finished ? workoutPassiveReward(workout) : { bonusXp: 0, bonusCredits: 0 };
   const companionXp = passive.bonusXp, companionCredits = passive.bonusCredits;
+  const gearCredits = finished ? workoutGearPassiveCredits(workout) : 0;
   const recordXp = records * RECORD_XP, bonusXp = finishXp + varietyXp + recordXp + abilityXp + companionXp, totalXp = setXp + bonusXp;
-  return { sets, setXp, finishXp, varietyXp, recordXp, records, abilityXp, abilityCredits, companionXp, companionCredits, bonusXp, totalXp, credits: Math.floor(totalXp / 5) + abilityCredits + companionCredits };
+  return { sets, setXp, finishXp, varietyXp, recordXp, records, abilityXp, abilityCredits, gearCredits, companionXp, companionCredits, bonusXp, totalXp, credits: Math.floor(totalXp / 5) + abilityCredits + gearCredits + companionCredits };
 }
 
 /** Series are earned during the draft; only bonusXp is new on finish. */

@@ -72,3 +72,43 @@
   margin: 0;
   padding: 0;
 }
+
+@media (max-width: 760px) {
+  :global(.exercise-picker) .library {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+  :global(.exercise-picker) .library > * {
+    flex: none;
+  }
+  :global(.exercise-picker) .library > label,
+  :global(.exercise-picker) .groupFilter {
+    margin-bottom: 8px;
+  }
+  :global(.exercise-picker) .library > label > input[type='search'] {
+    margin-bottom: 0;
+  }
+  :global(.exercise-picker) .groupFilter legend {
+    margin-bottom: 5px;
+  }
+  :global(.exercise-picker) .groupButtons {
+    gap: 4px;
+  }
+  :global(.exercise-picker) .groupButtons button {
+    padding: 6px 9px;
+  }
+  :global(.exercise-picker) .library > :global(.catalog-list),
+  :global(.exercise-picker) .library > :is(:global(.exercise-guide), :global(.form-card)) {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    margin-bottom: 8px;
+    overflow-y: auto;
+    overscroll-behavior-y: none;
+  }
+  :global(.exercise-picker) .library[data-panel-open] > :not(:global(.exercise-guide), :global(.form-card), :global(.error)) {
+    display: none;
+  }
+}

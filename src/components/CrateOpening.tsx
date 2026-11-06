@@ -14,11 +14,10 @@ import './crate-opening.css';
 
 type Props = {
   game: GameState;
-  result: InventoryItem | null;
+  item: InventoryItem;
   effectsEnabled: boolean;
   soundEnabled: boolean;
   onGameChange: (transform: (current: GameState) => GameState) => Promise<void>;
-  onFinished: (item: InventoryItem) => void;
   onClose: () => void;
   onEquip: (item: InventoryItem) => void;
 };
@@ -26,12 +25,8 @@ type Props = {
 const TARGET = 192;
 const sequence: Rarity[] = ['common', 'rare', 'common', 'epic', 'common', 'rare', 'legendary', 'common', 'rare', 'common', 'epic', 'common'];
 
-export default function CrateOpening({ game, result, effectsEnabled, soundEnabled, onGameChange, onFinished, onClose, onEquip }: Props) {
-  const pending = game.pendingOpening;
-  const reserved = pending ? game.inventory.find(candidate => candidate.id === pending.itemId) : result;
-  const lastItem = useRef(reserved);
-  if (reserved) lastItem.current = reserved;
-  const item = reserved ?? lastItem.current;
+export default function CrateOpening({ game, item, effectsEnabled, soundEnabled, onGameChange, onClose, onEquip }: Props) {
+  const pending = game.pendingOpening?.itemId === item.id ? game.pendingOpening : null;
   const [motionKnown, setMotionKnown] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -41,11 +36,11 @@ export default function CrateOpening({ game, result, effectsEnabled, soundEnable
   const blur = useRef<SVGFEGaussianBlurElement>(null);
   const blurId = useId();
   const openingCrate = useRef<HTMLDivElement>(null);
-  const actions = useRef({ onGameChange, onFinished, onClose });
+  const actions = useRef({ onGameChange, onClose });
   const sound = useRef(soundEnabled);
   const previousSoundIndex = useRef(-1);
   const transitioned = useRef('');
-  actions.current = { onGameChange, onFinished, onClose };
+  actions.current = { onGameChange, onClose };
   sound.current = soundEnabled;
   const stage = pending?.stage ?? 'result';
   const animated = effectsEnabled && motionKnown && !reduced;
@@ -86,18 +81,17 @@ export default function CrateOpening({ game, result, effectsEnabled, soundEnable
     return () => { document.body.style.overflow = overflow; document.removeEventListener('keydown', onKey); if (previous?.isConnected) previous.focus({ preventScroll: true }); };
   }, []);
   async function finishQuickly() {
-    if (!item || savingRef.current) return;
+    if (savingRef.current) return;
     savingRef.current = true; setSaving(true); setSaveError('');
     try {
       await actions.current.onGameChange(revealReservedOpening);
-      actions.current.onFinished(item);
       if (sound.current) playSound('rare');
     } catch {
       setSaveError('No se ha confirmado el guardado. Tu premio conserva el mismo identificador; reintenta sin volver a pagar.');
     } finally { savingRef.current = false; setSaving(false); }
   }
   useEffect(() => {
-    if (!pending || !item || !motionKnown || savingRef.current || saveError) return;
+    if (!pending || !motionKnown || savingRef.current || saveError) return;
     if (!animated) { void finishQuickly(); return; }
     const key = `${item.id}:${stage}`;
     const advance = async () => {
@@ -108,7 +102,6 @@ export default function CrateOpening({ game, result, effectsEnabled, soundEnable
       transitioned.current = key; savingRef.current = true; setSaving(true);
       try {
         await actions.current.onGameChange(spinDone ? current => setOpeningStage(current, 'revealing') : completeOpening);
-        if (revealDone) actions.current.onFinished(item);
         if (sound.current) playSound(spinDone ? 'crate-land' : 'rare');
       } catch { setSaveError('No se ha confirmado el guardado. Reintenta para conservar este mismo premio.'); }
       finally { savingRef.current = false; setSaving(false); }
@@ -165,7 +158,7 @@ export default function CrateOpening({ game, result, effectsEnabled, soundEnable
     return () => window.cancelAnimationFrame(frame);
   }, [stage, revealStartedAt, reduced, animated]);
 
-  if (!item || typeof document === 'undefined') return null;
+  if (typeof document === 'undefined') return null;
   const rarity = RARITIES[item.rarity];
   const definition = stage === 'result' ? getItemDefinition(item) : null;
   const isNew = definition && !game.inventory.some(candidate => {
@@ -181,7 +174,7 @@ export default function CrateOpening({ game, result, effectsEnabled, soundEnable
       <div className="opening-header"><span className="eyebrow"><Sparkles size={12} /> APERTURA DE COFRE</span><h2 id="crate-opening-title">{stage === 'spinning' ? 'Sorteando rareza' : stage === 'result' ? 'Recompensa obtenida' : 'Revelando contenido'}</h2><p>{saving ? 'Confirmando el guardado…' : saveError ? 'El guardado necesita un reintento.' : stage === 'spinning' ? (animated ? 'Solo ves rarezas. El contenido se revela al terminar.' : 'Revelado estático según tu preferencia de movimiento.') : stage === 'result' ? (item.quoteId ? 'Conversión guardada sin volver a pagar ni sortear.' : 'Recompensa guardada en tu colección.') : 'Abriendo tu recompensa…'}</p></div>
       {animated && stage !== 'result' && <div className="rarity-roulette" aria-label="Ruleta de rarezas"><div className="rarity-roulette-window" style={{ filter: `url("#${blurId}")` }}><div className="rarity-roulette-track" ref={track} aria-hidden="true">{cards.map((card, index) => <div key={index} className={`rarity-roulette-card${index === TARGET && stage === 'revealing' ? ' is-winner' : ''}`} style={{ '--card-rarity': RARITIES[card].color } as CSSProperties}><Box size={45} strokeWidth={1.4} /><span>{RARITIES[card].label}</span><small>CONTENIDO OCULTO</small><i /></div>)}</div></div><span className="rarity-roulette-pointer" aria-hidden="true" /></div>}
       {animated && stage === 'revealing' && <div className="opening-reveal-animation" role="status" aria-label="Abriendo recompensa"><div ref={openingCrate} className="opening-crate" aria-hidden="true"><div className="opening-crate-glow" /><div className="opening-crate-lid" /><div className="opening-crate-base"><span /></div>{effectsEnabled && !reduced && <Sparkles className="opening-crate-sparkles" size={38} />}</div><span>ROMPIENDO EL SELLO</span></div>}
-      {stage === 'result' && !saving && !saveError && definition && <div className="opening-item-result" aria-live="polite"><div className="opening-result-badges">{isNew && !item.quoteId && <span className="opening-new-badge">¡Nuevo!</span>}<span className="opening-rarity-badge"><Star size={15} />{rarity.label} · {definition.kind === 'gear' ? 'EQUIPAMIENTO' : definition.kind==='companion'?'CHEESIT':'CRÉDITOS'}</span></div><div className="opening-result-art">{item.gearId ? <GearSprite gearId={item.gearId} /> : item.companionId ? <CompanionSprite companionId={item.companionId} animated={effectsEnabled&&!reduced} motion="celebrate"/> : <CreditCoin size={70}/>}</div><h3>{definition.kind === 'quote' ? <><CreditCoin/> +{quoteConversionAmount(game, item)} créditos</> : definition.name}</h3><p>{definition.kind === 'quote' ? 'Tu recompensa antigua reservada se ha convertido en créditos de su misma rareza. Conserva su identidad e historial.' : definition.description}</p>{item.gearId && <p>{getAbilityDefinition(item.gearId)?.description} · +{getAbilityDefinition(item.gearId)?.chargesPerDrop ?? 0} cargas al revelar esta copia. El aspecto queda desbloqueado.</p>}{item.companionId&&<CheesitPassive companionId={item.companionId} status={game.equippedCompanionId===item.companionId?'equipped':'available'}/>}<div className="opening-result-actions">{definition.kind !== 'quote' && <button className="opening-primary" onClick={() => { onEquip(item); onClose(); }}>{definition.kind==='companion'?'Equipar cheesit':'Usar aspecto'}<Check size={18} /></button>}<button className="opening-secondary" onClick={onClose}>{item.quoteId ? 'Aceptar créditos' : 'Guardar en colección'}<ArrowRight size={17} /></button></div></div>}
+      {stage === 'result' && !saving && !saveError && definition && <div className="opening-item-result" aria-live="polite"><div className="opening-result-badges">{isNew && !item.quoteId && <span className="opening-new-badge">¡Nuevo!</span>}<span className="opening-rarity-badge"><Star size={15} />{rarity.label} · {definition.kind === 'gear' ? 'EQUIPAMIENTO' : definition.kind==='companion'?'CHEESIT':'CRÉDITOS'}</span></div><div className="opening-result-art">{item.gearId ? <GearSprite gearId={item.gearId} /> : item.companionId ? <CompanionSprite companionId={item.companionId} animated={effectsEnabled&&!reduced} motion="celebrate"/> : <CreditCoin size={70}/>}</div><h3>{definition.kind === 'quote' ? <><CreditCoin/> +{quoteConversionAmount(game, item)} créditos</> : definition.name}</h3><p>{definition.kind === 'quote' ? 'Tu recompensa antigua reservada se ha convertido en créditos de su misma rareza. Conserva su identidad e historial.' : definition.description}</p>{item.gearId && <p>{getAbilityDefinition(item.gearId)?.description} La pasiva se aplica con el aspecto equipado.</p>}{item.companionId&&<CheesitPassive companionId={item.companionId} status={game.equippedCompanionId===item.companionId?'equipped':'available'}/>}<div className="opening-result-actions">{definition.kind !== 'quote' && <button className="opening-primary" onClick={() => { onEquip(item); onClose(); }}>{definition.kind==='companion'?'Equipar cheesit':'Usar aspecto'}<Check size={18} /></button>}<button className="opening-secondary" onClick={onClose}>{item.quoteId ? 'Aceptar créditos' : 'Guardar en colección'}<ArrowRight size={17} /></button></div></div>}
       {saving && <p className="opening-safe-note" role="status">Confirmando recompensa…</p>}
       {saveError && <div className="opening-save-error" role="alert"><p>{saveError}</p><button className="opening-primary" onClick={() => void finishQuickly()}>Reintentar guardado</button></div>}
       {stage !== 'result' && !saving && !saveError && <><button className="opening-secondary opening-quick" onClick={() => void finishQuickly()}>Revelar ahora · sin animación<ArrowRight size={17}/></button><p className="opening-safe-note">Premio reservado. El giro completo dura cinco segundos; revelar ahora conserva el mismo premio y débito.</p></>}

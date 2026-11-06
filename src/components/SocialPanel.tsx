@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, MapPin, Search, Users, WifiOff } from 'lucide-react';
 import { readDirectory, readSocial, setFollow, SOCIAL_PAGE_SIZE, type DirectoryProfile, type SocialList, type SocialProfile, type SocialRoute } from '@/lib/remote/social';
 import WorkoutFeed from './WorkoutFeed';
+import type { SaveRoutineFromWorkout } from './SaveWorkoutRoutine';
 import { PersonalAvatar } from './PersonalAvatar';
 import './social.css';
 import './gym-settings.css';
@@ -45,8 +46,8 @@ function SocialRow({ profile, onOpen, onFollow, disabled }: { profile: Directory
   </button>{onFollow && <button type="button" className={`social-row-follow ${profile.is_following ? 'secondary' : 'primary'}`} aria-pressed={profile.is_following} disabled={disabled} onClick={onFollow}>{profile.is_following ? 'Siguiendo' : 'Seguir'}<span className="sr-only"> a @{profile.username}</span></button>}</li>;
 }
 
-export default function SocialPanel({ owner, guest, route, onNavigate, onBack, onAccount, embedded = false }: {
-  owner?: string; guest: boolean; embedded?: boolean; route: SocialRoute; onNavigate: (route: SocialRoute) => void; onBack: () => void; onAccount: () => void;
+export default function SocialPanel({ owner, guest, route, onNavigate, onBack, onAccount, onSaveRoutine, embedded = false }: {
+  owner?: string; guest: boolean; embedded?: boolean; onSaveRoutine?: SaveRoutineFromWorkout; route: SocialRoute; onNavigate: (route: SocialRoute) => void; onBack: () => void; onAccount: () => void;
 }) {
   const key = `${route.owner ?? ''}:${route.list ?? ''}:${route.query}`;
   const [paging, setPaging] = useState({ key, offset: 0 });
@@ -113,7 +114,7 @@ export default function SocialPanel({ owner, guest, route, onNavigate, onBack, o
         {profile.owner_id !== owner && <div className="social-follow"><button className={profile.is_following ? 'secondary' : 'primary'} disabled={pending.has(profile.owner_id) || loading || !online} aria-pressed={profile.is_following} onClick={() => void follow(profile)}>{pending.has(profile.owner_id) ? 'Confirmando…' : profile.is_following ? 'Dejar de seguir' : 'Seguir'}</button></div>}
         {mutationError && <p className="social-error" role="alert">{mutationError}</p>}{notice && <p className="social-confirmed" role="status">{notice}</p>}
       </section>}
-      {!error && profile && <>{!route.workout && <h2 className="social-publications-heading">Publicaciones</h2>}<WorkoutFeed viewer={owner} owner={profile.owner_id} workout={route.workout ?? undefined} onProfile={person => onNavigate({ owner: person, list: null, query: '' })} onWorkout={(person, workout) => onNavigate({ owner: person, list: null, query: '', workout })}/></>}
+      {!error && profile && <>{!route.workout && <h2 className="social-publications-heading">Publicaciones</h2>}<WorkoutFeed onSaveRoutine={onSaveRoutine} viewer={owner} owner={profile.owner_id} workout={route.workout ?? undefined} onProfile={person => onNavigate({ owner: person, list: null, query: '' })} onWorkout={(person, workout) => onNavigate({ owner: person, list: null, query: '', workout })}/></>}
       {!error && (!route.owner || route.list) && profiles.length > 0 && <ul className="social-people" aria-label={searching ? 'Resultados de personas' : title}>{profiles.map(p => <SocialRow key={p.owner_id} profile={p} onOpen={() => onNavigate({ owner: p.owner_id, list: null, query: route.query })} onFollow={searching ? () => void follow(p) : undefined} disabled={pending.has(p.owner_id) || !online}/>)}</ul>}
       {!loading && !error && result.key === key && profiles.length === 0 && <section className="social-empty"><Users size={32}/><h2>{searching ? 'No encontramos a nadie.' : route.list === 'followers' ? 'Todavía no hay seguidores.' : route.list === 'following' ? 'Todavía no sigue a nadie.' : route.workout ? 'Entrenamiento no disponible.' : 'Perfil no disponible.'}</h2><p>{searching ? 'Prueba con otro nombre o @usuario. Solo aparecen perfiles completados.' : route.list ? 'Las conexiones aparecerán aquí cuando se confirmen.' : 'Puede que esta cuenta ya no exista o no haya completado su perfil.'}</p></section>}
       {result.key === key && result.more && !error && <button className="secondary social-more" disabled={loading} onClick={() => setPaging({ key, offset: profiles.length })}>Cargar más personas</button>}

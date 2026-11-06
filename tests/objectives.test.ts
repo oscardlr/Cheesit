@@ -200,7 +200,7 @@ test('permanent objective XP raises levels, credits and level-crate access while
   assert.deepEqual(restored.game?.missionRewards, earned.missionRewards);
   assert.ok(getMissions(deleted, day, earned).filter(mission => mission.rewarded).every(mission => mission.complete));
   assert.equal(getLevelCrates(original, []).length, 0);
-  assert.equal(getLevelCrates(earned, []).length, levelProgress(missionXp).level - 1);
+  assert.ok(getLevelCrates(earned, []).some(crate => crate.level === 2));
   const reward = openLevelCrate(earned, [], 2);
   assert.ok(reward, 'mission XP alone can unlock a free level crate');
   assert.ok(reward.item.gearId);

@@ -17,12 +17,29 @@ const backMuscles: MuscleShape[] = [
   { id: 'hamstrings', paths: ['M66 218 Q81 232 96 221 L91 272 78 284 63 270Z', 'M134 218 Q119 232 104 221 L109 272 122 284 137 270Z'] },
   { id: 'calves', paths: ['M66 297 Q74 288 85 296 L82 344 70 355 64 338Z', 'M134 297 Q126 288 115 296 L118 344 130 355 136 338Z'] },
 ];
-export function activityColor(value: number) { return value === 0 ? '#40344f' : value < 4 ? '#7160a0' : value < 9 ? '#b8a0ff' : '#d8ff3e'; }
+export const MUSCLE_LEVEL_COLORS = [
+  { min: 1, max: 4, color: '#8b80b8' },
+  { min: 5, max: 9, color: '#b598fc' },
+  { min: 10, max: 19, color: '#879fff' },
+  { min: 20, max: 29, color: '#6ccaf7' },
+  { min: 30, max: 39, color: '#60ddcf' },
+  { min: 40, max: 49, color: '#85e688' },
+  { min: 50, max: 59, color: '#cced71' },
+  { min: 60, max: 69, color: '#ffe081' },
+  { min: 70, max: 79, color: '#ffac6b' },
+  { min: 80, max: 89, color: '#ff8799' },
+  { min: 90, max: 98, color: '#ff9ee4' },
+  { min: 99, max: 99, color: '#fff0fc' },
+] as const;
+
+export function muscleLevelColor(level: number) {
+  return MUSCLE_LEVEL_COLORS.find(tier => level >= tier.min && level <= tier.max)?.color ?? MUSCLE_LEVEL_COLORS[0].color;
+}
 
 export default function BodyFigure({ back, muscles, selected = '', onSelect }: { back: boolean; muscles: MuscleActivity[]; selected?: string; onSelect?: (id: string) => void }) {
   return <div className="body-figure"><span>{back ? 'POSTERIOR' : 'ANTERIOR'}</span><svg viewBox="0 0 200 400" aria-label={back ? 'Mapa muscular posterior' : 'Mapa muscular anterior'}>
     <g className="body-outline"><ellipse cx="100" cy="32" rx="20" ry="25" /><path d="M88 54 L88 64 64 76 Q45 73 35 101 L29 146 24 173 20 197 Q20 209 29 207 L40 184 52 149 60 121 69 161 63 198 58 251 61 284 58 334 62 367 79 368 88 326 91 291 100 246 109 291 112 326 121 368 138 367 142 334 139 284 142 251 137 198 131 161 140 121 148 149 160 184 171 207 Q180 209 180 197 L176 173 171 146 165 101 Q155 73 136 76 L112 64 112 54" /><path d="M62 367 L59 382 Q68 389 83 382 L79 368 M121 368 L117 382 Q132 389 141 382 L138 367" /></g>
-    {(back ? backMuscles : frontMuscles).map(shape => { const activity = muscles.find(muscle => muscle.id === shape.id); return <g key={shape.id} className={`muscle-region ${selected === shape.id ? 'selected' : ''}`} role={onSelect ? "button" : undefined} tabIndex={onSelect ? 0 : undefined} aria-label={`${activity?.label ?? shape.id}, nivel ${activity?.level ?? 1}: ${activity?.sets ?? 0} series directas, ${activity?.secondarySets ?? 0} secundarias`} aria-pressed={onSelect ? selected === shape.id : undefined} onClick={onSelect ? () => onSelect(shape.id) : undefined} onKeyDown={event => { if (onSelect && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onSelect(shape.id); } }} style={{ fill: activityColor(activity?.weightedSets ?? 0) }}>{shape.paths.map((path, index) => <path key={index} d={path} />)}</g>; })}
+    {(back ? backMuscles : frontMuscles).map(shape => { const activity = muscles.find(muscle => muscle.id === shape.id); return <g key={shape.id} className={`muscle-region ${selected === shape.id ? 'selected' : ''}`} role={onSelect ? "button" : undefined} tabIndex={onSelect ? 0 : undefined} aria-label={`${activity?.label ?? shape.id}, nivel ${activity?.level ?? 1}: ${activity?.sets ?? 0} series directas, ${activity?.secondarySets ?? 0} secundarias`} aria-pressed={onSelect ? selected === shape.id : undefined} onClick={onSelect ? () => onSelect(shape.id) : undefined} onKeyDown={event => { if (onSelect && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onSelect(shape.id); } }} style={{ fill: muscleLevelColor(activity?.level ?? 1) }}>{shape.paths.map((path, index) => <path key={index} d={path} />)}</g>; })}
     <path d="M100 187 L100 229" fill="none" stroke="#1e1726" strokeWidth="3" />
   </svg></div>;
 }

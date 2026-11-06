@@ -77,8 +77,10 @@ export function preserveWorkoutPassiveEvent(selected: Workout, authoritative: Wo
     : isCompanionPassiveSnapshot(captured) && isCompanionPassiveSnapshot(incoming) &&
       captured.workoutId === incoming.workoutId && captured.companionId === incoming.companionId && captured.passiveId === incoming.passiveId && captured.version === incoming.version && captured.fixedAt === incoming.fixedAt && captured.fixedDate === incoming.fixedDate;
   const companionReward = authoritative.companionReward ?? (authoritative.status === 'draft' && sameCapture ? selected.companionReward : undefined);
-  return { ...selected, companionPassive: captured, companionReward,
-    ...(companionReward && selected.status === 'draft' ? { status: authoritative.status } : {}) };
+  const gearPassiveRewards = authoritative.gearPassiveRewards
+    ?? (authoritative.status === 'draft' ? selected.gearPassiveRewards : undefined);
+  return { ...selected, companionPassive: captured, companionReward, gearPassiveRewards,
+    ...((companionReward || gearPassiveRewards) && selected.status === 'draft' ? { status: authoritative.status } : {}) };
 }
 
 /** The stored award is authoritative after the first finish, even for an unmet

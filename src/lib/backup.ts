@@ -8,7 +8,7 @@ import { isCivilDate, todayMadrid } from './dates';
 import { WORKOUT_COLOR, copiedName, isRoutineColor, isRoutineIcon, newId, resolvedRoutineIcon, snapshotLoadConventions, validName, validPlannedSets, validSet, type AppData, type Exercise, type Routine, type Workout, type WorkoutSet } from './model';
 import { mergeMissionRewards } from './objectives';
 import { getAbilityCharges, isGameState, normalizeGame, preserveSeasonMetadata, reconcileSeasonProgression, unlockedCompanions, unlockedGear, type GameState } from './game';
-import { getAbilityDefinition, isAbilityUse } from './abilities';
+import { getAbilityDefinition, isAbilityUse, validGearPassiveRewards } from './abilities';
 import { MUSCLES } from './muscles';
 import { mergeQuoteConversions } from './quote-conversion';
 import { isCompanionPassiveAward, isCompanionPassiveSnapshot, preserveWorkoutPassiveEvent } from './cheesit-passives';
@@ -72,7 +72,7 @@ export function validateData(value: unknown): AppData {
     }
   }
   for (const workout of value.workouts) {
-    if (!record(workout) || (workout.status === 'draft' ? !optionalText(workout.name, 80) || typeof workout.name !== 'string' : !name(workout.name)) || !workoutColor(workout.color) || typeof workout.date !== 'string' || (workout.status === 'draft' ? workout.date !== '' && !isCivilDate(workout.date) : !isCivilDate(workout.date) || workout.date > todayMadrid()) || !['draft', 'finished', 'deleted'].includes(workout.status as string) || !timestamp(workout.createdAt) || !timestamp(workout.updatedAt) || !bounded(workout.exercises, 50) || !optionalText(workout.notes)) return fail('entrenamiento o fecha futura');
+    if (!record(workout) || (workout.status === 'draft' ? !optionalText(workout.name, 80) || typeof workout.name !== 'string' : !name(workout.name)) || (workout.color !== undefined && !workoutColor(workout.color)) || !routineIcon(workout.icon) || typeof workout.date !== 'string' || (workout.status === 'draft' ? workout.date !== '' && !isCivilDate(workout.date) : !isCivilDate(workout.date) || workout.date > todayMadrid()) || !['draft', 'finished', 'deleted'].includes(workout.status as string) || !timestamp(workout.createdAt) || !timestamp(workout.updatedAt) || !bounded(workout.exercises, 50) || !optionalText(workout.notes)) return fail('entrenamiento o fecha futura');
     if ((workout.startedAt !== undefined && !timestamp(workout.startedAt)) || (workout.finishedAt !== undefined && !timestamp(workout.finishedAt)) || (workout.autoRest !== undefined && typeof workout.autoRest !== 'boolean') || (workout.defaultRestSeconds !== undefined && !optionalNumber(workout.defaultRestSeconds, 0, 3600, true))) return fail('duración o descanso');
     if (workout.restTimer !== undefined && (!record(workout.restTimer) || !(workout.restTimer.endsAt === null || timestamp(workout.restTimer.endsAt)) || !finite(workout.restTimer.remainingSeconds) || workout.restTimer.remainingSeconds < 0 || workout.restTimer.remainingSeconds > 3600 || !finite(workout.restTimer.durationSeconds) || !Number.isInteger(workout.restTimer.durationSeconds) || workout.restTimer.durationSeconds < 0 || workout.restTimer.durationSeconds > 3600)) return fail('temporizador de descanso');
     if (workout.publication !== undefined && !isWorkoutPublication(workout.publication, workout.id)) return fail('publicación del entrenamiento');
@@ -81,6 +81,7 @@ export function validateData(value: unknown): AppData {
     add(workout.id);
     if(workout.abilityId!==undefined&&workout.abilityId!==null&&(typeof workout.abilityId!=='string'||!getAbilityDefinition(workout.abilityId)))return fail('habilidad de entrenamiento');
     if(workout.abilityReward!==undefined&&(!isAbilityUse(workout.abilityReward)||workout.abilityReward.workoutId!==workout.id||workout.abilityReward.abilityId!==workout.abilityId||workout.status==='draft'))return fail('recompensa de habilidad');
+    if (workout.gearPassiveRewards !== undefined && (workout.status === 'draft' || workout.abilityReward || !validGearPassiveRewards(workout.gearPassiveRewards, workout.id as string))) return fail('pasivas de atuendo');
     if (workout.companionPassive !== undefined && workout.companionPassive !== null && (!isCompanionPassiveSnapshot(workout.companionPassive) || workout.companionPassive.workoutId !== workout.id)) return fail('pasiva de cheesit');
     if (workout.companionReward !== undefined && (!isCompanionPassiveAward(workout.companionReward) || workout.companionReward.workoutId !== workout.id || workout.status === 'draft' || !isCompanionPassiveSnapshot(workout.companionPassive) || canonical(workout.companionPassive) !== canonical(Object.fromEntries(Object.entries(workout.companionReward).filter(([key]) => !['awardedAt', 'bonusXp', 'bonusCredits', 'eligible', 'reason'].includes(key)))))) return fail('recompensa de cheesit');
     let confirmed = 0;
@@ -110,7 +111,7 @@ export function validateData(value: unknown): AppData {
   if (value.preferences !== undefined && (!record(value.preferences) || typeof value.preferences.effects !== 'boolean' || typeof value.preferences.sound !== 'boolean')) return fail('preferencias de efectos o sonido');
   if (value.profile !== undefined && !isAthleteProfile(value.profile)) return fail('perfil de entrenamiento');
   if (value.personalProfile !== undefined && !isPersonalProfile(value.personalProfile)) return fail('perfil personal');
-  return { ...value, ...(value.game !== undefined ? { game: normalizeGame(value.game) } : {}) } as AppData;
+  return { ...value, workouts: (value.workouts as Workout[]).map(workout => workout.color === undefined ? { ...workout, color: WORKOUT_COLOR } : workout), ...(value.game !== undefined ? { game: normalizeGame(value.game) } : {}) } as AppData;
 }
 
 function canonical(value: unknown): string {
@@ -188,6 +189,7 @@ export function previewBackup(raw: unknown, current: AppData, resolutions: Recor
     // passive event or turn the source's award into a second credit/XP grant.
     if (kind === 'workouts') {
       delete (copy as unknown as Workout).companionReward;
+      delete (copy as unknown as Workout).gearPassiveRewards;
       delete (copy as unknown as Workout).cycleLink;
       delete (copy as unknown as Workout).publication;
       (copy as unknown as Workout).companionPassive = null;

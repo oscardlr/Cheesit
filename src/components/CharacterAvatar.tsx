@@ -6,7 +6,6 @@ import type { AppData } from '@/lib/model';
 import { GEAR, type GearSlot } from '@/lib/gear';
 import { COMPANIONS } from '@/lib/companions';
 import { gameProgress, normalizeGame, unlockedGear, unlockedCompanions, type GameState } from '@/lib/game';
-import { getAbilityDefinition } from '@/lib/abilities';
 import type { CharacterMotion } from '@/lib/character-motion';
 import { CHARACTER_ART, CHARACTER_ATLAS, CHARACTER_MASTER, CHARACTER_VIEWBOX, CHARACTER_SLOT_ORDER, CHARACTER_MASKS } from '@/lib/character-art';
 import { CharacterGearArtwork } from './CharacterArtwork';
@@ -83,6 +82,5 @@ export function CharacterParty({game,level,compact=false}:{game:GameState;level:
 }
 export function CharacterCard({data,onOpen,animated=true}:{data:AppData;onOpen:()=>void;animated?:boolean}){
   const game=normalizeGame(data.game), progress=gameProgress(game,data.workouts,data.profile);
-  const active=getAbilityDefinition(game.activeAbilityId);
-  return <section className="character-summary-card"><div className="character-summary-copy"><span className="eyebrow"><Shirt size={13}/> TU ALTER EGO ARCADE</span><h2>Tu esfuerzo.<br/><em>Tu personaje.</em></h2><p>Aspectos para siempre. Equipo, cheesits y una habilidad para tu siguiente sesión.</p><div><span>{appearanceGear(game).length}/5 piezas equipadas</span><span>Nivel {progress.level}</span></div>{game.equippedCompanionId&&<CheesitPassive companionId={game.equippedCompanionId} status="equipped" compact/>}{active&&<p className="character-active-ability"><Sparkles size={11}/>{active.name}</p>}<button onClick={()=>{try{sessionStorage.setItem('grind-open-wardrobe','1')}catch{}onOpen()}}>Personalizar personaje<ArrowUpRight size={17}/></button></div><CharacterParty game={game} level={progress.level} animated={animated}/></section>;
+  return <section className="character-summary-card"><div className="character-summary-copy"><span className="eyebrow"><Shirt size={13}/> TU ALTER EGO ARCADE</span><h2>Tu esfuerzo.<br/><em>Tu personaje.</em></h2><p>Aspectos para siempre. Equipo y cheesits con pasivas.</p><div><span>{appearanceGear(game).length}/5 piezas equipadas</span><span>Nivel {progress.level}</span></div>{game.equippedCompanionId&&<CheesitPassive companionId={game.equippedCompanionId} status="equipped" compact/>}<button onClick={()=>{try{sessionStorage.setItem('grind-open-wardrobe','1')}catch{}onOpen()}}>Personalizar personaje<ArrowUpRight size={17}/></button></div><CharacterParty game={game} level={progress.level} animated={animated}/></section>;
 }

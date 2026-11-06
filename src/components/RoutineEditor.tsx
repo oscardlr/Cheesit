@@ -3,12 +3,11 @@
 import PageTitle from './PageTitle';
 
 import type { Exercise, Routine, RoutineExercise } from '@/lib/model';
-import { COLORS, ROUTINE_COLOR_OPTIONS, ROUTINE_ICONS, resolvedRoutineIcon, validPlannedSets } from '@/lib/model';
+import { validPlannedSets } from '@/lib/model';
 import SupersetControl from './SupersetControl';
 import SetKindControl from './SetKindControl';
-import RoutineIcon, { ROUTINE_ICON_LABELS } from './RoutineIcon';
+import TrainingAppearance from './TrainingAppearance';
 import ExerciseThumbnail from './ExerciseThumbnail';
-import './routine-editor.css';
 
 export default function RoutineEditor({ routine, exercises, message, busy, onChange, onSave, onBack, onAdd }: {
   routine: Routine; exercises: Exercise[]; message: string; busy: boolean;
@@ -22,8 +21,7 @@ export default function RoutineEditor({ routine, exercises, message, busy, onCha
     <p className="notice">Define los ejercicios y las series. Guarda la rutina para reutilizarla.</p>
     <fieldset className="session-fields" disabled={busy}>
       <div className="form-card"><label>Nombre de la rutina<input value={routine.name} maxLength={80} placeholder="Por ejemplo, Tren superior" onChange={event => onChange({ ...routine, name: event.target.value })} /></label>
-        <fieldset className="color-field"><legend>Color</legend><div className="colors routine-colors">{ROUTINE_COLOR_OPTIONS.map(({ value: color, label }) => <button type="button" key={color} className={`color-choice ${routine.color === color ? 'selected' : ''}`} style={{ backgroundColor: color }} aria-label={`Color ${label}`} aria-pressed={routine.color === color} onClick={() => onChange({ ...routine, color })}>{routine.color === color ? '✓' : ''}</button>)}{!(COLORS as readonly string[]).includes(routine.color) && <button type="button" className="color-choice legacy-color selected" style={{ backgroundColor: routine.color }} aria-label="Color actual (anterior)" aria-pressed="true" title="Color actual (anterior)">✓</button>}</div></fieldset>
-        <fieldset className="routine-icon-field"><legend>Icono</legend><div className="routine-icon-choices">{ROUTINE_ICONS.map(icon => <button type="button" key={icon} className={`routine-icon-choice ${resolvedRoutineIcon(routine.icon) === icon ? 'selected' : ''}`} aria-label={`Icono ${ROUTINE_ICON_LABELS[icon]}`} aria-pressed={resolvedRoutineIcon(routine.icon) === icon} title={ROUTINE_ICON_LABELS[icon]} onClick={() => onChange({ ...routine, icon })}><RoutineIcon icon={icon} size={22} /></button>)}</div></fieldset>
+        <TrainingAppearance color={routine.color} icon={routine.icon} onChange={value => onChange({ ...routine, ...value })} />
         <label>Notas de la rutina<textarea maxLength={2000} placeholder="Opcional" value={routine.notes ?? ''} onChange={event => onChange({ ...routine, notes: event.target.value })} /></label>
       </div>
       <h2>Ejercicios · {routine.exercises.length}</h2>{!routine.exercises.length&&<div className="empty-card"><h3>¿Qué vas a entrenar?</h3><p>Añade los ejercicios en el orden que prefieras.</p></div>}

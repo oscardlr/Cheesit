@@ -60,7 +60,7 @@
 .feed-search-toggle:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
 @media(max-width:420px){.feed-toolbar>.text-action>span{display:none}}
 
-.feed-caption a{color:var(--purple);font-weight:650;text-decoration:underline;text-underline-offset:2px}
+.feed-caption a{color:var(--purple);font-weight:650;text-decoration:none}
 
 .feed-post-meta{display:flex;align-items:center;gap:4px;flex-shrink:0}
 .feed-post-options{position:relative}

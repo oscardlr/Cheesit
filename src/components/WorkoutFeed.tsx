@@ -11,6 +11,7 @@ import {
 } from '@/lib/remote/feed';
 import { PersonalAvatar } from './PersonalAvatar';
 import WorkoutDetailContent from './WorkoutDetailContent';
+import SaveWorkoutRoutine, { type SaveRoutineFromWorkout } from './SaveWorkoutRoutine';
 import './workout-feed.css';
 
 type FeedProps = {
@@ -22,6 +23,7 @@ type FeedProps = {
   onWorkout: (owner: string, workout: string) => void;
   onAccount?: () => void;
   onEditWorkout?: (workout: string) => void;
+  onSaveRoutine?: SaveRoutineFromWorkout;
   onTogglePeopleSearch?: () => void;
   peopleSearch?: ReactNode;
 };
@@ -169,8 +171,8 @@ function PostComments({ post, viewer, onProfile, onCount, onClose, composer }: {
   </section>;
 }
 
-function PostCard({ post, viewer, detail, onProfile, onWorkout, onEditWorkout, onUpdate, onUnavailable }: {
-  post: FeedPost; viewer: string; detail?: boolean; onProfile: FeedProps['onProfile']; onWorkout: FeedProps['onWorkout']; onEditWorkout: FeedProps['onEditWorkout']; onUpdate: (update: (post: FeedPost) => FeedPost) => void; onUnavailable: (id: string) => void;
+function PostCard({ post, viewer, detail, onProfile, onWorkout, onEditWorkout, onSaveRoutine, onUpdate, onUnavailable }: {
+  post: FeedPost; viewer: string; detail?: boolean; onProfile: FeedProps['onProfile']; onWorkout: FeedProps['onWorkout']; onEditWorkout: FeedProps['onEditWorkout']; onSaveRoutine?: SaveRoutineFromWorkout; onUpdate: (update: (post: FeedPost) => FeedPost) => void; onUnavailable: (id: string) => void;
 }) {
   const [comments, setComments] = useState(false);
   const [pendingLike, setPendingLike] = useState<boolean | null>(null);
@@ -258,12 +260,12 @@ function PostCard({ post, viewer, detail, onProfile, onWorkout, onEditWorkout, o
     {error && <p className="feed-error" role="alert">{error}</p>}
     {notice && <p className="feed-notice" role="status">{notice}</p>}
     {shareUrl && <label className="feed-share-link">Enlace a la publicación<input type="url" readOnly value={shareUrl} onFocus={event => event.target.select()}/></label>}
-    {detail && <div className="feed-workout-detail"><WorkoutDetailContent workout={post.workout}/></div>}
+    {detail && <div className="feed-workout-detail">{viewer !== post.owner_id && onSaveRoutine && <SaveWorkoutRoutine workout={post.workout} onSave={onSaveRoutine}/>}<WorkoutDetailContent workout={post.workout}/></div>}
     {comments && <PostComments post={post} viewer={viewer} onProfile={onProfile} onClose={closeComments} composer={composer} onCount={delta => onUpdate(current => ({ ...current, comments: Math.max(0, current.comments + delta) }))}/>}
   </article>;
 }
 
-function FeedStream({ viewer, owner, workout, onProfile, onWorkout, onEditWorkout, onTogglePeopleSearch, peopleSearch, following = false, onFollowingChange }: FeedProps & { viewer: string; following?: boolean; onFollowingChange: (following: boolean) => void }) {
+function FeedStream({ viewer, owner, workout, onProfile, onWorkout, onEditWorkout, onSaveRoutine, onTogglePeopleSearch, peopleSearch, following = false, onFollowingChange }: FeedProps & { viewer: string; following?: boolean; onFollowingChange: (following: boolean) => void }) {
   const [items, setItems] = useState<FeedPost[]>([]);
   const [cursor, setCursor] = useState<FeedCursor | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -314,7 +316,7 @@ function FeedStream({ viewer, owner, workout, onProfile, onWorkout, onEditWorkou
     {peopleSearch}
     <div hidden={Boolean(peopleSearch)}>
     {notice && <p className="feed-notice" role="status">{notice}</p>}
-    <div className="feed-posts">{items.map(post => <PostCard key={post.id} post={post} viewer={viewer} detail={!!workout} onProfile={onProfile} onWorkout={onWorkout} onEditWorkout={onEditWorkout} onUpdate={update => setItems(previous => previous.map(item => item.id === post.id ? update(item) : item))} onUnavailable={id => { setItems(previous => previous.filter(item => item.id !== id)); setNotice('Esta publicación ya no está disponible.'); }}/>)}</div>
+    <div className="feed-posts">{items.map(post => <PostCard key={post.id} post={post} viewer={viewer} detail={!!workout} onProfile={onProfile} onWorkout={onWorkout} onEditWorkout={onEditWorkout} onSaveRoutine={onSaveRoutine} onUpdate={update => setItems(previous => previous.map(item => item.id === post.id ? update(item) : item))} onUnavailable={id => { setItems(previous => previous.filter(item => item.id !== id)); setNotice('Esta publicación ya no está disponible.'); }}/>)}</div>
     {loading && <p className="feed-status" role="status">{loaded ? 'Cargando más entrenamientos…' : 'Cargando publicaciones…'}</p>}
     {error && <div className="feed-error" role="alert"><p>{error}</p><button className="secondary" onClick={() => void load(failedCursor.current)}>Reintentar publicaciones</button></div>}
     {loaded && !loading && !error && items.length === 0 && <div className="feed-empty"><LockKeyhole size={32}/><h2>{workout ? 'Entrenamiento no disponible.' : following ? 'Todavía no hay publicaciones de las personas a las que sigues.' : 'Todavía no hay publicaciones.'}</h2><p>{workout ? 'Puede haberse eliminado, ser privado o no estar disponible para tu cuenta.' : owner ? 'Aquí aparecerán los entrenamientos publicados que tengas permiso para ver. La privacidad del perfil también se aplica a sus publicaciones.' : following ? 'Puedes descubrir a más personas en «Buscar personas» y seguirlas desde su perfil.' : 'Cuando alguien publique un entrenamiento, lo encontrarás aquí. Puedes publicar el tuyo desde el historial después de guardarlo.'}</p></div>}

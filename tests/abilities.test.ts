@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { GEAR } from '../src/lib/gear';
 import { COMPANIONS } from '../src/lib/companions';
 import { ABILITIES, getAbilityDefinition, isAbilityUse } from '../src/lib/abilities';
-import { applyWorkoutAbility, equipCompanion, equipCosmetic, getAbilityCharges, isGameState, normalizeGame, sellItem, setActiveAbility, unlockedCompanions, unlockedGear, gameBalance, type GameState, type InventoryItem } from '../src/lib/game';
+import { applyWorkoutAbility, applyWorkoutGearPassives, equipCompanion, equipCosmetic, getAbilityCharges, isGameState, normalizeGame, sellItem, setActiveAbility, unlockedCompanions, unlockedGear, gameBalance, type GameState, type InventoryItem } from '../src/lib/game';
 import { rewardProgress, rewardSetIndex, workoutReward } from '../src/lib/rewards';
 import { muscleActivity } from '../src/lib/muscles';
 import type { Workout } from '../src/lib/model';
@@ -293,4 +293,25 @@ test('copied ability rewards and missing consumption ledgers cannot grant credit
   const restored=previewBackup(createBackup({...base,game:applied.game,workouts:[deleted]}),base);
   assert.equal(getAbilityCharges(restored.merged.game!,'plasma-blaster'),0);
   assert.equal(gameBalance(restored.merged.game!,restored.merged.workouts),gameBalance(restored.merged.game!,[]));
+});
+
+test('equipped passives stack across slots, preserve credits and never spend a legacy charge', () => {
+  let game = owned(['purple-tank', 'lime-shorts', 'plasma-blaster']);
+  for (const id of ['purple-tank', 'lime-shorts', 'plasma-blaster']) game = equipCosmetic(game, id);
+  const chest = session(null, 'Pecho');
+  const legs = session(null);
+  const source = { ...chest, exercises: [...chest.exercises, ...legs.exercises] };
+  const result = applyWorkoutGearPassives(game, source, []);
+  assert.deepEqual(new Set(result.gearPassiveRewards?.map(use => use.abilityId)), new Set(['purple-tank', 'lime-shorts', 'plasma-blaster']));
+  const payout = workoutReward(result, [result]);
+  const directCredits = getAbilityDefinition('plasma-blaster')!.credits;
+  assert.equal(payout.gearCredits, directCredits);
+  assert.ok(payout.abilityXp > 0);
+  const funded = { ...game, arcadeGrant: { season: '2026', xp: 0, credits: 1000, grantedAt: '2026-10-01T12:00:00Z', charges: {} } };
+  assert.equal(gameBalance(funded, [result]) - gameBalance(funded, [source]),
+    directCredits + Math.floor(payout.totalXp / 5) - Math.floor(workoutReward(source, [source]).totalXp / 5));
+  assert.deepEqual(game.abilityUses, []);
+  const changed = equipCosmetic(game, null, 'hand');
+  assert.deepEqual(applyWorkoutGearPassives(changed, source, [result]).gearPassiveRewards, result.gearPassiveRewards);
+  assert.equal(workoutReward(applyWorkoutGearPassives(changed, { ...source, id: crypto.randomUUID() }, []), []).gearCredits, 0);
 });
