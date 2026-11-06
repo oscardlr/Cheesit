@@ -90,6 +90,7 @@ for (const width of [390,1440]) {
     await expect(page.locator('.ascent-rank')).toContainText(`NIVEL ${progress.level}`);
     await page.reload();
     await expect(page.locator('.ascent-rank')).toContainText(`NIVEL ${progress.level}`);
+    await page.evaluate(() => window.scrollBy(0, -32));
     await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Inicio', exact: true }).click();
     await expect(page.locator('.character-season')).toContainText('XP acumulada');
     expect(errors).toEqual([]);
