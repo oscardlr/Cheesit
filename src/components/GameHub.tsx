@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react';
 import { ArrowRight, Award, Box, Check, ChevronRight, Clock3, Crown, Dumbbell, Footprints, Gift, Heart, LockKeyhole, Shirt, Sparkles, Target, Trophy, TrendingUp, Zap } from 'lucide-react';
 import type { AppData } from '@/lib/model';
 import { CRATES, MASTER_CRATE_ID, RARITIES, gameProgress, equipCosmetic, equipCompanion, gameBalance, gameCreditStatus, getAchievements, getLevelCrates, getMissions, normalizeGame, progressionSeasons, openCrate, openLevelCrate, type GameState, type InventoryItem, type Rarity } from '@/lib/game';
@@ -23,7 +23,7 @@ import { formatCreditBalance, TEST_CREDITS } from '@/lib/test-credits';
 import { acknowledgeQuoteConversions, quoteConversionNotice } from '@/lib/quote-conversion';
 import type { Mission } from '@/lib/objectives';
 
-type Props = { data: AppData; today: string; effectsEnabled: boolean; soundEnabled: boolean; initialTab?: Tab; onTabChange?: (tab: Tab) => void; onPersist: (next: AppData) => Promise<void>; onSettings?: () => void; onOpeningChange?: (active: boolean) => void };
+type Props = { data: AppData; today: string; effectsEnabled: boolean; soundEnabled: boolean; initialTab?: Tab; overviewHeadingRef: RefObject<HTMLHeadingElement | null>; onTabChange?: (tab: Tab) => void; onPersist: (next: AppData) => Promise<void>; onSettings?: () => void; onOpeningChange?: (active: boolean) => void };
 export type ArcadeView = 'overview' | 'goals' | 'crates' | 'ascent' | 'looks' | 'abilities';
 type Tab = ArcadeView;
 const destinations = [
@@ -43,11 +43,18 @@ function ProgressBar({ value, label }: { value: number; label: string }) {
 }
 
 
-export default function GameHub({ data, today, effectsEnabled, soundEnabled, initialTab = 'overview', onTabChange, onPersist, onSettings, onOpeningChange }: Props) {
+export default function GameHub({ data, today, effectsEnabled, soundEnabled, initialTab = 'overview', overviewHeadingRef, onTabChange, onPersist, onSettings, onOpeningChange }: Props) {
   const [tab, setTab] = useState<Tab>(initialTab);
   const headingRef=useRef<HTMLHeadingElement>(null);
   const previousTab=useRef(initialTab);
-  useEffect(()=>{if(previousTab.current===tab)return;previousTab.current=tab;window.scrollTo({top:0,behavior:'instant'});if(document.activeElement?.getAttribute('role')!=='tab')headingRef.current?.focus({preventScroll:true})},[tab]);
+  useEffect(() => {
+    if (previousTab.current === tab) return;
+    previousTab.current = tab;
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    if (document.activeElement?.getAttribute('role') === 'tab') return;
+    const heading = tab === 'overview' ? overviewHeadingRef.current : headingRef.current;
+    heading?.focus({ preventScroll: true });
+  }, [tab, overviewHeadingRef]);
   const activeTab = tab === 'looks' || tab === 'abilities' ? 'collection' : tab;
   const selectTab = (next: Tab) => { setTab(next); onTabChange?.(next); };
   const [missionFilter, setMissionFilter] = useState<'all' | 'pending' | 'rewarded'>('all');
@@ -126,10 +133,10 @@ export default function GameHub({ data, today, effectsEnabled, soundEnabled, ini
 
   return <div className={`game-hub arcade-redesign view-${activeTab} ${effectsEnabled ? '' : 'game-hub-quiet'}`}>
     <header className="home-header arcade-page-header">
-      {tab === 'overview'
-        ? <span className="eyebrow">CADA REP DESBLOQUEA ALGO</span>
-        : <button className="arcade-back" onClick={() => selectTab('overview')}><ArrowLeft size={15}/>Inicio de Arcade</button>}
-      <PageTitle ref={headingRef} tabIndex={-1}>{tab==='overview'?'Arcade':tab==='goals'?'Retos y logros':tab==='crates'?'Cofres y créditos':tab==='ascent'?'Nivel y recompensas':'Personaje'}</PageTitle>
+      {tab !== 'overview' && <>
+        <button className="arcade-back" onClick={() => selectTab('overview')}><ArrowLeft size={15}/>Inicio de Arcade</button>
+        <PageTitle ref={headingRef} tabIndex={-1}>{tab==='goals'?'Retos y logros':tab==='crates'?'Cofres y créditos':tab==='ascent'?'Nivel y recompensas':'Personaje'}</PageTitle>
+      </>}
       <div className="arcade-header-stats">
         <span className="arcade-header-level">
           <img src="/assets/cheesit-level-badge.png" alt="Nivel" width={24} height={24}/>

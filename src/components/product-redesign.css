@@ -11,9 +11,16 @@
 .ux-shell.product-redesign .workspace { min-height: 100dvh; }
 .ux-shell.product-redesign .app-content { max-width: 1400px; padding: 42px 44px 64px; }
 .ux-shell.product-redesign .brand-rail { background: #15121beb; border-color: #b8a0ff12; }
-.ux-shell.product-redesign .topbar { border-color: #b8a0ff10; background: #110f1666; padding-inline: 44px; }
-.ux-shell.product-redesign .brand { font-size: 30px; }
-.ux-shell.product-redesign .rail-caption { color: var(--muted); font-size: 9px; letter-spacing: 1.8px; }
+.ux-shell.product-redesign .topbar { border-color: #b8a0ff10; background: #110f1666; padding-inline: 44px; justify-content: space-between; }
+.ux-shell.product-redesign .topbar-heading { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.ux-shell.product-redesign .topbar-heading .brand { display: grid; place-items: center; flex: none; width: 48px; height: 44px; }
+.ux-shell.product-redesign .topbar-heading img { display: block; width: 100%; height: auto; }
+.ux-shell.product-redesign .topbar-title { color: var(--text); font-size: clamp(17px, 2.4vw, 22px); font-weight: 650; line-height: 1.15; }
+.ux-shell.product-redesign .topbar-actions { flex: none; }
+.ux-shell.product-redesign .section-content { padding-top: 24px; }
+@media(min-width:761px) {
+  .ux-shell.product-redesign .bottom-nav { top: 100px; }
+}
 .ux-shell.product-redesign .bottom-nav button { border-radius: 14px; font-weight: 500; }
 .ux-shell.product-redesign .bottom-nav button.active { background: #b8a0ff12; border-color: #b8a0ff1c; color: var(--lime); }
 .ux-shell.product-redesign .bottom-nav .nav-add { background: var(--lime); color: var(--bg); font-weight: 700; border-radius: 999px; }
@@ -134,7 +141,12 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0 16px;
 }
-.ux-shell.product-redesign .arcade-page-header > :is(.eyebrow,.arcade-back) {
+.ux-shell.product-redesign .view-overview > .arcade-page-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+.ux-shell.product-redesign .arcade-page-header > .arcade-back {
   grid-column: 1 / -1;
   justify-self: start;
 }
@@ -353,7 +365,8 @@
 @media(max-width:760px) {
   .ux-shell.product-redesign .app-content,.ux-shell.product-redesign[class*=screen-] .app-content { padding: 26px 20px 130px; }
   .ux-shell.product-redesign .topbar { padding-inline: 16px; border-color: #b8a0ff10; background: transparent; }
-  .ux-shell.product-redesign .brand { font-size: 26px; }
+  .ux-shell.product-redesign .brand-rail { display: none; }
+  .ux-shell.product-redesign .app-content.section-content { padding-top: 16px; }
   .ux-shell.product-redesign { --section-gap: 24px; --card-gap: 9px; }
   .ux-shell.product-redesign .page-title { font-size: 38px; letter-spacing: -1.8px; margin-block: 9px; }
   .ux-shell.product-redesign .home-header p { font-size: 13px; }
@@ -497,7 +510,6 @@
 @media(max-width:360px) {
   .ux-shell.product-redesign .app-content,.ux-shell.product-redesign[class*=screen-] .app-content { padding-inline: 14px; }
   .ux-shell.product-redesign .topbar { padding-right: 10px; }
-  .ux-shell.product-redesign .brand { font-size: 24px; }
   .ux-shell.product-redesign .page-title { font-size: 34px; }
   .ux-shell.product-redesign .next-session { padding: 23px; }
   .ux-shell.product-redesign .next-session h2 { font-size: 28px; }

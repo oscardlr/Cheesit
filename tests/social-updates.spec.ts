@@ -43,7 +43,7 @@ test('feed tabs filter followed people on the server and interaction notificatio
   await expect(page.getByRole('tab', { name: 'Siguiendo', exact: true })).toBeVisible();
   await expect(page.locator('.feed-post')).toHaveCount(2);
   await expect(page.getByRole('heading', { name: strangerPost.name, exact: true })).toBeVisible();
-  await expect(page.locator('.screen-feed .app-content > .home-header')).toHaveCount(1);
+  await expect(page.locator('.topbar').getByRole('heading', { name: 'Comunidad', exact: true })).toBeVisible();
   await expect(page.getByText('Entrenamientos, esfuerzo y comunidad.', { exact: true })).toHaveCount(0);
   await expect(page.getByText('CADA REP CONECTA.', { exact: true })).toHaveCount(0);
   await page.getByRole('tab', { name: 'Siguiendo', exact: true }).click();

@@ -167,7 +167,7 @@ test('the community directory lists people and follows or unfollows from a filte
   const searchIcon = page.getByRole('button', { name: 'Buscar personas', exact: true });
   const tabs = page.getByRole('tablist', { name: 'Seleccionar feed', exact: true });
   await expect(searchIcon).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Comunidad', exact: true })).toHaveCount(0);
+  await expect(page.locator('.topbar').getByRole('heading', { name: 'Comunidad', exact: true })).toBeVisible();
   await expect(page.getByRole('searchbox')).toHaveCount(0);
   const profileButton = page.getByLabel('Menú de perfil');
   for (const width of [320, 360, 390]) {
