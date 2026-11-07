@@ -87,6 +87,13 @@ const sectionFor = (screen: Screen) => {
   if (screen === 'social' || screen === 'notifications') return 'feed';
   return screen;
 };
+const mainSections = [
+  { id: 'summary', Icon: LayoutDashboard },
+  { id: 'feed', Icon: Rss },
+  { id: 'train', Icon: Dumbbell },
+  { id: 'progress', Icon: Activity },
+  { id: 'game', Icon: Sparkles },
+] as const;
 const pageTitles: Record<Screen, string> = {
   summary: 'Inicio', feed: 'Comunidad', train: 'Entrenar', plans: 'Planes de entrenamiento',
   publish: 'Publicación', routines: 'Mis rutinas', start: 'Empezar entreno', editor: 'En sesión',
@@ -195,7 +202,16 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
  useEffect(()=>{if(!loaded)return;const latest=currentData.current;const nextGame=reconcileSeasonProgression(normalizeGame(latest.game),latest.workouts,latest.profile,today);if(JSON.stringify(nextGame)!==JSON.stringify(latest.game))setData({...latest,game:nextGame})},[loaded,today]);
  useEffect(()=>{setPreferencesLoaded(true)},[]);
  useEffect(()=>{if(!loaded||!preferencesLoaded||(!currentData.current.preferences&&!preferencesDirty.current))return;setData(prev=>prev.preferences?.effects===effectsEnabled&&prev.preferences?.sound===soundEnabled?prev:{...prev,preferences:{...prev.preferences,effects:effectsEnabled,sound:soundEnabled}})},[loaded,preferencesLoaded,effectsEnabled,soundEnabled]);
- useEffect(()=>{window.scrollTo({top:0,behavior:'instant'});if(loaded){const heading=document.querySelector<HTMLElement>('main h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true})}}},[screen,loaded]);
+ const sectionHeadingRef = useRef<HTMLHeadingElement>(null);
+ useEffect(() => {
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  if (!loaded || !navigationReady) return;
+  const heading = sectionHeadingRef.current ?? document.querySelector<HTMLElement>('main h1');
+  if (heading) {
+   heading.tabIndex = -1;
+   heading.focus({ preventScroll: true });
+  }
+ }, [screen, loaded, navigationReady]);
  useEffect(()=>{if(editing && !editingOriginal){setData(prev=>{const current=prev.workouts.find(w=>w.id===editing.id);if(current?.status==='finished')return prev;return {...prev,workouts:current?prev.workouts.map(w=>w.id===editing.id?editing:w):[...prev.workouts,editing]}});}},[editing,editingOriginal]);
  const bounds=periodBounds(period,anchor,today); const periodWorkouts=finished.filter(w=>w.date>=bounds.start && w.date<=bounds.end); const stats=totals(periodWorkouts);
  const previousStart=period==='week'?shift(bounds.start,-7):monthShift(bounds.start,-1); const span=Math.round((Date.parse(`${bounds.end}T12:00:00Z`)-Date.parse(`${bounds.start}T12:00:00Z`))/86400000); const previousMonthEnd=shift(bounds.start,-1); const previousEnd=period==='week'?shift(previousStart,span):[shift(previousStart,span),previousMonthEnd].sort()[0]; const previousStats=totals(finished.filter(w=>w.date>=previousStart&&w.date<=previousEnd));
@@ -443,28 +459,35 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
  if(readError)return <div className="app-shell"><main className="app-content"><h1>No se han podido leer tus datos</h1><p className="notice">El almacenamiento del navegador no está disponible. No se han sobrescrito tus datos. Comprueba los permisos o vuelve a intentarlo.</p><button className="primary wide" onClick={()=>window.location.reload()}>Reintentar</button></main></div>;
  if(!loaded||!navigationReady)return <div className="app-shell ux-shell"><main className="app-loading" aria-busy="true"><img src="/cheesit-logo.png" alt="Cheesit" width={72} height={48}/><p role="status">Cargando tus entrenamientos…</p><div className="loading-track" aria-hidden="true"/></main></div>;
  if(storageConflict&&!arcadeOpening)return <main className="storage-conflict"><h1>Otra pestaña ha guardado cambios</h1><p>Puedes combinar los cambios guardados en las pestañas. Las ediciones incompatibles se conservarán para su revisión.</p><button className="primary" autoFocus onClick={()=>void store.recoverTab().then(()=>window.location.reload()).catch(error=>setSaveError(error.message))}>Recuperar cambios de las pestañas</button><p role="alert">{saveError}</p><button className="secondary" onClick={exportData}>Copia opcional</button><button className="secondary" onClick={()=>window.location.reload()}>Recargar datos actuales</button></main>;
+ const isMainPage = mainSections.some(({ id }) => id === screen) && (screen !== 'game' || gameTab === 'overview');
  return <div className={`app-shell ux-shell product-redesign screen-${screen} ${effectsEnabled?'':'effects-disabled'}`}>
  <a className="skip-link" href="#main-content" onClick={event=>{event.preventDefault();document.getElementById('main-content')?.focus()}}>Saltar al contenido</a>
- <aside className="brand-rail"><button className="brand" aria-label="Cheesit, ir a Inicio" onClick={()=>navigate('summary')}><span className="brand-symbol"><img src="/cheesit-logo.png" width={384} height={256} alt="" aria-hidden="true"/></span><span>cheesit<span className="brand-period">.</span></span></button><span className="rail-caption">CADA REP CUENTA.</span><div className="rail-bottom"><span className="rail-account"><Dumbbell size={18}/>{guest?'Modo invitado':username?`@${username}`:'Tu cuenta'}</span><p>{guest?'Guardado en este navegador':'Tu entrenamiento, contigo.'}</p></div></aside>
+ <aside className="brand-rail"><div className="rail-bottom"><span className="rail-account"><Dumbbell size={18}/>{guest?'Modo invitado':username?`@${username}`:'Tu cuenta'}</span><p>{guest?'Guardado en este navegador':'Tu entrenamiento, contigo.'}</p></div></aside>
  <div className="workspace">
  <header className="topbar">
-  <div className="topbar-location"><span className="live-dot"/> CHEESIT<span className="topbar-divider">/</span><span className="topbar-page">{pageTitles[screen]}</span></div>
+  <div className="topbar-heading">
+   <button type="button" className="brand" aria-label="Cheesit, ir a Inicio" onClick={()=>navigate('summary')}>
+    <img src="/cheesit-logo.png" width={48} height={32} alt=""/>
+   </button>
+   {isMainPage
+    ? <h1 className="topbar-title" ref={sectionHeadingRef} tabIndex={-1}>{pageTitles[screen]}</h1>
+    : <span className="topbar-title">{pageTitles[screen]}</span>}
+  </div>
   <div className="topbar-actions">
    <NotificationButton unread={notificationFeed.unread} onOpen={()=>guardNavigation(()=>{setScreen('notifications');void notificationFeed.refresh()})}/>
    <ProfileMenu screen={screen} onNavigate={navigate} photo={data.personalProfile?.photo} onSignOut={onSignOut}/>
   </div>
  </header>
  <OfflineShell flush={flushData}/>
- <main className="app-content" id="main-content" tabIndex={-1} key={screen} ref={contentRef}>
+ <main className={`app-content${isMainPage ? ' section-content' : ''}`} id="main-content" tabIndex={-1} key={screen} ref={contentRef}>
  {(saveError||finishPending)&&<section className="save-error-banner" role="alert"><strong>Cambios pendientes de guardar</strong><p>{saveError||'La finalización está pendiente de confirmar en el dispositivo.'}</p><button className="secondary" onClick={()=>void persistData(currentData.current).catch(()=>undefined)} disabled={storageConflict||busy}>Reintentar guardado</button><button className="text-action" onClick={exportData}>Exportar lo pendiente</button></section>}
 
 
  {screen==='settings' && <Back title="Ajustes" onClick={()=>{setMessage('');setScreen('summary')}}/>}
  <div hidden={screen!=='settings'}>{accountSettings}</div>
  {screen==='summary' && <>
- <header className="home-header"><div><span className="eyebrow">{dateLabel(today,{weekday:'long',day:'numeric',month:'long'})}</span><PageTitle>Inicio</PageTitle><p>{data.personalProfile?.displayName?`${data.personalProfile.displayName}, cada rep cuenta.`:'Cada rep cuenta.'}</p></div></header>
  <div className="home-command-grid">
- <section className="next-session" aria-labelledby="next-session-title"><div className="next-session-copy"><span className="eyebrow">{draft?'SESIÓN EN CURSO':'TU PRÓXIMA SESIÓN'}</span><h2 id="next-session-title">{draft?'Sigue donde lo dejaste.':'¿Entrenamos?'}</h2><p>{draft?`${draft.name || 'Entrenamiento'} · ${dateLabel(draft.date,{day:'numeric',month:'short'})}`:'Elige una rutina o empieza con tus propios ejercicios.'}</p><div className="next-session-actions"><button className="primary summary-start" onClick={()=>draft?continueDraft(draft.id):openStart()}><Dumbbell size={19}/>{draft?'Continuar entreno':'Empezar entreno'}<ArrowRight size={18}/></button>{draft&&<button className="text-action" onClick={()=>openStart()}>Nueva sesión <Plus size={16}/></button>}</div></div><img className="next-session-art" src="/assets/grind-dumbbell.webp" alt="" aria-hidden="true" width={200} height={200}/></section>
+ <section className="next-session" aria-labelledby="next-session-title"><div className="next-session-copy"><span className="eyebrow">Tu próxima sesión</span><h2 id="next-session-title">¿Entrenamos?</h2><p>{draft?`${draft.name || 'Entrenamiento'} · ${dateLabel(draft.date,{day:'numeric',month:'short'})}`:'Elige una rutina o empieza con tus propios ejercicios.'}</p><div className="next-session-actions"><button className="primary summary-start" onClick={()=>draft?continueDraft(draft.id):openStart()}><Dumbbell size={19}/>{draft?'Continuar entreno':'Empezar entreno'}<ArrowRight size={18}/></button>{draft&&<button className="text-action" onClick={()=>openStart()}>Nueva sesión <Plus size={16}/></button>}</div></div><img className="next-session-art" src="/assets/grind-dumbbell.webp" alt="" aria-hidden="true" width={200} height={200}/></section>
  <section className="week-card"><div className="section-heading"><h2>Esta semana</h2><span className="week-count"><Flame size={14}/>{weekCount}<span>/ {game.weeklyWorkoutGoal}</span></span></div><div className="week-strip">{weekDays.map((day,i)=>{const complete=workFinished.some(w=>w.date===day);return <button key={day} aria-label={`${dateLabel(day)}, ${complete?'entrenamiento completado':'ver día'}`} className={`${day===today?'current':''} ${complete?'complete':''}`} onClick={()=>openHistory(day)}><span>{['L','M','X','J','V','S','D'][i]}</span><strong>{complete?<Check size={15}/>:Number(day.slice(-2))}</strong><i/></button>})}</div><p><span className="live-dot"/>{weekCount>=game.weeklyWorkoutGoal?'Meta semanal conseguida.':`${Math.max(0,game.weeklyWorkoutGoal-weekCount)} ${game.weeklyWorkoutGoal-weekCount===1?'día':'días'} para tu objetivo semanal.`}</p><button className="text-action" onClick={()=>openGame('goals')}>Ver objetivo semanal <ArrowRight size={16}/></button></section>
  <section className="activity-section" aria-labelledby="home-activity-title"><div className="section-top"><div><h2 id="home-activity-title">Tu actividad</h2></div><div className="segmented"><button aria-pressed={period==='week'} className={period==='week'?'active':''} onClick={()=>{setPeriod('week');setAnchor(today)}}>Semana</button><button aria-pressed={period==='month'} className={period==='month'?'active':''} onClick={()=>{setPeriod('month');setAnchor(today)}}>Mes</button></div></div>
  <div className="period-row"><button className="icon-button" aria-label="Periodo anterior" onClick={()=>setAnchor(period==='week'?shift(anchor,-7):monthShift(anchor,-1))}><ChevronLeft size={15}/></button><strong>{dateLabel(bounds.start,{day:'numeric',month:'short'})} — {dateLabel(bounds.end,{day:'numeric',month:'short'})}</strong><button className="icon-button" aria-label="Periodo siguiente" disabled={anchor>=today || (period==='month'&&anchor.slice(0,7)>=today.slice(0,7))} onClick={()=>setAnchor(period==='week'?shift(anchor,7):monthShift(anchor,1))}><ChevronRight size={15}/></button><small>{anchor===today?(period==='week'?'ESTA SEMANA':'ESTE MES'):'PERIODO SELECCIONADO'}</small></div>
@@ -483,12 +506,11 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
  </>}
  {screen==='profile' && <PersonalProfile onPublication={(owner,workout)=>guardNavigation(()=>{setSocialRoute({owner,workout,list:null,query:''});setScreen('social')})} accountOwner={accountOwner} onSocial={list=>guardNavigation(()=>{setSocialRoute({owner:accountOwner??null,list,query:''});setScreen('social')})} username={username} guest={guest} data={data} level={rewards.level} xp={rewards.xp} onSave={personalProfile=>persistConfirmedData({...currentData.current,personalProfile})} onWorkout={id=>{setDetailReturn('profile');setDetailId(id);setScreen('detail')}} onStart={()=>openStart()} onBack={()=>navigate('summary')}/>}
  {screen==='objectives' && <><Back title="Objetivos" onClick={()=>navigate('summary')}/><ObjectivesPanel data={data} exercises={exercises} today={today} onSave={update=>persistData(update(currentData.current))}/></>}
- {screen==='game' && <GameHub onOpeningChange={setArcadeOpening} initialTab={gameTab} onTabChange={setGameTab} data={data} onPersist={persistData} onSettings={()=>navigate('settings')} today={today} effectsEnabled={effectsEnabled} soundEnabled={soundEnabled}/>}
+ {screen==='game' && <GameHub overviewHeadingRef={sectionHeadingRef} onOpeningChange={setArcadeOpening} initialTab={gameTab} onTabChange={setGameTab} data={data} onPersist={persistData} onSettings={()=>navigate('settings')} today={today} effectsEnabled={effectsEnabled} soundEnabled={soundEnabled}/>}
  {screen==='notifications' && <Notifications feed={notificationFeed} guest={guest||!accountOwner} onBack={()=>navigate('feed')} onAccount={()=>navigate('settings')} onNavigate={route=>guardNavigation(()=>{setSocialRoute(route);setScreen('social')})}/>}
  {screen==='social' && <SocialPanel onSaveRoutine={saveRoutineFromWorkout} key={`${accountOwner??'guest'}:${socialRoute.owner??''}:${socialRoute.list??''}`} owner={accountOwner} guest={guest} route={socialRoute} onNavigate={route=>guardNavigation(()=>setSocialRoute(route))} onBack={()=>{if(socialRoute.source==='notifications')navigate('notifications');else if(socialRoute.list)setSocialRoute({...socialRoute,list:null});else if(socialRoute.source==='people')navigate('feed',()=>setPeopleQuery(socialRoute.query));else if(socialRoute.owner)setSocialRoute({owner:null,list:null,query:socialRoute.query});else navigate('feed')}} onAccount={()=>navigate('settings')}/>}
 
  {screen==='feed' && <>
-  <header className="home-header"><PageTitle>Comunidad</PageTitle></header>
   <WorkoutFeed onSaveRoutine={saveRoutineFromWorkout} viewer={accountOwner} guest={guest} onEditWorkout={editFeedPublication} onAccount={()=>navigate('settings')}
    onTogglePeopleSearch={()=>setPeopleQuery(query=>query===null?'':null)}
    peopleSearch={peopleQuery!==null?<SocialPanel embedded owner={accountOwner} guest={guest} route={{owner:null,list:null,query:peopleQuery}}
@@ -498,7 +520,6 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
    onWorkout={(owner,workout)=>guardNavigation(()=>{setSocialRoute({owner,workout,list:null,query:''});setScreen('social')})}/>
  </>}
  {screen==='progress' && <>
-  <header className="home-header"><PageTitle>Progreso</PageTitle></header>
   <nav className="progress-views" aria-label="Vistas de progreso">
    {progressViews.map(({id,label})=><button type="button" key={id} aria-current={progressView===id?'page':undefined} onClick={()=>guardNavigation(()=>{setProgressView(id);setProgressId(null);scrollViewToTop(contentRef.current)})}>{label}</button>)}
   </nav>
@@ -507,7 +528,6 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
  <WeeklySummary data={data} today={today} effects={effectsEnabled} onWorkout={openDetail}/>
  </section>}
  {screen==='train' && <>
-  <header className="home-header"><PageTitle>Entrenar</PageTitle></header>
   {draft && <section className="next-session training-resume" aria-label="Entrenamiento pendiente">
     <div className="next-session-copy">
       <span className="eyebrow">SESIÓN EN CURSO</span>
@@ -549,17 +569,11 @@ export default function EntrenosApp({ store, accountSettings, guest = false, use
  {screen==='settings' && <>{accountOwner&&!guest&&<ActivityPrivacy owner={accountOwner}/>}<GymSettings gym={data.personalProfile?.gym} onSave={gym=>persistConfirmedData({...currentData.current,personalProfile:{...(currentData.current.personalProfile??EMPTY_PERSONAL_PROFILE),gym}})}/><section className="settings-section experience-settings"><h2>Sonido y efectos</h2><div className="settings-card preference-row"><div><strong>Efectos y confeti</strong><p>Celebraciones al confirmar series y terminar sesiones.</p></div><button className={`toggle ${effectsEnabled?'on':''}`} role="switch" aria-label="Efectos y confeti" aria-checked={effectsEnabled} onClick={()=>{preferencesDirty.current=true;setEffectsEnabled(v=>!v)}}><span/></button></div><div className="settings-card preference-row"><div><strong>Sonido de victoria</strong><p>Sonidos en botones, series y recompensas.</p></div><button className={`toggle ${soundEnabled?'on':''}`} role="switch" aria-label="Sonido de victoria" aria-checked={soundEnabled} onClick={()=>{preferencesDirty.current=true;setSoundEnabled(v=>!v)}}><span/></button></div><p className="settings-fineprint">El modo de movimiento reducido de tu dispositivo se respeta automáticamente.</p></section><section className="settings-section"><span className="eyebrow">TUS DATOS</span><h2>Almacenamiento</h2><div className="settings-card"><strong>{guest?'En este navegador':'En tu cuenta'}</strong><p>{guest?'Modo invitado: tu actividad permanece en este navegador, sin cuenta ni sincronización.':'Guardado automático en la nube, con copia local para entrenar sin cobertura. Consulta el estado de sincronización y gestiona tu sesión en los ajustes de cuenta. Las copias JSON son opcionales.'}</p><p className="storage-status"><span>●</span> {saveError ? saveState : syncLabel}</p></div><button className="settings-action" onClick={exportData}><span><strong>Exportar datos</strong><small>Descargar una copia JSON</small></span><span className="arrow">↓</span></button><button className="settings-action" onClick={()=>importRef.current?.click()}><span><strong>Importar datos</strong><small>Restaurar una copia de Cheesit</small></span><span className="arrow">↑</span></button><input ref={importRef} type="file" accept="application/json,.json" hidden onChange={e=>{const f=e.target.files?.[0];if(f)void importData(f)}}/>{message&&<p role="status" className="notice">{message}</p>}</section><section className="settings-section"><span className="eyebrow">ACERCA DE</span><h2>Cheesit</h2><p>Registra tus entrenamientos y consulta tu progreso.</p></section><section className="settings-section account-reset-section" aria-label="Resetear cuenta"><span className="eyebrow">EMPEZAR DE NUEVO</span><h2>Resetear cuenta</h2><p>Borra tus entrenos, rutinas, ejercicios propios y todo el progreso del juego. Volverás a empezar con 100 créditos. Tu acceso, perfil y preferencias se conservan.</p><button type="button" className="account-reset-button" disabled={busy} onClick={()=>void resetAccount()}><RotateCcw size={18}/>{busy?'Reseteando cuenta…':'Resetear cuenta'}</button><p className="account-reset-warning">Esta acción no se puede deshacer. Te pediremos confirmación antes de borrar.</p>{resetNotice&&<p className="notice" role="status">{resetNotice}</p>}</section></>}
  </main></div>
  <ScrollNavigation view={picker ? screen + ':' + picker : screen}>
-  {([
-   {id:'summary',label:'Inicio',Icon:LayoutDashboard},
-   {id:'feed',label:'Comunidad',Icon:Rss},
-   {id:'train',label:'Entrenar',Icon:Dumbbell},
-   {id:'progress',label:'Progreso',Icon:Activity},
-   {id:'game',label:'Arcade',Icon:Sparkles},
-  ] as const).map(({id,label,Icon})=>{
+  {mainSections.map(({id,Icon})=>{
    const active=sectionFor(screen)===id;
    return <button key={id} className={`${active?'active ':''}${id==='train'?'nav-training':''}`} aria-current={active?'page':undefined}
     onClick={()=>activateNav(id,()=>id==='game'?openGame('overview'):id==='progress'?openHistory():navigate(id))}>
-    <Icon size={21} aria-hidden="true"/><span>{label}</span>
+    <Icon size={21} aria-hidden="true"/><span>{pageTitles[id]}</span>
    </button>;
   })}
  </ScrollNavigation>
